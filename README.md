@@ -1,3 +1,61 @@
+# ECO
+
+original read me in next section.
+
+https://certbot.eff.org/instructions?ws=nginx&os=debianbuster
+
+  563  sudo apt install snapd
+  564  sudo snap install core
+  570  sudo snap install core; sudo snap refresh core
+  571  sudo apt-get remove certbot
+  572  sudo snap install --classic certbot
+  573  sudo ln -s /snap/bin/certbot /usr/bin/certbot
+  574  sudo certbot --nginx
+  questions qsked: email, and it proposes to create ca for www.ecovision.com -> yes
+  OK: https://www.ecovision.ovh/
+  when i check /etc/nginx/sites-enabled/ecovision:
+    server {
+        listen              443 ssl;
+            server_name         www.ecovision.ovh;	
+            root /var/www/ecovision/html;
+            index index.html index.htm index.nginx-debian.html;
+            server_name ecovision www.ecovision.ovh;
+            location / {
+                    try_files $uri $uri/ =404;
+            }
+        ssl_certificate /etc/letsencrypt/live/www.ecovision.ovh/fullchain.pem; # managed by Certbot
+        ssl_certificate_key /etc/letsencrypt/live/www.ecovision.ovh/privkey.pem; # managed by Certbot
+    }
+    server {
+        if ($host = www.ecovision.ovh) {
+            return 301 https://$host$request_uri;
+        } # managed by Certbot
+        listen 80;
+        listen [::]:80;
+        server_name         www.ecovision.ovh;
+        server_name ecovision www.ecovision.ovh;
+        return 404; # managed by Certbot
+
+
+lets try this in docker nginx
+systemctl stop nginx    => stop the current one (without docker) above
+/etc/letsencrypt/live/www.ecovision.ovh/fullchain.pem
+/etc/nginx/conf.d/ is currently empty but will be shared volume with the docker nging folder contains our new config (above with the keys)
+backup; cp -r docker nginx ngin-BACKUP
+sudo cp /etc/letsencrypt/live/www.ecovision.ovh/fullchain.pem nginx/conf.d/
+sudo cp /etc/letsencrypt/live/www.ecovision.ovh/privkey.pem nginx/conf.d/
+adapt content of the above file into app.conf: this gives:
+
+
+test
+go inside nginx container and see if it ca access to gunicnr container:
+docker exec -it a173325fdc8b bash
+    curl http://web:8000
+        => hello world => OK
+
+
+WORKING https://www.ecovision.ovh:81/camera
+
 # Docker NGINX Gunicorn Flask
 
 Basic Flask application running on Gunicorn, a WSGI HTTP server, with NGINX as a reverse proxy server.
