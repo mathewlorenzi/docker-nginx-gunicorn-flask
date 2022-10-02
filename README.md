@@ -1,5 +1,18 @@
 # ECO
 
+## 2) TODO
+local: web docker only
+docker-compose build web
+docker-compose up web
+http://127.0.0.1:8000/camera OK
+http://127.0.0.1:8000/image KO  ===> WHY
+docker exec -it ... sh
+no sample>png in output !!!!!!!!!! WHY
+
+TODO activate log: how: flask debug perhaps is enough
+
+## 1) Steps to make it work
+
 original read me in next section.
 
 https://certbot.eff.org/instructions?ws=nginx&os=debianbuster
