@@ -4,24 +4,25 @@ from flask import Flask, render_template, request, send_from_directory, jsonify,
 #from numpy import isin
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-OUTPUT_PATH = os.path.join(APP_ROOT, "results")
-if os.path.exists(OUTPUT_PATH) is False:
-    os.mkdir(OUTPUT_PATH)
+#OUTPUT_PATH = os.path.join(APP_ROOT, "results")
+#if os.path.exists(OUTPUT_PATH) is False:
+#    os.mkdir(OUTPUT_PATH)
 
-app.debug = True
+#app.debug = True
 
 @app.route("/")
 def index():
-    app.logger.debug("/ endpoint: pid: " + str(os.getpid()))
+#    app.logger.debug("/ endpoint: pid: " + str(os.getpid()))
 
     data = {"data": "Hello Camera3"}
     return jsonify(data)
 
 @app.route("/image", methods=['POST'])
 def image():
-    app.logger.debug("/image endpoint: pid: " + str(os.getpid()))
+#    app.logger.debug("/image endpoint: pid: " + str(os.getpid()))
 
     # return render_template("upload.html")
     # return send_from_directory('/images','test.jpeg')
@@ -51,8 +52,12 @@ def image():
     if isinstance(imagestr, str) is False:
         print("error decoding string")
     else:
-        captured_image_path = os.path.join(OUTPUT_PATH, "sample.png") 
-        with open(captured_image_path, 'wb') as f:
+        #captured_image_path = os.path.join(OUTPUT_PATH, "sample.png") 
+        #with open(captured_image_path, 'wb') as f:
+        #if os.path.exists("./output") is False:
+        #    os.mkdir("./output")
+
+        with open('./output/sample.png', 'wb') as f:
             #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
             f.write(base64.b64decode(imagestr.split(',')[1].encode()))
 
@@ -63,10 +68,10 @@ def image():
 @app.route("/camera", methods=['GET'])
 def upload():
 
-    here pass a parameter url for the post image inside render template
+    #here pass a parameter url for the post image inside render template
 
-    app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
-    return render_template("camera.html")
+    #app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
+   return render_template("camera.html")
 
 #if __name__ == "__main__":
 #    app.run(port=5000, debug=True)
