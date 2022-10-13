@@ -1,5 +1,6 @@
 import os
 import base64
+from datetime import datetime
 from flask import Flask, render_template, request, send_from_directory, jsonify, json
 #from numpy import isin
 app = Flask(__name__)
@@ -8,9 +9,11 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 class AppImage:
-    def __init__(self, filenameWithStamp: str):
-        get current timestamp without space here instead
-        self.filenameWithStamp = filenameWithStamp
+    def __init__(self):
+        dt_obj = datetime.now()
+        dt_obj = ''.join(dt_obj.split())
+        print(dt_obj)
+        self.filenameWithStamp = dt_obj + ".png"
 
 class BufferImages:
     def __init__(self, maxLength: int, directory: str):
@@ -18,23 +21,16 @@ class BufferImages:
         self.maxLength = maxLength
         self.buffer = []
         self.lastRecordedIndex = -1
+        for i in range(len(self.maxLength)):
+            appImage = AppImage("none");
+            self.buffer.append(appimage)
     def insert(self, inputImage: AppImage):
-        if self.lastRecordedIndex < 0:
-            self.buffer.append(inputImage)
-            self.lastRecordedIndex = 0
-            if len(self.buffer) != 1:
-                print("error inserting at 0")
-                return False
-        elif self.lastRecordedIndex == self.maxLength:
-here
-        self.lastRecordedIndex += 1 # -1->0, 9->10
-        if self.lastRecordedIndex == self.maxLength:
-            self.lastRecordedIndex = -1
-
-lastindex 
--1 0
-0 1
-1 2
+        index_nimage = self.lastRecordedIndex + 1# NextImageNotReadyYetForUploadAsNot
+        if index_nimage >= self.maxLength:
+            index_nimage = 0
+        self.buffer[index_nimage].copyFrom(inputImage)
+        #now the image is in the buffer, fully saved, so it is available for the client => update index
+        self.lastRecordedIndex = index_nimage;
 
 OUTPUT_PATH = os.path.join(APP_ROOT, "output")
 if os.path.exists(OUTPUT_PATH) is False:
@@ -65,18 +61,28 @@ def image():
         print("error decoding string")
     else:
 
-        filenameWithStamp = getCurrentTimestamp()
-
-        with open(os.path.join(bufferImages.directory, filenameWithStamp), 'wb') as f:
+        appImage = AppImage()
+        filename = appImage.filenameWithStamp
+        with open(os.path.join(bufferImages.directory, filename), 'wb') as f:
             #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
             f.write(base64.b64decode(imagestr.split(',')[1].encode()))
-
-            appImage = AppImage(filenameWithStamp=filenameWithStamp)
             bufferImages.insert(appImage)
 
     # unused but lets return something
     data = {"data": "Received image"}
     return jsonify(data)
+
+@app.route("/getimage", methods=['GET'])
+def getImage():
+    filename = os.path.join(bufferImages.directory, bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp)
+    with open( filename, mode="rb" ) as f:
+       imageContent = f.read().decode("iso-8859-1")
+       #(open(input_filename, "rb").read()).decode("iso-8859-1")
+       dict_out = {
+           "filename": filename,
+           "stream": imageContent
+       }
+       return dict_out
 
 @app.route("/camera", methods=['GET'])
 def upload():
