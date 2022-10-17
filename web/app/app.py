@@ -99,7 +99,8 @@ bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
 
 @app.route("/")
 def index():
-#    app.logger.debug("/ endpoint: pid: " + str(os.getpid()))
+    logging.debug("/ endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/ endpoint: pid: ", str(os.getpid()))
 
     data = {"data": "Hello Camera3"}
     return jsonify(data)
@@ -144,20 +145,20 @@ def image():
                 #app.logger.error(msg)
 
     # unused but lets return something
-    data = {"data": "Received image"}
+    # data = {"data": "Received image"}
     return jsonify(data)
 
-@app.route("/getimage", methods=['GET'])
-def getImage():
-    filename = os.path.join(bufferImages.directory, bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp)
-    with open( filename, mode="rb" ) as f:
-       imageContent = f.read().decode("iso-8859-1")
-       #(open(input_filename, "rb").read()).decode("iso-8859-1")
-       dict_out = {
-           "filename": filename,
-           "stream": imageContent
-       }
-       return dict_out
+# @app.route("/getimage", methods=['GET'])
+# def getImage():
+#     filename = os.path.join(bufferImages.directory, bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp)
+#     with open( filename, mode="rb" ) as f:
+#        imageContent = f.read().decode("iso-8859-1")
+#        #(open(input_filename, "rb").read()).decode("iso-8859-1")
+#        dict_out = {
+#            "filename": filename,
+#            "stream": imageContent
+#        }
+#        return dict_out
 
 @app.route("/camera", methods=['GET'])
 def upload():
@@ -168,10 +169,12 @@ def upload():
 # called by c++ client
 @app.route("/lastimage", methods=["GET"])
 def getlastimage():
+    print("[DEBUG]/lastimage: ")
     # filename = os.path.join(get_test_dir(get_root_dir()), "data", "small.jpg")
     filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
     pathImage = os.path.join("images", filenameWithStamp)
 
+    print("[DEBUG]/lastimage: ", pathImage)
     if os.path.exists(pathImage) is False:
         msg = "[ERROR]/getlastimage image does not exists on disk: " + pathImage
         dict_out = {
@@ -190,15 +193,22 @@ def getlastimage():
         return dict_out
 
     with open( pathImage, mode="rb" ) as f:
-        imageContent = f.read().decode("iso-8859-1")
-        #(open(input_filename, "rb").read()).decode("iso-8859-1")
-        dict_out = {
-            "information": "OK",
-            "filenameWithStamp": filenameWithStamp,
-            "stream": imageContent,
-            "details": "none"
-        }
-        return dict_out
+       imageContent = f.read()
+       return imageContent
+
+
+TODO at start (or using a deamon thread) clean all images before curernt timestamp 
+
+    # with open( pathImage, mode="rb" ) as f:
+    #     imageContent = f.read().decode("iso-8859-1")
+    #     #(open(input_filename, "rb").read()).decode("iso-8859-1")
+    #     dict_out = {
+    #         "information": "OK",
+    #         "filenameWithStamp": filenameWithStamp,
+    #         "stream": imageContent,
+    #         "details": "none"
+    #     }
+    #     return dict_out
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=5000)
