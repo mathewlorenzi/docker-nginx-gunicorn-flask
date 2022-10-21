@@ -1,13 +1,14 @@
 import os
 import base64
 import logging
-from datetime import datetime
-from flask import Flask, render_template, request, send_from_directory, jsonify, json
-#from flask.logging import create_logger
-#from numpy import isin
+from flask import Flask, render_template, request, send_from_directory, jsonify, json, flash
+from flask import redirect
+from buffer_images import AppImage, BufferImages
+
+# https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
+
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.debug = True
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -16,78 +17,6 @@ logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(ascti
 logging.warning('Start') 
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-class AppImage:
-    def __init__(self):
-        dt_obj = str(datetime.now())
-        dt_obj = dt_obj.replace(" ", "")
-        #print(dt_obj)
-        self.filenameWithStamp = dt_obj + ".png"
-        self.hasData = False
-    def copyFrom(self, src):
-        self.filenameWithStamp = src.filenameWithStamp
-        self.hasData = src.hasData
-    def Print(self):
-        print(self.filenameWithStamp, self.hasData)
-        
-class BufferImages:
-    def __init__(self, maxLength: int, directory: str):
-        self.directory = directory
-        self.maxLength = maxLength
-        self.buffer = []
-        self.lastRecordedIndex = -1
-        # self.replacedImageFilename = None
-        self.oldestRecordedImage = None
-        for i in range(self.maxLength):
-            appImage = AppImage();
-            self.buffer.append(appImage)
-    def insert(self, inputImage: AppImage):
-        index_nimage = self.lastRecordedIndex + 1# NextImageNotReadyYetForUploadAsNot
-        if index_nimage >= self.maxLength:
-            index_nimage = 0
-        
-        # if self.lastRecordedIndex >= 0:
-        #    self.replacedImageFilename = self.buffer[self.lastRecordedIndex].filenameWithStamp;
-        
-        self.buffer[index_nimage].copyFrom(inputImage)
-        #now the image is in the buffer, fully saved, so it is available for the client => update index
-        self.lastRecordedIndex = index_nimage;
-
-        self.oldestRecordedImage = self.lastRecordedIndex + 1
-        if self.oldestRecordedImage >= self.maxLength:
-            self.oldestRecordedImage = 0
-
-    def deleteOldest(self):
-        if self.oldestRecordedImage is not None:
-            pathImage = os.path.join(self.directory, self.buffer[self.oldestRecordedImage].filenameWithStamp)
-            if self.buffer[self.oldestRecordedImage].hasData is False:                
-                msg = "[INFO]oldest image cannot be deleted as it does not have any data (was not recorded before): " + pathImage
-                return (msg, True)    
-            if os.path.exists(pathImage) is False:
-                msg = "[ERROR]oldest image cannot be deleted as it does not exists on disk: " + pathImage
-                return (msg, False)
-            if os.path.isfile(pathImage) is False:
-                msg = "[ERROR]oldest image cannot be deleted as it is not a file: " + pathImage
-                return (msg, False)
-            os.remove(pathImage)
-            if os.path.exists(pathImage) is True:
-                msg = "[ERROR]oldest image was not successfully deleted, it still exist on disk: " + pathImage
-                return (msg, False)
-            if os.path.isfile(pathImage) is True:
-                msg = "[ERROR]oldest image was not successfully deleted, it still is an existing file: " + pathImage
-                return (msg, False)
-            msg = "[INFO]oldest image was successfully deleted: " + pathImage
-            self.buffer[self.oldestRecordedImage].hasData = False
-            return (msg, True)
-        msg = "[INFO]oldest image not yet recorded: cannot be yet deleted"
-        return (msg, True)
-        
-
-    def Print(self):
-        for i in range(self.maxLength):
-            print(i, end=":")
-            self.buffer[i].Print()
-
 OUTPUT_PATH = os.path.join(APP_ROOT, "..", "..", "images")
 logging.debug("check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
@@ -97,13 +26,71 @@ bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
 
 #app.debug = True
 
-@app.route("/")
-def index():
-    logging.debug("/ endpoint: pid: " + str(os.getpid()))
-    print("[DEBUG]/ endpoint: pid: ", str(os.getpid()))
-
+@app.route("/hello")
+def hello():
+    logging.debug("/hello endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/hello endpoint: pid: ", str(os.getpid()))
     data = {"data": "Hello Camera3"}
     return jsonify(data)
+
+@app.route('/', methods=['GET', 'POST'])
+def mainroute():
+    logging.debug("/ main endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/ main endpoint: pid: ", str(os.getpid()))
+    if request.method == 'GET':
+        return render_template('form.html')
+    elif request.method == 'POST':
+        logging.debug("redirect to camera with name: " + request.form['username'])
+        print("[DEBUG]redirect to camera with name: ", request.form['username'])
+        #return redirect('/camera', name = request.form['username'])
+        return render_template('camera.html', name = request.form['username'])
+
+# @app.route('/form', methods=['GET', 'POST'])
+# def contactform():
+#     logging.debug("/form endpoint: pid: " + str(os.getpid()))
+#     print("[DEBUG]/form endpoint: pid: ", str(os.getpid()))
+# 	form = ContactForm()
+# 	if request.method == 'GET':
+# 		return render_template('contact.html', form=form)
+# 	elif request.method == 'POST':
+# 		if form.validate() == False:
+# 			flash('All fields are required !')
+# 			return render_template('contact.html', form=form)
+# 		else:
+# 			msg = Message(form.subject.data, sender='[SENDER EMAIL]', recipients=['your reciepients gmail id'])
+# 			msg.body = """
+# 			from: %s &lt;%s&gt
+# 			%s
+# 			"""% (form.name.data, form.email.data, form.message.data)
+# 			mail.send(msg)
+# 			return redirect(url_for('index'))
+# 		return '<h1>Form submitted!</h1>'  
+
+# @app.route('/contact', methods=['POST', 'GET'])
+# def contact():
+#     form = ContactForm()
+#     if form.validate_on_submit():        
+#         print('-------------------------')
+#         print(request.form['name'])
+#         print(request.form['email'])
+#         print(request.form['subject'])
+#         print(request.form['message'])       
+#         print('-------------------------')
+#         send_message(request.form)
+#         return redirect('/success')      
+#     return render_template('views/contacts/contact.html', form=form)
+
+# @app.route('/success')
+# def success():
+#     return redirect('/camera') # return render_template('views/home/index.html')
+
+def send_message(message):
+    print(message.get('name'))
+    #msg = Message(message.get('subject'), sender = message.get('email'),
+    #        recipients = ['id1@gmail.com'],
+    #        body= message.get('message')
+    #)  
+    #mail.send(msg)
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';
 @app.route("/image", methods=['POST'])
@@ -162,9 +149,11 @@ def image():
 
 @app.route("/camera", methods=['GET'])
 def upload():
+    logging.debug("/camera endpoint" + str(request.method))
+    print("[DEBUG]/camera endpoint", request.method)
     #here pass a parameter url for the post image inside render template
     #app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
-   return render_template("camera.html")
+    return render_template("camera.html")
 
 # called by c++ client
 @app.route("/lastimage", methods=["GET"])
@@ -197,7 +186,7 @@ def getlastimage():
        return imageContent
 
 
-TODO at start (or using a deamon thread) clean all images before curernt timestamp 
+#TODO at start (or using a deamon thread) clean all images before curernt timestamp 
 
     # with open( pathImage, mode="rb" ) as f:
     #     imageContent = f.read().decode("iso-8859-1")
