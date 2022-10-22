@@ -43,7 +43,7 @@ def mainroute():
         logging.debug("redirect to camera with name: " + request.form['username'])
         print("[DEBUG]redirect to camera with name: ", request.form['username'])
         #return redirect('/camera', name = request.form['username'])
-        return render_template('camera.html', name = request.form['username'])
+        return render_template('camera.html', nameId = request.form['username'])
 
 # @app.route('/form', methods=['GET', 'POST'])
 # def contactform():
@@ -104,6 +104,9 @@ def image():
     # we could go further into beauty: s = json.dumps(data, indent=4, sort_keys=True)
 
     imagestr = data["image"]
+    nameId = data["nameId"]
+    logging.debug("/image: name:" + nameId)
+    print("[DEBUG]/image: name:", nameId)
     if isinstance(imagestr, str) is False:
         print("error decoding string")
     else:
@@ -122,11 +125,12 @@ def image():
                 " oldest image to be del: ", bufferImages.oldestRecordedImage, 
                 bufferImages.buffer[bufferImages.oldestRecordedImage].filenameWithStamp, 
                 )
-            bufferImages.Print()
+            #bufferImages.Print()
             (msg, succ) = bufferImages.deleteOldest()
             print(succ, msg)
             if succ is True:
-                bufferImages.Print()
+                logging.info(msg)
+                #bufferImages.Print()
             else:
                 logging.error(msg)
                 #app.logger.error(msg)

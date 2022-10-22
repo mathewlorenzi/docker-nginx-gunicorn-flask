@@ -66,11 +66,12 @@
 
 <body>
     <div class="contentarea">
+        var nameId = {{ nameId }}
         <h1>
-            Hello {{ name }}. Lets start capturing.
+            Hello {{ nameId }}. Lets start capturing.
         </h1>
-        <div class="camera">
-            <video id="video">Video stream not available.</video>
+        <input value="{{ nameId }}" type="text" hidden="hidden" id="nameId" />
+        <video id="video">Video stream not available.</video>
         </div>
         <div><button id="startbutton">Take Photo</button></div>
         <canvas id="canvas"></canvas>
@@ -196,8 +197,12 @@
                 xhr.send(JSON.stringify({ 
                     "email": "hello@user.com", 
                     "response": { "name": "Tester" },
-                    "image": data
+                    "image": data,
+                    //"name": document.getElementById("nameId").innerHTML
+                    "nameId": document.getElementById("nameId").value
                  }));
+
+                 //alert(document.getElementById('myVariable').value)
 
                  ///////////////////////////////////////////////////where to add this
                  ///////////////////////////////////////////////////Feature-Policy: camera 'self'
