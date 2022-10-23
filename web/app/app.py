@@ -1,9 +1,11 @@
 import os
 #import base64
+import threading
 import logging
 from flask import Flask, render_template, request, send_from_directory, jsonify, json, flash
 from flask import redirect
 from buffer_images import STR_UNKNOWN, AppImage, ClientCamera, BufferClients
+from file_watcher import SessionRunner
 
 # https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
 
@@ -203,4 +205,26 @@ def active_clients():
 # TODO thread to remove unactive clients
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+    
+    print(" .............................................. ")
+    logging.info(" .............................................. ")
+
+
+    # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
+    #app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)).start()
+    #threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)).start()
+
+    print(" .............................................. ")
+    logging.info(" .............................................. ")
+
+    filesWatcher = SessionRunner(thread_id=0, mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=10)
+    logging.info(" .............................................. 1 ")
+    logging.debug("start filesWatcher")
+    logging.info(" .............................................. 2 ")
+    filesWatcher.start()
+    logging.info(" .............................................. 3 ")
+    logging.debug("join")
+    filesWatcher.join()
+
