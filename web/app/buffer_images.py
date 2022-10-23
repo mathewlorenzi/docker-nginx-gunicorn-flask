@@ -1,5 +1,6 @@
 import os
 import base64
+import logging
 from datetime import datetime
 
 STR_UNKNOWN = "UNKNOWN"
@@ -18,8 +19,9 @@ class AppImage:
         print(self.filenameWithStamp, self.hasData)
         
 class BufferImages:
-    def __init__(self, maxLength: int, directory: str):
+    def __init__(self, maxLength: int, clientId:str, directory: str):
         self.directory = directory
+        self.clientId = clientId
         self.maxLength = maxLength
         self.buffer = []
         self.lastRecordedIndex = -1
@@ -46,27 +48,28 @@ class BufferImages:
 
     def deleteOldest(self):
         if self.oldestRecordedImage is not None:
-            pathImage = os.path.join(self.directory, self.buffer[self.oldestRecordedImage].filenameWithStamp)
+            filename = self.buffer[self.oldestRecordedImage].filenameWithStamp
+            pathImage = os.path.join(self.directory, filename)
             if self.buffer[self.oldestRecordedImage].hasData is False:                
-                msg = "[INFO]oldest image cannot be deleted as it does not have any data (was not recorded before): " + pathImage
+                msg = "oldest image cannot be deleted as it does not have any data (was not recorded before): " + self.clientId + ", " + filename
                 return (msg, True)    
             if os.path.exists(pathImage) is False:
-                msg = "[ERROR]oldest image cannot be deleted as it does not exists on disk: " + pathImage
+                msg = "oldest image cannot be deleted as it does not exists on disk: " + self.clientId + ", " + filename
                 return (msg, False)
             if os.path.isfile(pathImage) is False:
-                msg = "[ERROR]oldest image cannot be deleted as it is not a file: " + pathImage
+                msg = "oldest image cannot be deleted as it is not a file: " + self.clientId + ", " + filename
                 return (msg, False)
             os.remove(pathImage)
             if os.path.exists(pathImage) is True:
-                msg = "[ERROR]oldest image was not successfully deleted, it still exist on disk: " + pathImage
+                msg = "oldest image was not successfully deleted, it still exist on disk: " + self.clientId + ", " + filename
                 return (msg, False)
             if os.path.isfile(pathImage) is True:
-                msg = "[ERROR]oldest image was not successfully deleted, it still is an existing file: " + pathImage
+                msg = "oldest image was not successfully deleted, it still is an existing file: " + self.clientId + ", " + filename
                 return (msg, False)
-            msg = "[INFO]oldest image was successfully deleted: " + pathImage
+            msg = "oldest image was successfully deleted: " + self.clientId + ", " + filename
             self.buffer[self.oldestRecordedImage].hasData = False
             return (msg, True)
-        msg = "[INFO]oldest image not yet recorded: cannot be yet deleted"
+        msg = "oldest image not yet recorded: cannot be yet deleted, " + self.clientId
         return (msg, True)
         
 
@@ -84,6 +87,7 @@ class ClientCamera():
         self.mainUploadDir = mainUploadDir
         self.bufferImages = BufferImages(
             maxLength=5, 
+            clientId = self.clientId,
             directory=os.path.join(self.mainUploadDir, self.clientId)
         )
         self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
@@ -96,25 +100,23 @@ class ClientCamera():
         self.initMsg = "Client Camera created: "+self.clientId
         self.initSucc = True
     
-    def saveNewImage(self, imageContent: str):
+    def saveNewImage(self, logger: logging.Logger, imageContent: str):
         appImage = AppImage()
         filename = appImage.filenameWithStamp
-        print("ClientCamera::saveNewImage::SaveNewImage ", self.bufferImages.directory, filename)
+        logger.debug("ClientCamera::SaveNewImage " + self.bufferImages.clientId + ", filename:" + filename)
         with open(os.path.join(self.bufferImages.directory, filename), 'wb') as f:
             #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
             f.write(base64.b64decode(imageContent.split(',')[1].encode()))
             appImage.hasData = True
             self.bufferImages.insert(appImage)
-            print("ClientCamera::saveNewImage::SaveNewImage image ready at ", 
+            logger.info("ClientCamera::SaveNewImage image ready at {} {} oldest to be del {} {}".format( 
                 self.bufferImages.lastRecordedIndex, 
                 self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
-                #" replaced image to be del: ", bufferImages.replacedImageFilename
-                " oldest image to be del: ", self.bufferImages.oldestRecordedImage, 
-                self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp, 
-                )
+                self.bufferImages.oldestRecordedImage, 
+                self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp))
             #bufferImages.Print()
             (msg, succ) = self.bufferImages.deleteOldest()
-            print(succ, msg)
+            #print(succ, msg)
             return (msg, succ)
             # if succ is True:
             #     logging.info(msg)
@@ -132,7 +134,7 @@ class BufferClients():
         self.database_main_path_all_clients = database_main_path_all_clients
 
     def getClientIndex(self, nameId: str) -> int:
-        print("BufferClients::getClientIndex: nameId:", nameId)
+        #print("BufferClients::getClientIndex: nameId:", nameId)
         indexClient = None
         for index in range(len(self.buff)):
             if self.buff[index].clientId == nameId:

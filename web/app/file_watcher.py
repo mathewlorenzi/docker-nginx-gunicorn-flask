@@ -30,10 +30,11 @@ class SessionRunner(threading.Thread):
         return self._stop_event.is_set()
 
     def log(self, msg):
-        date = datetime.now()
-        date = date.strftime('%Y/%m/%d %H:%M:%S')
-        print('{} Thread {:d}: {}'.format(date, self.id, msg))
-        logging.info('{} Thread {:d}: {} pid {}'.format(date, self.id, msg, os.getpid()))
+        #date = datetime.now()
+        #date = date.strftime('%Y/%m/%d %H:%M:%S')
+        #print('{} Thread {:d}: {}'.format(date, self.id, msg))
+        #logging.info('{} Thread {:d}: {} pid {}'.format(date, self.id, msg, os.getpid()))
+        logging.info('{}'.format(msg))
 
     def run(self):
         self.log('starting')
@@ -67,7 +68,7 @@ class SessionRunner(threading.Thread):
                             os.remove(localFile)
                         except FileNotFoundError as e:
                             logging(e)
-                            self.log(e)
+                            self.log("[ERROR] FileNotFound {}".format(e))
                             print(e)
                 if len(files) == 0:
                     try:

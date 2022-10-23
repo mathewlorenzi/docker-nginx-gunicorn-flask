@@ -1,11 +1,11 @@
 import os
 #import base64
-import threading
+#import threading
 import logging
-from flask import Flask, render_template, request, send_from_directory, jsonify, json, flash
-from flask import redirect
-from buffer_images import STR_UNKNOWN, AppImage, ClientCamera, BufferClients
-from file_watcher import SessionRunner
+from flask import Flask, render_template, request, jsonify, json#, flash send_from_directory
+#from flask import redirect
+from buffer_images import STR_UNKNOWN, BufferClients #AppImage, ClientCamera, 
+#from file_watcher import SessionRunner
 
 # https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
 
@@ -15,12 +15,14 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 #logging.basicConfig(level=logging.DEBUG)
 
 # TODO log rotate
-logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-logging.warning('Start') 
+#logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s : %(message)s')
+logger = logging.getLogger(__name__)
+logger.warning('Start') 
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_PATH = os.path.join(APP_ROOT, "..", "..", "database_clients_camera")
-logging.debug("check output folder: "+str(OUTPUT_PATH))
+OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "..", "database_clients_camera") )
+logger.debug("check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
@@ -31,20 +33,20 @@ bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH)
 
 @app.route("/hello")
 def hello():
-    logging.debug("/hello endpoint: pid: " + str(os.getpid()))
-    print("[DEBUG]/hello endpoint: pid: ", str(os.getpid()))
+    logger.debug("/hello endpoint: pid: " + str(os.getpid()))
+    #print("[DEBUG]/hello endpoint: pid: ", str(os.getpid()))
     data = {"data": "Hello Camera3"}
     return jsonify(data)
 
 @app.route('/', methods=['GET', 'POST'])
 def mainroute():
-    logging.debug("/ main endpoint: pid: " + str(os.getpid()))
-    print("[DEBUG]/ main endpoint: pid: ", str(os.getpid()))
+    logger.debug("/ main endpoint: pid: " + str(os.getpid()))
+    #print("[DEBUG]/ main endpoint: pid: ", str(os.getpid()))
     if request.method == 'GET':
         return render_template('form.html')
     elif request.method == 'POST':
-        logging.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
-        print("[DEBUG]redirect to camera with name: ", request.form['username'], " from ", request.url_root)
+        logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
+        #print("[DEBUG]redirect to camera with name: ", request.form['username'], " from ", request.url_root)
         #return redirect('/camera', name = request.form['username'])
         return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])
 
@@ -52,7 +54,7 @@ def mainroute():
 @app.route("/image", methods=['POST'])
 def image():
     #app.logger("/image")
-    logging.debug("/image")
+    #logger.debug("/image")
     # bytes to string
     jsonstr = request.data.decode('utf8')
     # string to json
@@ -62,33 +64,36 @@ def image():
     imagestr = data["image"]
     nameId = data["nameId"]
     usedUrl = data["usedUrl"]
-    logging.debug("/image: name:" + nameId + " usedUrl " + usedUrl)
-    print("[DEBUG]/image: name:", nameId, " usedUrl ", usedUrl)
+    #logger.debug("/image: name:" + nameId + " usedUrl " + usedUrl)
+    #print("[DEBUG]/image: name:", nameId, " usedUrl ", usedUrl)
+    logger.debug("/image: nameId:" + nameId)
     if isinstance(imagestr, str) is False or isinstance(nameId, str) is False:
-        print("error decoding string")
+        #print("error decoding string")
+        logger.error("/image: nameId is not a string:" + str(nameId))
+        return ("KO: nameId is not a string", 400)
     else:
 
         # look if existing active camera
         indexClient = bufferClients.getClientIndex(nameId=nameId)
         if indexClient is None:
-            logging.info("/image: name:" + nameId + " new client")
-            print("[INFO]/image: name:", nameId, " new client")
+            logger.info("/image: nameId:" + nameId + " new client")
+            #print("[INFO]/image: name:", nameId, " new client")
             indexClient = bufferClients.insertNewClient(nameId=nameId)
         indexClient = bufferClients.getClientIndex(nameId=nameId)
         if indexClient is None:
-            logging.error("/image: name:" + nameId + " failed finding client")
-            print("[ERROR]/image: name:", nameId, " failed finding client")
-            return ("Failed finding client or inserting new client " + nameId, 400)
+            logger.error("/image: nameId:" + nameId + " failed finding client")
+            #print("[ERROR]/image: name:", nameId, " failed finding client")
+            return ("KO: Failed finding client or inserting new client " + nameId, 400)
         
-        (msg, succ) = bufferClients.buff[indexClient].saveNewImage(imageContent=imagestr)
+        (msg, succ) = bufferClients.buff[indexClient].saveNewImage(logger=logger, imageContent=imagestr)
         if succ is False:
-            logging.error(msg)
-            print("[ERROR]", msg)
+            logger.error(msg)
+            #print("[ERROR]", msg)
             # return (msg, 400)
-            return ("KO", 400)
+            return ("KO: failed saving new image", 400)
         else:
-            logging.info(msg)
-            print("[INFO]", msg)
+            logger.debug(msg)
+            #print("[INFO]", msg)
             # return (msg, 200)
             return ("OK", 200)
 
@@ -111,10 +116,10 @@ def image():
         #     (msg, succ) = bufferImages.deleteOldest()
         #     print(succ, msg)
         #     if succ is True:
-        #         logging.info(msg)
+        #         logger.info(msg)
         #         #bufferImages.Print()
         #     else:
-        #         logging.error(msg)
+        #         logger.error(msg)
         #         #app.logger.error(msg)
 
     # unused but lets return something
@@ -124,8 +129,8 @@ def image():
 
 @app.route("/camera", methods=['GET'])
 def upload():
-    logging.debug("/camera endpoint" + str(request.method))
-    print("[DEBUG]/camera endpoint", request.method)
+    logger.debug("/camera endpoint" + str(request.method))
+    #print("[DEBUG]/camera endpoint", request.method)
     #here pass a parameter url for the post image inside render template
     #app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
@@ -133,8 +138,8 @@ def upload():
 # called by c++ client
 @app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
 def lastimage_filename(nameId: str):
-    logging.debug("/lastimage_filename nameId " + str(nameId))
-    print("[DEBUG]/lastimage_filename nameId ", nameId)
+    logger.debug("/lastimage_filename nameId " + str(nameId))
+    #print("[DEBUG]/lastimage_filename nameId ", nameId)
     if nameId is None:
         return ("nameId not present in url", 400)    
     if nameId == "":
@@ -155,7 +160,7 @@ def lastimage_filename(nameId: str):
 # called by c++ client
 @app.route("/lastimage/<string:nameId>", methods=["GET"])
 def getlastimage(nameId: str):
-    print("[DEBUG]/lastimage: nameId: ", nameId)
+    #print("[DEBUG]/lastimage: nameId: ", nameId)
     # filename = os.path.join(get_test_dir(get_root_dir()), "data", "small.jpg")
     # filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
     # pathImage = os.path.join("images", filenameWithStamp)
@@ -170,14 +175,14 @@ def getlastimage(nameId: str):
 
     pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
 
-    print("[DEBUG]/lastimage: =======> ", pathImage)
+    #print("[DEBUG]/lastimage: =======> ", pathImage)
     if os.path.exists(pathImage) is False:
         msg = "[ERROR]/getlastimage image does not exists on disk: " + pathImage
         dict_out = {
             "information": "KO",
             "details": msg
         }
-        logging.error(  msg)
+        logger.error(  msg)
         return dict_out
     if os.path.isfile(pathImage) is False:
         msg = "[ERROR]/getlastimage image exist but is not a valid file: " + pathImage
@@ -185,7 +190,7 @@ def getlastimage(nameId: str):
             "information": "KO",
             "details": msg
         }
-        logging.error(msg)
+        logger.error(msg)
         return dict_out
 
     with open( pathImage, mode="rb" ) as f:
@@ -206,25 +211,14 @@ def active_clients():
 
 if __name__ == '__main__':
 
-    
-    print(" .............................................. ")
-    logging.info(" .............................................. ")
-
-
     # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
-    #app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
-    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)).start()
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    # thread id keeps increasing : every time there is a request: is this normal ? threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)).start()
     #threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)).start()
 
-    print(" .............................................. ")
-    logging.info(" .............................................. ")
-
-    filesWatcher = SessionRunner(thread_id=0, mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=10)
-    logging.info(" .............................................. 1 ")
-    logging.debug("start filesWatcher")
-    logging.info(" .............................................. 2 ")
-    filesWatcher.start()
-    logging.info(" .............................................. 3 ")
-    logging.debug("join")
-    filesWatcher.join()
+    # filesWatcher = SessionRunner(thread_id=0, mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=10)
+    # logger.debug("start filesWatcher")
+    # filesWatcher.start()
+    # logger.debug("join")
+    # filesWatcher.join()
 
