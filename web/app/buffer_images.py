@@ -1,5 +1,8 @@
 import os
+import base64
 from datetime import datetime
+
+STR_UNKNOWN = "UNKNOWN"
 
 class AppImage:
     def __init__(self):
@@ -71,3 +74,89 @@ class BufferImages:
         for i in range(self.maxLength):
             print(i, end=":")
             self.buffer[i].Print()
+
+class ClientCamera():
+    def __init__(self, clientId: str, mainUploadDir: str) -> None:
+        if clientId == "":
+            self.clientId = STR_UNKNOWN
+        else:
+            self.clientId = clientId
+        self.mainUploadDir = mainUploadDir
+        self.bufferImages = BufferImages(
+            maxLength=5, 
+            directory=os.path.join(self.mainUploadDir, self.clientId)
+        )
+        self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
+        if os.path.exists(self.outputDir) is False:
+            os.mkdir(self.outputDir)
+        if os.path.exists(self.outputDir) is False:
+            self.initMsg = "could not create: " + self.outputDir
+            print("[ERROR]", self.initMsg)
+            self.initSucc = False
+        self.initMsg = "Client Camera created: "+self.clientId
+        self.initSucc = True
+    
+    def saveNewImage(self, imageContent: str):
+        appImage = AppImage()
+        filename = appImage.filenameWithStamp
+        print("ClientCamera::saveNewImage::SaveNewImage ", self.bufferImages.directory, filename)
+        with open(os.path.join(self.bufferImages.directory, filename), 'wb') as f:
+            #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
+            f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+            appImage.hasData = True
+            self.bufferImages.insert(appImage)
+            print("ClientCamera::saveNewImage::SaveNewImage image ready at ", 
+                self.bufferImages.lastRecordedIndex, 
+                self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
+                #" replaced image to be del: ", bufferImages.replacedImageFilename
+                " oldest image to be del: ", self.bufferImages.oldestRecordedImage, 
+                self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp, 
+                )
+            #bufferImages.Print()
+            (msg, succ) = self.bufferImages.deleteOldest()
+            print(succ, msg)
+            return (msg, succ)
+            # if succ is True:
+            #     logging.info(msg)
+            #     #bufferImages.Print()
+            # else:
+            #     logging.error(msg)
+            #     #app.logger.error(msg)
+        return ("failed opening image for writing", False)
+
+
+class BufferClients():
+
+    def __init__(self, database_main_path_all_clients: str) -> None:
+        self.buff = []
+        self.database_main_path_all_clients = database_main_path_all_clients
+
+    def getClientIndex(self, nameId: str) -> int:
+        print("BufferClients::getClientIndex: nameId:", nameId)
+        indexClient = None
+        for index in range(len(self.buff)):
+            if self.buff[index].clientId == nameId:
+                indexClient = index
+                break
+        return indexClient
+
+    def insertNewClient(self, nameId: str) -> int:
+        newClientCam = ClientCamera(clientId=nameId, mainUploadDir=self.database_main_path_all_clients)
+
+        if newClientCam is None:
+            print("[ERROR] creating ClientCamera object is None")
+            return None
+
+        if newClientCam.initSucc is not True:
+            print("[ERROR] creating ClientCamera", newClientCam.initMsg)
+            return None
+
+        self.buff.append(newClientCam)
+            
+        indexClient = self.getClientIndex(nameId=nameId)
+        if indexClient is None:
+            print("[ERROR]insertClient failed")
+            return None
+
+        print("[INFO]insertClient SUCCESS at ", indexClient)
+        return indexClient

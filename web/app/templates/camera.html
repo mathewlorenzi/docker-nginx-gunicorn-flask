@@ -67,10 +67,13 @@
 <body>
     <div class="contentarea">
         var nameId = {{ nameId }}
+        var usedUrl = {{ usedUrl }}
         <h1>
+            Coming from {{ usedUrl }}
             Hello {{ nameId }}. Lets start capturing.
         </h1>
         <input value="{{ nameId }}" type="text" hidden="hidden" id="nameId" />
+        <input value="{{ usedUrl }}" type="text" hidden="hidden" id="usedUrl" />
         <video id="video">Video stream not available.</video>
         </div>
         <div><button id="startbutton">Take Photo</button></div>
@@ -180,7 +183,30 @@
 
                 var xhr = new XMLHttpRequest();
 
-                var url = 'http://localhost:5000/image';
+                var urlRoot = document.getElementById("usedUrl").value                
+
+                //var urlRootString = String(urlRoot)
+
+                // if (urlRoot.outerHTML)
+                //     urlRootString = urlRoot.outerHTML;
+                // else if (XMLSerializer)
+                //     urlRootString = new XMLSerializer().serializeToString(urlRoot); 
+
+
+                //console.log(" ... urlRoot: " + urlRootString)
+                //var re = new RegExp(/^.*\//);
+                //var urlRootString = String(re.exec(window.location.href)) + "image"
+                //console.log(" ... urlRoot: " + urlRootString)
+
+                
+                //var new_location = location.origin+ "/" + response.data;
+                //console.log('new location is:' + new_location);
+                // window.location.href = new_location;
+                // console.log('new location is:' + window.location.href);
+
+
+                const url = urlRoot + "image";
+                //var url = 'http://localhost:5000/image';
                 //var url = 'http://web:8000/image';
                 //var url = 'https://51.77.194.68:81/image';
                 //var url = 'https://www.ecovision.ovh:81/image';
@@ -199,7 +225,8 @@
                     "response": { "name": "Tester" },
                     "image": data,
                     //"name": document.getElementById("nameId").innerHTML
-                    "nameId": document.getElementById("nameId").value
+                    "nameId": document.getElementById("nameId").value,
+                    "usedUrl": url
                  }));
 
                  //alert(document.getElementById('myVariable').value)

@@ -1,9 +1,9 @@
 import os
-import base64
+#import base64
 import logging
 from flask import Flask, render_template, request, send_from_directory, jsonify, json, flash
 from flask import redirect
-from buffer_images import AppImage, BufferImages
+from buffer_images import STR_UNKNOWN, AppImage, ClientCamera, BufferClients
 
 # https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
 
@@ -17,12 +17,13 @@ logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(ascti
 logging.warning('Start') 
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_PATH = os.path.join(APP_ROOT, "..", "..", "images")
+OUTPUT_PATH = os.path.join(APP_ROOT, "..", "..", "database_clients_camera")
 logging.debug("check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
-bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
+#bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
+bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH)
 
 #app.debug = True
 
@@ -40,57 +41,10 @@ def mainroute():
     if request.method == 'GET':
         return render_template('form.html')
     elif request.method == 'POST':
-        logging.debug("redirect to camera with name: " + request.form['username'])
-        print("[DEBUG]redirect to camera with name: ", request.form['username'])
+        logging.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
+        print("[DEBUG]redirect to camera with name: ", request.form['username'], " from ", request.url_root)
         #return redirect('/camera', name = request.form['username'])
-        return render_template('camera.html', nameId = request.form['username'])
-
-# @app.route('/form', methods=['GET', 'POST'])
-# def contactform():
-#     logging.debug("/form endpoint: pid: " + str(os.getpid()))
-#     print("[DEBUG]/form endpoint: pid: ", str(os.getpid()))
-# 	form = ContactForm()
-# 	if request.method == 'GET':
-# 		return render_template('contact.html', form=form)
-# 	elif request.method == 'POST':
-# 		if form.validate() == False:
-# 			flash('All fields are required !')
-# 			return render_template('contact.html', form=form)
-# 		else:
-# 			msg = Message(form.subject.data, sender='[SENDER EMAIL]', recipients=['your reciepients gmail id'])
-# 			msg.body = """
-# 			from: %s &lt;%s&gt
-# 			%s
-# 			"""% (form.name.data, form.email.data, form.message.data)
-# 			mail.send(msg)
-# 			return redirect(url_for('index'))
-# 		return '<h1>Form submitted!</h1>'  
-
-# @app.route('/contact', methods=['POST', 'GET'])
-# def contact():
-#     form = ContactForm()
-#     if form.validate_on_submit():        
-#         print('-------------------------')
-#         print(request.form['name'])
-#         print(request.form['email'])
-#         print(request.form['subject'])
-#         print(request.form['message'])       
-#         print('-------------------------')
-#         send_message(request.form)
-#         return redirect('/success')      
-#     return render_template('views/contacts/contact.html', form=form)
-
-# @app.route('/success')
-# def success():
-#     return redirect('/camera') # return render_template('views/home/index.html')
-
-def send_message(message):
-    print(message.get('name'))
-    #msg = Message(message.get('subject'), sender = message.get('email'),
-    #        recipients = ['id1@gmail.com'],
-    #        body= message.get('message')
-    #)  
-    #mail.send(msg)
+        return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';
 @app.route("/image", methods=['POST'])
@@ -105,51 +59,66 @@ def image():
 
     imagestr = data["image"]
     nameId = data["nameId"]
-    logging.debug("/image: name:" + nameId)
-    print("[DEBUG]/image: name:", nameId)
-    if isinstance(imagestr, str) is False:
+    usedUrl = data["usedUrl"]
+    logging.debug("/image: name:" + nameId + " usedUrl " + usedUrl)
+    print("[DEBUG]/image: name:", nameId, " usedUrl ", usedUrl)
+    if isinstance(imagestr, str) is False or isinstance(nameId, str) is False:
         print("error decoding string")
     else:
-        appImage = AppImage()
-        filename = appImage.filenameWithStamp
-        print("/image save ", filename)
-        with open(os.path.join(bufferImages.directory, filename), 'wb') as f:
-            #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
-            f.write(base64.b64decode(imagestr.split(',')[1].encode()))
-            appImage.hasData = True
-            bufferImages.insert(appImage)
-            print("/image image ready at ", 
-                bufferImages.lastRecordedIndex, 
-                bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp, 
-                #" replaced image to be del: ", bufferImages.replacedImageFilename
-                " oldest image to be del: ", bufferImages.oldestRecordedImage, 
-                bufferImages.buffer[bufferImages.oldestRecordedImage].filenameWithStamp, 
-                )
-            #bufferImages.Print()
-            (msg, succ) = bufferImages.deleteOldest()
-            print(succ, msg)
-            if succ is True:
-                logging.info(msg)
-                #bufferImages.Print()
-            else:
-                logging.error(msg)
-                #app.logger.error(msg)
+
+        # look if existing active camera
+        indexClient = bufferClients.getClientIndex(nameId=nameId)
+        if indexClient is None:
+            logging.info("/image: name:" + nameId + " new client")
+            print("[INFO]/image: name:", nameId, " new client")
+            indexClient = bufferClients.insertNewClient(nameId=nameId)
+        indexClient = bufferClients.getClientIndex(nameId=nameId)
+        if indexClient is None:
+            logging.error("/image: name:" + nameId + " failed finding client")
+            print("[ERROR]/image: name:", nameId, " failed finding client")
+            return ("Failed finding client or inserting new client " + nameId, 400)
+        
+        (msg, succ) = bufferClients.buff[indexClient].saveNewImage(imageContent=imagestr)
+        if succ is False:
+            logging.error(msg)
+            print("[ERROR]", msg)
+            # return (msg, 400)
+            return ("KO", 400)
+        else:
+            logging.info(msg)
+            print("[INFO]", msg)
+            # return (msg, 200)
+            return ("OK", 200)
+
+        # appImage = AppImage()
+        # filename = appImage.filenameWithStamp
+        # print("/image save ", filename)
+        # with open(os.path.join(bufferImages.directory, filename), 'wb') as f:
+        #     #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
+        #     f.write(base64.b64decode(imagestr.split(',')[1].encode()))
+        #     appImage.hasData = True
+        #     bufferImages.insert(appImage)
+        #     print("/image image ready at ", 
+        #         bufferImages.lastRecordedIndex, 
+        #         bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp, 
+        #         #" replaced image to be del: ", bufferImages.replacedImageFilename
+        #         " oldest image to be del: ", bufferImages.oldestRecordedImage, 
+        #         bufferImages.buffer[bufferImages.oldestRecordedImage].filenameWithStamp, 
+        #         )
+        #     #bufferImages.Print()
+        #     (msg, succ) = bufferImages.deleteOldest()
+        #     print(succ, msg)
+        #     if succ is True:
+        #         logging.info(msg)
+        #         #bufferImages.Print()
+        #     else:
+        #         logging.error(msg)
+        #         #app.logger.error(msg)
 
     # unused but lets return something
     # data = {"data": "Received image"}
-    return jsonify(data)
-
-# @app.route("/getimage", methods=['GET'])
-# def getImage():
-#     filename = os.path.join(bufferImages.directory, bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp)
-#     with open( filename, mode="rb" ) as f:
-#        imageContent = f.read().decode("iso-8859-1")
-#        #(open(input_filename, "rb").read()).decode("iso-8859-1")
-#        dict_out = {
-#            "filename": filename,
-#            "stream": imageContent
-#        }
-#        return dict_out
+    #return jsonify({"info":"ok"}, 200)
+    return ("OK", 200)
 
 @app.route("/camera", methods=['GET'])
 def upload():
@@ -157,7 +126,13 @@ def upload():
     print("[DEBUG]/camera endpoint", request.method)
     #here pass a parameter url for the post image inside render template
     #app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
-    return render_template("camera.html")
+    return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
+
+# called by c++ client
+@app.route("/lastimage_filename",  HERE nameId methods=["GET"])
+def lastimage_filename():
+    filenameWithStamp =  bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
+    pathImage = os.path.join("images", filenameWithStamp) 
 
 # called by c++ client
 @app.route("/lastimage", methods=["GET"])
@@ -189,19 +164,13 @@ def getlastimage():
        imageContent = f.read()
        return imageContent
 
+# called by python thread manager for c++ cleint ecovision
+@app.route("/active_clients", methods=["GET"])
+def active_clients():
+    for clientEl in bufferClients:
+        
 
-#TODO at start (or using a deamon thread) clean all images before curernt timestamp 
-
-    # with open( pathImage, mode="rb" ) as f:
-    #     imageContent = f.read().decode("iso-8859-1")
-    #     #(open(input_filename, "rb").read()).decode("iso-8859-1")
-    #     dict_out = {
-    #         "information": "OK",
-    #         "filenameWithStamp": filenameWithStamp,
-    #         "stream": imageContent,
-    #         "details": "none"
-    #     }
-    #     return dict_out
+# TODO thread to remove unactive clients
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
