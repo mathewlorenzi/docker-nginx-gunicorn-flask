@@ -129,27 +129,53 @@ def upload():
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
 
 # called by c++ client
-@app.route("/lastimage_filename",  HERE nameId methods=["GET"])
-def lastimage_filename():
-    filenameWithStamp =  bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
-    pathImage = os.path.join("images", filenameWithStamp) 
+@app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
+def lastimage_filename(nameId: str):
+    logging.debug("/lastimage_filename nameId " + str(nameId))
+    print("[DEBUG]/lastimage_filename nameId ", nameId)
+    if nameId is None:
+        return ("nameId not present in url", 400)    
+    if nameId == "":
+        return ("nameId is empty in url", 400)
+    
+    index = bufferClients.getClientIndex(nameId)
+    if index is None:
+        return ("no client with nameId: " + nameId, 400)
+    
+    lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+
+    filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
+    
+    #pathImage = os.path.join("images", filenameWithStamp) 
+    
+    return (filenameWithStamp, 200)
 
 # called by c++ client
-@app.route("/lastimage", methods=["GET"])
-def getlastimage():
-    print("[DEBUG]/lastimage: ")
+@app.route("/lastimage/<string:nameId>", methods=["GET"])
+def getlastimage(nameId: str):
+    print("[DEBUG]/lastimage: nameId: ", nameId)
     # filename = os.path.join(get_test_dir(get_root_dir()), "data", "small.jpg")
-    filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
-    pathImage = os.path.join("images", filenameWithStamp)
+    # filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
+    # pathImage = os.path.join("images", filenameWithStamp)
 
-    print("[DEBUG]/lastimage: ", pathImage)
+    (filenameWithStamp, succ) = lastimage_filename(nameId = nameId)
+    if succ != 200:
+        return (filenameWithStamp, 400)
+
+    index = bufferClients.getClientIndex(nameId)
+    if index is None:
+        return ("no client with nameId although we found it last image filename: " + nameId, 400)
+
+    pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
+
+    print("[DEBUG]/lastimage: =======> ", pathImage)
     if os.path.exists(pathImage) is False:
         msg = "[ERROR]/getlastimage image does not exists on disk: " + pathImage
         dict_out = {
             "information": "KO",
             "details": msg
         }
-        logging.error(msg)
+        logging.error(  msg)
         return dict_out
     if os.path.isfile(pathImage) is False:
         msg = "[ERROR]/getlastimage image exist but is not a valid file: " + pathImage
@@ -163,11 +189,15 @@ def getlastimage():
     with open( pathImage, mode="rb" ) as f:
        imageContent = f.read()
        return imageContent
+       # TODO why no more displayed in webrowser
 
 # called by python thread manager for c++ cleint ecovision
 @app.route("/active_clients", methods=["GET"])
 def active_clients():
-    for clientEl in bufferClients:
+    list = []
+    for clientEl in bufferClients.buff:
+        list.append(clientEl.clientId)
+    return (list, 200)
         
 
 # TODO thread to remove unactive clients
