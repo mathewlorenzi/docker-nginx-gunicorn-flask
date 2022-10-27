@@ -162,3 +162,9 @@ class BufferClients():
 
         print("[INFO]insertClient SUCCESS at ", indexClient)
         return indexClient
+
+    def getListClients(self):
+        listClients = []
+        for client in self.buff:
+            listClients.append(client.clientId)
+        return listClients

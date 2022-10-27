@@ -136,18 +136,19 @@ def upload():
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
 
 # called by c++ client
-@app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
-def lastimage_filename(nameId: str):
-    logger.debug("/lastimage_filename nameId " + str(nameId))
+#@app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
+@app.route("/last_image_filename/<string:camId>", methods=["GET"])
+def lastimage_filename(camId: str):
+    logger.debug("/lastimage_filename camId " + str(camId))
     #print("[DEBUG]/lastimage_filename nameId ", nameId)
-    if nameId is None:
-        return ("nameId not present in url", 400)    
-    if nameId == "":
+    if camId is None:
+        return ("camId not present in url", 400)    
+    if camId == "":
         return ("nameId is empty in url", 400)
     
-    index = bufferClients.getClientIndex(nameId)
+    index = bufferClients.getClientIndex(camId)
     if index is None:
-        return ("no client with nameId: " + nameId, 400)
+        return ("no client with camId: " + camId, 400)
     
     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
 
@@ -158,20 +159,21 @@ def lastimage_filename(nameId: str):
     return (filenameWithStamp, 200)
 
 # called by c++ client
-@app.route("/lastimage/<string:nameId>", methods=["GET"])
-def getlastimage(nameId: str):
+#@app.route("/lastimage/<string:nameId>", methods=["GET"])
+@app.route("/last_image_content/<string:camId>", methods=["GET"])
+def getlastimage(camId: str):
     #print("[DEBUG]/lastimage: nameId: ", nameId)
     # filename = os.path.join(get_test_dir(get_root_dir()), "data", "small.jpg")
     # filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
     # pathImage = os.path.join("images", filenameWithStamp)
 
-    (filenameWithStamp, succ) = lastimage_filename(nameId = nameId)
+    (filenameWithStamp, succ) = lastimage_filename(camId = camId)
     if succ != 200:
         return (filenameWithStamp, 400)
 
-    index = bufferClients.getClientIndex(nameId)
+    index = bufferClients.getClientIndex(camId)
     if index is None:
-        return ("no client with nameId although we found it last image filename: " + nameId, 400)
+        return ("no client with camId although we found it last image filename: " + camId, 400)
 
     pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
 
@@ -206,6 +208,65 @@ def active_clients():
         list.append(clientEl.clientId)
     return (list, 200)
         
+# not stateless
+# @app.route("/active_client_cam_all_images", methods=["GET"])
+# def active_client_cam_all_images():
+# #@app.route("/active_client_cam/<int:maxagesec>", methods=["GET"])
+# #def active_client_cam(maxagesec: int):
+#     #print("maxagesec: ", maxagesec)
+#     listout = []
+#     for dir in camIds:
+#         for file in os.listdir(os.path.join(OUTPUT_DIR, dir)):
+#             listout.append((dir, file))
+#             #print(dir, file)
+#     #return (listout, 200)
+#     return jsonify(data=listout), 200
+
+
+@app.route("/active_client_cam", methods=["GET"])
+def active_client_cam():
+#@app.route("/active_client_cam/<int:maxagesec>", methods=["GET"])
+#def active_client_cam(maxagesec: int):
+    #print("maxagesec: ", maxagesec)
+    listout = bufferClients.getListClients()
+    return jsonify(data=listout), 200
+    # listout = []
+    # for dir in camIds:
+    #     listout.append(dir)
+    # return jsonify(data=listout), 200
+
+# @app.route("/uploaded_image/<string:camId>/<string:filename>", methods=["GET"])
+# def uploaded_image(camId: str, filename: str):
+#     inputpath = os.path.join(bufferClients.database_main_path_all_clients, camId, filename)
+#     # inputpath = os.path.join(OUTPUT_DIR, camId, filename)
+#     print(inputpath)
+#     if os.path.isfile(inputpath) is False:
+#         return ("file is not valid", 400)
+#     if os.path.exists(inputpath) is False:
+#         return ("file does not exist", 400)
+#     with open(inputpath, mode="rb") as f:
+#         return (f.read(), 200)
+#     return ("KO", 400)
+  
+# @app.route("/last_image_content/<string:camId>", methods=["GET"])
+# def last_image_content(camId: str):
+#     # take first encountered filename as last recorded one
+#     for filename in os.listdir(os.path.join(OUTPUT_DIR, camId)): 
+#         inputpath = os.path.join(OUTPUT_DIR, camId, filename)
+#         print(inputpath)
+#         with open(inputpath, mode="rb") as f:
+#             return (f.read(), 200)
+#     return ("KO", 400)
+  
+# @app.route("/last_image_filename/<string:camId>", methods=["GET"])
+# def last_image_filename(camId: str):
+#     inputpath = os.path.join(bufferClients.database_main_path_all_clients, camId, filename)
+#     # take first encountered filename as last recorded one
+#     for filename in os.listdir(os.path.join(OUTPUT_DIR, camId)): 
+#         #inputpath = os.path.join(OUTPUT_DIR, camId, filename)
+#         print("return:->"+filename+"<-")
+#         return (filename, 200)
+#     return ("KO", 400)
 
 # TODO thread to remove unactive clients
 
