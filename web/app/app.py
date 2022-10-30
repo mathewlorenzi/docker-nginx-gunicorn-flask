@@ -31,6 +31,30 @@ bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH)
 
 #app.debug = True
 
+# import shutil
+# import cv2
+# import time
+# from datetime import datetime
+# def populate_fake_images(OUTPUT_PATH: str, sampleImagePath: str):
+#     camIds = ["peter", "paul", "jack", "UNKNOWN"]
+#     if os.path.exists(OUTPUT_PATH):
+#         shutil.rmtree(OUTPUT_PATH)
+#     os.mkdir(OUTPUT_PATH)
+#     for dir in camIds:
+#         os.mkdir(os.path.join(OUTPUT_PATH, dir))
+#     img = cv2.imread(sampleImagePath)
+#     for dir in camIds:
+#         for nb in range(10):
+#             now = datetime.now()
+#             date_time = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
+#             print("date_time:", dir, date_time)
+#             cv2.imwrite(os.path.join(OUTPUT_PATH, dir, date_time+".jpg"), img)
+#             time.sleep(0.5)
+#     return camIds
+  
+# populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
+# exit(1)
+
 @app.route("/hello")
 def hello():
     logger.debug("/hello endpoint: pid: " + str(os.getpid()))
