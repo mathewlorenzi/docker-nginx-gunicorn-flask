@@ -2,21 +2,39 @@ import os
 import base64
 import logging
 from datetime import datetime
+from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 STR_UNKNOWN = "UNKNOWN"
 
 class AppImage:
     def __init__(self):
-        dt_obj = str(datetime.now())
-        dt_obj = dt_obj.replace(" ", "")
-        #print(dt_obj)
-        self.filenameWithStamp = dt_obj + ".png"
-        self.hasData = False
+        now = datetime.now()
+        self.dateTime = now
+        # dt_obj = str()
+        # dt_obj = dt_obj.replace(" ", "")
+        # #print(dt_obj)
+        date_time = convertDatetimeToString(self.dateTime)
+        # date_time = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
+        self.filenameWithStamp = date_time + ".png"
+        #self.filenameWithStamp = dt_obj + ".png"
+        self.hasData = False    # data been saved to disk
+        self.uploaded = False
+        (self.convertedStampMicroSec, succConvert) = convertStringTimestampToDatetimeAndMicrosecValue(date_time = date_time)
+        if succConvert is False:
+            print("[ERROR]AppImage: convertedStampMicroSec: ", convertedStampMicroSec)
+            self.success = False
+        else:
+            print("[INFO]AppImage: ", now, "convertedStampMicroSec: ", self.convertedStampMicroSec)
+            self.success = True
     def copyFrom(self, src):
+        self.dateTime = src.dateTime
         self.filenameWithStamp = src.filenameWithStamp
         self.hasData = src.hasData
+        self.success = src.success
+        self.convertedStampMicroSec = src.convertedStampMicroSec
+        self.uploaded = src.uploaded
     def Print(self):
-        print(self.filenameWithStamp, self.hasData)
+        print(self.dateTime, self.convertedStampMicroSec, self.filenameWithStamp, "hasData: ", self.hasData, "uploaded", self.uploaded, "SUCCESS: ", self.success)
         
 class BufferImages:
     def __init__(self, maxLength: int, clientId:str, directory: str):
@@ -27,8 +45,11 @@ class BufferImages:
         self.lastRecordedIndex = -1
         # self.replacedImageFilename = None
         self.oldestRecordedImage = None
+        self.success = False
         for i in range(self.maxLength):
             appImage = AppImage();
+            if appImage.success is False:
+                self.success is True
             self.buffer.append(appImage)
     def insert(self, inputImage: AppImage):
         index_nimage = self.lastRecordedIndex + 1# NextImageNotReadyYetForUploadAsNot
@@ -90,6 +111,11 @@ class ClientCamera():
             clientId = self.clientId,
             directory=os.path.join(self.mainUploadDir, self.clientId)
         )
+        if self.bufferImages is False:
+            self.initMsg = "ClientCamera: buffer images creation failed: "
+            print("[ERROR]", self.initMsg)
+            self.initSucc = False
+
         self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
         if os.path.exists(self.outputDir) is False:
             os.mkdir(self.outputDir)
@@ -102,11 +128,23 @@ class ClientCamera():
     
     def saveNewImage(self, logger: logging.Logger, imageContent: str):
         appImage = AppImage()
+        if appImage.success is False:
+            return ("[ERROR]ClientCamera::saveNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        logger.debug("ClientCamera::SaveNewImage " + self.bufferImages.clientId + ", filename:" + filename)
+        logger.debug("ClientCamera::SaveNewImage " + self.bufferImages.clientId + ", filename: " + filename)
         with open(os.path.join(self.bufferImages.directory, filename), 'wb') as f:
-            #f.write(base64.decodestring(imagestr.split(',')[1].encode()))
-            f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+            # # f.write(base64.decodestring(imagestr.split(',')[1].encode()))
+            
+            
+            # OK but KO with simul_clients f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+            if len(imageContent.split(',')) > 1:
+                f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+            elif len(imageContent.split(',')) == 1:
+                f.write(base64.b64decode(imageContent.encode()))
+            else:
+                return ("[ERROR]ClientCamera::saveNewImage: image content seems empty", False)
+            
+            
             appImage.hasData = True
             self.bufferImages.insert(appImage)
             logger.info("ClientCamera::SaveNewImage image ready at {} {} oldest to be del {} {}".format( 

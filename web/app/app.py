@@ -27,6 +27,7 @@ if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
 #bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
+# if bufferImages.success is False: ...
 bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH)
 
 #app.debug = True
@@ -85,12 +86,14 @@ def image():
     data = json.loads(jsonstr)
     # we could go further into beauty: s = json.dumps(data, indent=4, sort_keys=True)
 
+    # TODO check json fields
+    
     imagestr = data["image"]
     nameId = data["nameId"]
     usedUrl = data["usedUrl"]
     #logger.debug("/image: name:" + nameId + " usedUrl " + usedUrl)
     #print("[DEBUG]/image: name:", nameId, " usedUrl ", usedUrl)
-    logger.debug("/image: nameId:" + nameId)
+    logger.debug("/image: nameId: " + nameId + " usedUrl: " + usedUrl)
     if isinstance(imagestr, str) is False or isinstance(nameId, str) is False:
         #print("error decoding string")
         logger.error("/image: nameId is not a string:" + str(nameId))
@@ -109,6 +112,8 @@ def image():
             #print("[ERROR]/image: name:", nameId, " failed finding client")
             return ("KO: Failed finding client or inserting new client " + nameId, 400)
         
+        logger.info("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
+
         (msg, succ) = bufferClients.buff[indexClient].saveNewImage(logger=logger, imageContent=imagestr)
         if succ is False:
             logger.error(msg)
@@ -122,6 +127,7 @@ def image():
             return ("OK", 200)
 
         # appImage = AppImage()
+        # if appImage.success is Flse ...
         # filename = appImage.filenameWithStamp
         # print("/image save ", filename)
         # with open(os.path.join(bufferImages.directory, filename), 'wb') as f:
@@ -183,46 +189,73 @@ def lastimage_filename(camId: str):
     return (filenameWithStamp, 200)
 
 # called by c++ client
+@app.route("/is_last_image_uploaded/<string:camId>", methods=["GET"])
+def is_last_image_uploaded(camId: str):
+    index = bufferClients.getClientIndex(camId)
+    if index is None:
+        msg = "no client with camId although we found it last image filename: " + camId
+        logger.error(msg)
+        return (msg, 400)
+    lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
+    return (uploaded, 200)
+
+# called by c++ client
 #@app.route("/lastimage/<string:nameId>", methods=["GET"])
 @app.route("/last_image_content/<string:camId>", methods=["GET"])
-def getlastimage(camId: str):
+def lastimage_content(camId: str):
     #print("[DEBUG]/lastimage: nameId: ", nameId)
     # filename = os.path.join(get_test_dir(get_root_dir()), "data", "small.jpg")
     # filenameWithStamp = bufferImages.buffer[bufferImages.lastRecordedIndex].filenameWithStamp
     # pathImage = os.path.join("images", filenameWithStamp)
 
-    (filenameWithStamp, succ) = lastimage_filename(camId = camId)
-    if succ != 200:
-        return (filenameWithStamp, 400)
+    #(filenameWithStamp, succ) = lastimage_filename(camId = camId)
+    #if succ != 200:
+    #    return (filenameWithStamp, 400)
 
     index = bufferClients.getClientIndex(camId)
     if index is None:
         return ("no client with camId although we found it last image filename: " + camId, 400)
 
+    lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    if lastRecordedIndex is None:
+        msg = "lastRecordedIndex None: camId: " + camId
+        logger.error(msg)
+        return (msg, 400)
+    if lastRecordedIndex < 0:
+        msg = "lastRecordedIndex negative: camId: " + camId
+        logger.error(msg)
+        return (msg, 400)
+
+    filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
+    
     pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
 
     #print("[DEBUG]/lastimage: =======> ", pathImage)
     if os.path.exists(pathImage) is False:
         msg = "[ERROR]/getlastimage image does not exists on disk: " + pathImage
-        dict_out = {
-            "information": "KO",
-            "details": msg
-        }
+        # dict_out = {
+        #     "information": "KO",
+        #     "details": msg
+        # }
         logger.error(  msg)
-        return dict_out
+        return (msg, 400)
     if os.path.isfile(pathImage) is False:
         msg = "[ERROR]/getlastimage image exist but is not a valid file: " + pathImage
-        dict_out = {
-            "information": "KO",
-            "details": msg
-        }
+        # dict_out = {
+        #     "information": "KO",
+        #     "details": msg
+        # }
         logger.error(msg)
-        return dict_out
+        # return (dict_out, 400)
+        return (msg, 400)
 
     with open( pathImage, mode="rb" ) as f:
-       imageContent = f.read()
-       return imageContent
-       # TODO why no more displayed in webrowser
+        imageContent = f.read()
+        bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
+        logger.info("uploading image content")
+        return (imageContent, 200)
+        # TODO why no more displayed in webrowser
 
 # called by python thread manager for c++ cleint ecovision
 @app.route("/active_clients", methods=["GET"])
