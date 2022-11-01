@@ -78,29 +78,6 @@ class SessionRunner(threading.Thread):
                         print("Error occured: %s : %s" % (localDir, x.strerror))
                         self.log("Error occured: %s : %s" % (localDir, x.strerror))
 
-                
-            # file_to_process = None
-            # self.lock.acquire()
-            # if len(self.files) > 0:
-            #     self.log('{:d} files remaining ({:.1f} %)'.format(len(self.files),
-            #                                                       float(len(self.files))/float(self.nb_files)*100.))
-            #     file_to_process = self.files.pop()
-            # else:
-            #     go_on = False
-            # self.lock.release()
-
-            # if file_to_process is not None:
-            #     prod = MstarProduction(file_to_process)
-            #     if not (self.keep_existing_files and prod.is_mocem_image_computed()):
-            #         self.log('processing begins file {}'.format(file_to_process))
-            #         prod.run_mocem(False)
-            #         self.log('processing ended file {}'.format(file_to_process))
-            #     else:
-            #         self.log('skipping existing file {}'.format(file_to_process))
-            #         prod.run_mocem(True)
-            #     self.lock.acquire()
-            #     prod.compare_mstar_mocem(self.id+1)
-            #     self.lock.release()
             self.log('sleep '+str(self.intervalSec))
             time.sleep(self.intervalSec)
 
@@ -127,12 +104,6 @@ class FileWatcher(threading.Thread):
             try:
                 for dir in os.listdir(self.mainDir):
                     print(dir)
-                # logging.info('Check for {} bigger than {} Bytes'.format(self.filename, self.fileSizeLimitBytes))
-                # if os.path.isfile(self.filename):
-                #     currentFileSize = os.stat(self.filename).st_size
-                #     if currentFileSize > self.fileSizeLimitBytes:
-                #         self.status = True
-                #         logging.info('FileWatcher detect that {} exceed the limit'.format(self.filename))
                 else:
                     logging.warning("FileWatcher: doesn't exist")
             except OSError as e:  ## if failed, report it back to the user ##
@@ -140,32 +111,7 @@ class FileWatcher(threading.Thread):
             self._stop_event.wait(self.intervalSec) # check every N sec
     def GetStatus(self):
         return self.status
-
-
-def KillThemAll(FileWatcher):
-    try:
-        if FileWatcher is not None and FileWatcher.isAlive():
-            logging.info("stop file size checker")
-            FileWatcher.stop()
-            FileWatcher.join()
-    except Exception as e:
-        logging.exception("exception during video max file checker thread killing: " + str(e))
-    except:
-        logging.exception("unknown exception during video max file checker thread killing")
-    
-    # # ************ I DID THIS, I use RunTimeError of join:
-    # outtime = 0.1
-    # if videoCap is not None:
-    #     logger.info(" ... stream packer stop, isStopped {} isAlive {}".format(videoCap.isStopped(), videoCap.isAlive()))
-    #     videoCap.stop()
-    #     while videoCap.isAlive() is True:
-    #         try:
-    #             logger.info(" ... stream packer join, isStopped {} isAlive {}".format(videoCap.isStopped(), videoCap.isAlive()))
-    #             videoCap.join(outtime)
-    #         except RuntimeError:
-    #             logger.exception(" ... stream packer join, RuntimeError")
-    #     logger.info(" ... stream packer stopped and joined, isStopped {} isAlive {}".format(videoCap.isStopped(), videoCap.isAlive()))
-        
+            
 if __name__ == "__main__":
     logging.debug("start session running")
     threads = []
@@ -181,22 +127,3 @@ if __name__ == "__main__":
     logging.debug("join")
     for thread in threads:
         thread.join()
-
-    # videoCap = None
-    # fileWatcher = None
-    # while True :
-    #     try:
-    #         fileWatcher = FileWatcher(mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=10)
-    #         fileWatcher.start()
-    #         while fileWatcher.isAlive() :
-    #             fileWatcher.join(1)
-    #         KillThemAll(fileWatcher)
-    #     except KeyboardInterrupt:
-    #             KillThemAll(fileWatcher)    
-    #             logging.info("Exit from {} monitoring ! Bye".format(args.channel_desc))
-    #             sys.exit(0)
-    #     except Exception as e:
-    #         logging.exception("exception during live monitoring : " + str(e))        
-    #     except:
-    #         logging.exception("unknown exception during live monitoring")           
-    # logging.info("Exit from monitoring ! Bye")

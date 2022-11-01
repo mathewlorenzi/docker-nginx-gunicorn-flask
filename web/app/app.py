@@ -253,7 +253,7 @@ def lastimage_content(camId: str):
     with open( pathImage, mode="rb" ) as f:
         imageContent = f.read()
         bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
-        logger.info("uploading image content")
+        logger.info("uploading image content to client")
         return (imageContent, 200)
         # TODO why no more displayed in webrowser
 
