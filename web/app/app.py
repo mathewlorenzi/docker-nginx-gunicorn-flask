@@ -1,4 +1,9 @@
 import os
+
+files = [f for f in os.listdir('.') if os.path.isfile(f)]
+for f in files:
+    print(" .... docker debug: ", f)
+
 #import base64
 #import threading
 import logging
