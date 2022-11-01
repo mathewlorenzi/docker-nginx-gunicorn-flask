@@ -2,6 +2,9 @@ import os
 
 print(" .... docker debug: curr dir: ", os.getcwd())
 
+files = [f for f in os.listdir('.') if os.path.isdir(f)]
+for f in files:
+    print(" .... docker debug: ", f)
 files = [f for f in os.listdir('.') if os.path.isfile(f)]
 for f in files:
     print(" .... docker debug: ", f)
