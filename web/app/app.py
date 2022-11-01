@@ -1,8 +1,12 @@
 import os
 
+print(" .... docker debug: curr dir: ", os.getcwd())
+
 files = [f for f in os.listdir('.') if os.path.isfile(f)]
 for f in files:
     print(" .... docker debug: ", f)
+
+# os.chdir(os.path.dirname(__file__))
 
 #import base64
 #import threading
