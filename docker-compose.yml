@@ -9,7 +9,7 @@ services:
       - 8000:8000
     command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
     volumes:
-      - ./output:/usr/src/app/output
+      - ./database_clients_camera:/usr/src/app/database_clients_camera
 
   nginx:
     restart: always
