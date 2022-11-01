@@ -171,7 +171,7 @@ if __name__ == "__main__":
     threads = []
     #lock = RLock()
     for i in range(1):
-        thread = SessionRunner(thread_id=i, mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=10)
+        thread = SessionRunner(thread_id=i, mainDir="database_clients_camera", maxNbFiles=10, maxFileAgeMinutes=60, intervalSec=60)
         threads.append(thread)
 
     logging.debug("start")

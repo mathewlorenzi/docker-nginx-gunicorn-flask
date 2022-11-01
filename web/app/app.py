@@ -198,7 +198,7 @@ def is_last_image_uploaded(camId: str):
         return (msg, 400)
     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
     uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
-    return (uploaded, 200)
+    return (str(uploaded), 200)
 
 # called by c++ client
 #@app.route("/lastimage/<string:nameId>", methods=["GET"])
@@ -286,6 +286,7 @@ def active_client_cam():
 #def active_client_cam(maxagesec: int):
     #print("maxagesec: ", maxagesec)
     listout = bufferClients.getListClients()
+    logger.info("/active_client_cam returns "+str(listout))
     return jsonify(data=listout), 200
     # listout = []
     # for dir in camIds:
