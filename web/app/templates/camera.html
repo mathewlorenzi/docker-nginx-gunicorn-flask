@@ -65,6 +65,12 @@
 </head>
 
 <body>
+
+    <p id="href"></p>
+    <script>
+      document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
+    </script>
+    
     <div class="contentarea">
         var nameId = {{ nameId }}
         var usedUrl = {{ usedUrl }}
@@ -72,6 +78,7 @@
             Coming from {{ usedUrl }}
             Hello {{ nameId }}. Lets start capturing.
         </h1>
+        
         <input value="{{ nameId }}" type="text" hidden="hidden" id="nameId" />
         <input value="{{ usedUrl }}" type="text" hidden="hidden" id="usedUrl" />
         <video id="video">Video stream not available.</video>
