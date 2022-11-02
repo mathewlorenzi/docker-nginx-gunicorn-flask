@@ -41,7 +41,7 @@ print(".... docker this file dir:", file_path)
 
 if file_path not in sys.path:
     sys.path.insert(1, file_path)
-    
+
 print(".... docker sys path:", sys.path)
 
 # os.chdir(os.path.dirname(__file__))
@@ -118,6 +118,7 @@ def mainroute():
         return render_template('form.html')
     elif request.method == 'POST':
         logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
+        print("....... debug......:", request.host_url)
         #print("[DEBUG]redirect to camera with name: ", request.form['username'], " from ", request.url_root)
         #return redirect('/camera', name = request.form['username'])
         return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])
