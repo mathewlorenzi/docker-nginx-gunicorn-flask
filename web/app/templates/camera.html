@@ -73,8 +73,19 @@
 
     <p id="host"></p>
     <script>
-    document.getElementById("host").innerHTML ="The full URL of this page is:<br>" + window.location.host;
+    document.getElementById("host").innerHTML ="The host of this page is:<br>" + window.location.host;
     </script>
+
+    <p id="hostname"></p>
+    <script>
+    document.getElementById("host").innerHTML ="The hostname this page is:<br>" + window.location.hostname;
+    </script>
+
+    <p id="protocol"></p>
+    <script>
+    document.getElementById("protocol").innerHTML ="The protocol page is:<br>" + window.location.protocol;
+    </script>
+
 
     <div class="contentarea">
         var nameId = {{ nameId }}
