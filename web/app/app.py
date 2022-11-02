@@ -9,6 +9,24 @@ files = [f for f in os.listdir('.') if os.path.isfile(f)]
 for f in files:
     print(" .... docker debug: ", f)
 
+# import os.path as P
+# for topdir, subdirs, files in os.walk("./"):
+#   print("    " * topdir.count(P.sep), P.basename(topdir))
+#   for f in sorted(files):
+#     print("    " * (topdir.count(P.sep) + 1), f)
+
+import os
+def printRootStructure(dirname,indent=0):
+    for i in range(indent):
+        print("   ", end=",")
+    print(os.path.basename(dirname))
+    if os.path.basename(dirname) != 'venv' and os.path.basename(dirname) != '.git':
+        if os.path.isdir(dirname):
+            for files in os.listdir(dirname):
+                printRootStructure(os.path.join(dirname,files),indent+1) # changed
+
+printRootStructure(dirname='./',indent=0)
+
 # os.chdir(os.path.dirname(__file__))
 
 #import base64
