@@ -2,18 +2,24 @@ import os
 
 print(" .... docker debug: curr dir: ", os.getcwd())
 
-files = [f for f in os.listdir('.') if os.path.isdir(f)]
-for f in files:
-    print(" .... docker debug: ", f)
-files = [f for f in os.listdir('.') if os.path.isfile(f)]
-for f in files:
-    print(" .... docker debug: ", f)
+# files = [f for f in os.listdir('.') if os.path.isdir(f)]
+# for f in files:
+#     print(" .... docker debug: ", f)
+# files = [f for f in os.listdir('.') if os.path.isfile(f)]
+# for f in files:
+#     print(" .... docker debug: ", f)
 
 # import os.path as P
 # for topdir, subdirs, files in os.walk("./"):
 #   print("    " * topdir.count(P.sep), P.basename(topdir))
 #   for f in sorted(files):
 #     print("    " * (topdir.count(P.sep) + 1), f)
+
+print(" .... docker debug:", os.path.isdir("/usr/src/app/database_clients_camera"))
+
+# ENV PYTHONPATH "/usr/src/app"
+
+print(".... docker python path:", os.environ['PYTHONPATH'])
 
 import os
 def printRootStructure(dirname,indent=0):
