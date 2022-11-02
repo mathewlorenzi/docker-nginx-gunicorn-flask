@@ -17,6 +17,6 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
     ports:
-      - 81:443
+      - 80:443
     links:
       - web
