@@ -66,7 +66,7 @@
 
 <body>
 
-    <p id="href"></p>
+    <!-- <p id="href"></p>
     <script>
       document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
     </script>
@@ -85,7 +85,7 @@
     <script>
     document.getElementById("protocol").innerHTML ="The protocol page is:<br>" + window.location.protocol;
     </script>
-
+ -->
 
     <div class="contentarea">
         var nameId = {{ nameId }}
@@ -206,7 +206,19 @@
 
                 var xhr = new XMLHttpRequest();
 
-                var urlRoot = document.getElementById("usedUrl").value                
+                // ok but the posrt disappears
+                // var urlRoot = document.getElementById("usedUrl").value
+
+                var urlHost = window.location.host
+                var urlProtocol = window.location.protocol
+                var urlRoot = urlProtocol + "//" + urlHost
+                console.log(" ... urlRoot:" + urlRoot)
+
+                // document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
+                // document.getElementById("host").innerHTML ="The host of this page is:<br>" + window.location.host;
+                // document.getElementById("hostname").innerHTML ="The hostname this page is:<br>" + window.location.hostname;
+                // document.getElementById("protocol").innerHTML ="The protocol page is:<br>" + window.location.protocol;
+
 
                 //var urlRootString = String(urlRoot)
 
@@ -228,11 +240,12 @@
                 // console.log('new location is:' + window.location.href);
 
 
-                const url = urlRoot + "image";
+                const url = urlRoot + "/image";
                 //var url = 'http://localhost:5000/image';
                 //var url = 'http://web:8000/image';
                 //var url = 'https://51.77.194.68:81/image';
                 //var url = 'https://www.ecovision.ovh:81/image';
+                console.log(" ... url:" + url)
                 xhr.open("POST", url, true);
 
                 // function execute after request is successful 
