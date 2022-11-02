@@ -35,6 +35,10 @@ printRootStructure(dirname=sys.path[0], indent=0)
 
 print(".... docker python path:", os.environ.get('PYTHONPATH'))
 print(".... docker sys path:", sys.path)
+full_path = os.path.realpath(__file__)
+file_path = os.path.dirname(full_path)
+print(".... docker this file dir:", file_path)
+
 
 
 # os.chdir(os.path.dirname(__file__))
