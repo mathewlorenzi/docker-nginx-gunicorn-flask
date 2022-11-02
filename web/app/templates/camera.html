@@ -70,7 +70,12 @@
     <script>
       document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
     </script>
-    
+
+    <p id="host"></p>
+    <script>
+    document.getElementById("host").innerHTML ="The full URL of this page is:<br>" + window.location.host;
+    </script>
+
     <div class="contentarea">
         var nameId = {{ nameId }}
         var usedUrl = {{ usedUrl }}
