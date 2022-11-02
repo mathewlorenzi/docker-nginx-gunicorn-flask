@@ -39,7 +39,10 @@ full_path = os.path.realpath(__file__)
 file_path = os.path.dirname(full_path)
 print(".... docker this file dir:", file_path)
 
-
+if file_path not in sys.path:
+    sys.path.insert(1, file_path)
+    
+print(".... docker sys path:", sys.path)
 
 # os.chdir(os.path.dirname(__file__))
 
