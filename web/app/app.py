@@ -19,7 +19,6 @@ print(" .... docker debug:", os.path.isdir("/usr/src/app/database_clients_camera
 
 # ENV PYTHONPATH "/usr/src/app"
 
-print(".... docker python path:", os.environ['PYTHONPATH'])
 
 import os
 def printRootStructure(dirname,indent=0):
@@ -32,6 +31,11 @@ def printRootStructure(dirname,indent=0):
                 printRootStructure(os.path.join(dirname,files),indent+1) # changed
 
 printRootStructure(dirname='./',indent=0)
+
+print(".... docker python path:", os.environ.get('PYTHONPATH'))
+import sys
+print(".... docker sys path:", sys.path)
+
 
 # os.chdir(os.path.dirname(__file__))
 
