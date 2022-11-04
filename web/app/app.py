@@ -1,6 +1,11 @@
 import os
 
-print(" .... docker debug: curr dir: ", os.getcwd())
+# TODO filewatcher ... or in camera.html launch a second sceript to do this job
+# TODO or manager.py to send a clean endpoint to do filewatcher job.
+# TODO or look for flask refreshing option
+
+
+# print(" .... docker debug: curr dir: ", os.getcwd())
 
 # files = [f for f in os.listdir('.') if os.path.isdir(f)]
 # for f in files:
@@ -15,7 +20,7 @@ print(" .... docker debug: curr dir: ", os.getcwd())
 #   for f in sorted(files):
 #     print("    " * (topdir.count(P.sep) + 1), f)
 
-print(" .... docker debug:", os.path.isdir("/usr/src/app/database_clients_camera"))
+# print(" .... docker debug:", os.path.isdir("/usr/src/app/database_clients_camera"))
 
 # ENV PYTHONPATH "/usr/src/app"
 
@@ -30,21 +35,19 @@ def printRootStructure(dirname,indent=0):
             for files in os.listdir(dirname):
                 printRootStructure(os.path.join(dirname,files),indent+1) # changed
 
-# printRootStructure(dirname='./',indent=0)
-printRootStructure(dirname=sys.path[0], indent=0)
+# # printRootStructure(dirname='./',indent=0)
+#  printRootStructure(dirname=sys.path[0], indent=0)
 
-print(".... docker python path:", os.environ.get('PYTHONPATH'))
-print(".... docker sys path:", sys.path)
-full_path = os.path.realpath(__file__)
-file_path = os.path.dirname(full_path)
-print(".... docker this file dir:", file_path)
+# print(".... docker python path:", os.environ.get('PYTHONPATH'))
+# print(".... docker sys path:", sys.path)
+# full_path = os.path.realpath(__file__)
+# file_path = os.path.dirname(full_path)
+# print(".... docker this file dir:", file_path)
 
-if file_path not in sys.path:
-    sys.path.insert(1, file_path)
+# if file_path not in sys.path:
+#     sys.path.insert(1, file_path)
 
-print(".... docker sys path:", sys.path)
-
-# os.chdir(os.path.dirname(__file__))
+# print(".... docker sys path:", sys.path)
 
 #import base64
 #import threading
@@ -58,6 +61,8 @@ from buffer_images import STR_UNKNOWN, BufferClients #AppImage, ClientCamera,
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+debugapp = False
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -75,7 +80,7 @@ if os.path.exists(OUTPUT_PATH) is False:
 
 #bufferImages = BufferImages(maxLength=10, directory=OUTPUT_PATH)
 # if bufferImages.success is False: ...
-bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH)
+bufferClients = BufferClients(database_main_path_all_clients=OUTPUT_PATH, debugapp=debugapp)
 
 #app.debug = True
 
@@ -213,6 +218,24 @@ def upload():
     #app.logger.debug("/camera endpoint: pid: " + str(os.getpid()))
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
 
+@app.route("/debug_last_recorded_index/<string:camId>", methods=["GET"])
+def debug_last_recorded_index(camId: str):
+    logger.debug("/debug_last_recorded_index camId " + str(camId))
+    if camId is None:
+        return ("camId not present in url", 400)    
+    if camId == "":
+        return ("nameId is empty in url", 400)
+    
+    index = bufferClients.getClientIndex(camId)
+    if index is None:
+        return ("no client with camId: " + camId, 400)
+
+    lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    logger.debug("/debug_last_recorded_index camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+    return (str(lastRecordedIndex), 200)
+
+
+
 # called by c++ client
 #@app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
 @app.route("/last_image_filename/<string:camId>", methods=["GET"])
@@ -229,9 +252,10 @@ def lastimage_filename(camId: str):
         return ("no client with camId: " + camId, 400)
     
     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    logger.debug("/last_image_filename camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
 
     filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
-    
+    logger.debug("/last_image_filename camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
     #pathImage = os.path.join("images", filenameWithStamp) 
     
     return (filenameWithStamp, 200)
@@ -245,7 +269,10 @@ def is_last_image_uploaded(camId: str):
         logger.error(msg)
         return (msg, 400)
     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    logger.debug("/is_last_image_uploaded camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+
     uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
+    logger.debug("/is_last_image_uploaded camId " + str(camId) + " uploaded " + str(uploaded))
     return (str(uploaded), 200)
 
 # called by c++ client
@@ -266,6 +293,8 @@ def lastimage_content(camId: str):
         return ("no client with camId although we found it last image filename: " + camId, 400)
 
     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
+    logger.debug("/last_image_content camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+
     if lastRecordedIndex is None:
         msg = "lastRecordedIndex None: camId: " + camId
         logger.error(msg)
@@ -276,6 +305,7 @@ def lastimage_content(camId: str):
         return (msg, 400)
 
     filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
+    logger.debug("/last_image_content camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
     
     pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
 
@@ -311,6 +341,7 @@ def active_clients():
     list = []
     for clientEl in bufferClients.buff:
         list.append(clientEl.clientId)
+    logger.debug("/active_clients " + str(list))
     return (list, 200)
         
 # not stateless

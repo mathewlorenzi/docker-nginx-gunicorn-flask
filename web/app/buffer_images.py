@@ -167,14 +167,19 @@ class ClientCamera():
 
 class BufferClients():
 
-    def __init__(self, database_main_path_all_clients: str) -> None:
+    def __init__(self, database_main_path_all_clients: str, debugapp: bool=False) -> None:
         self.buff = []
         self.database_main_path_all_clients = database_main_path_all_clients
+        self.debugapp = debugapp
 
     def getClientIndex(self, nameId: str) -> int:
         #print("BufferClients::getClientIndex: nameId:", nameId)
         indexClient = None
+        if self.debugapp is True:
+            print(" ... debugapp: BufferClients::getClientIndex ", nameId, "in", len(self.buff), "buffer")
         for index in range(len(self.buff)):
+            if self.debugapp is True:
+                print(" ... debugapp: BufferClients::getClientIndex ", nameId, "vs", self.buff[index].clientId)
             if self.buff[index].clientId == nameId:
                 indexClient = index
                 break
