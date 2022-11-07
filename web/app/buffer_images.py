@@ -43,8 +43,9 @@ class AppImage:
         dict_out = {
             "dateTime": str(self.dateTime),
             "filenameWithStamp": self.filenameWithStamp,
-            "hasData": self.hasData,
+            "hasData": str(self.hasData), # fine to let it bool but C++ json parser needs string
             #"convertedStampMicroSec": self.convertedStampMicroSec,
+            "uploaded": str(self.uploaded),
             "contentBytes": self.contentBytes4Json
         }
         return dict_out
@@ -175,15 +176,21 @@ class ClientCamera():
         logger.debug("ClientCamera::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename)
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+
+
+        
         if len(imageContent.split(',')) > 1:
-            appImage.contentBytes = base64.b64decode(imageContent.split(',')[1].encode())
-            appImage.contentBytes4Json = base64.b64encode(imageContent.split(',')[1]).decode('utf-8')
+            content = imageContent.split(',')[1]
         elif len(imageContent.split(',')) == 1:
-            appImage.contentBytes = base64.b64decode(imageContent.encode())
-            appImage.contentBytes4Json = base64.b64encode(imageContent).decode('utf-8')
+            content = imageContent
         else:
             return ("[ERROR]ClientCamera::insertNewImage: image content seems empty", False)
 
+        # type(content)) # str
+        appImage.contentBytes = base64.b64decode(content.encode())
+        # type(appImage.contentBytes)) # bytes
+        appImage.contentBytes4Json = content
+        # type(appImage.contentBytes4Json)) # bytes
         appImage.hasData = True
 
         self.bufferImages.insert(appImage)

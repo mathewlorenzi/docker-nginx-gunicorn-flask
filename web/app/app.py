@@ -1,7 +1,9 @@
 
 import os
 import sys
+import base64
 import logging
+from time import sleep
 
 
 # in docker, local files cannot be found: add current path to python path:
@@ -26,8 +28,8 @@ logger.warning('Start')
 # printRootStructure(dirname='./',indent=0)
 #app.debug = True
 
-#MODE_SAVE_TO_DISK = NOSAVE
-MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
+MODE_SAVE_TO_DISK = NOSAVE
+#MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "..", "database_clients_camera") )
@@ -70,6 +72,7 @@ def mainroute():
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';
 @app.route("/image", methods=['POST'])
 def image():
+
     # bytes to string
     jsonstr = request.data.decode('utf8')
     # string to json
@@ -102,6 +105,14 @@ def image():
             return ("KO: Failed finding client or inserting new client " + nameId, 400)
         
         logger.debug("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
+
+
+        # while(bufferClients.buff[indexClient].lockOnUpload is True){
+        #     logger.info("/image: lock active, wait a bit, for camId" + nameId)
+        #     time.sleep(1)
+        # }
+        # lockOnUpload = False
+        # imageToBeUploaded = AppImage()
 
         (msg, succ) = bufferClients.buff[indexClient].insertNewImage(logger=logger, imageContent=imagestr)
         if succ is False:
@@ -141,7 +152,21 @@ def lastimage(camId: str):
         logger.error(msg)
         return (msg, 400)
 
+
+    already_uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
+
+    if already_uploaded is True:
+        logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + "already uploaded")
+        return ("already_uploaded", 204)
+
     dict_out = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()
+
+    bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
+
+    # OK
+    # with open( "todel.png", mode="wb" ) as f:
+    #     f.write(base64.b64decode(dict_out["contentBytes"].encode()))
+        
 
     # return (jsonify(dict_out), 200)
     return (dict_out, 200)
