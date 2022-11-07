@@ -1,4 +1,7 @@
 # ECO
+https://stackoverflow.com/questions/37960226/invalid-type-error-in-docker-compose
+
+https://stackoverflow.com/questions/55862431/how-to-communicate-between-two-containers-using-docker
 
 ## 2) TODO
 local: web docker only

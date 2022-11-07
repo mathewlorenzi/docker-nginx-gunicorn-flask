@@ -1,9 +1,73 @@
 from datetime import datetime
 
-# Envoyé: mercredi 26 octobre 2022 à 17:46
-# De: "etienne corvee" <etienne.corvee@caramail.com>
-# À: "etienne corvee" <etienne.corvee@caramail.com>
-# Objet: TODO convertStringTimestampToDatetimeAndMicrosecValue
+# TODO filewatcher ... or in camera.html launch a second sceript to do this job
+# TODO or manager.py to send a clean endpoint to do filewatcher job.
+# TODO or look for flask refreshing option
+
+# get username from form
+# https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
+
+
+def debugPathForDockerIssue():
+
+    print(" .... docker debug: curr dir: ", os.getcwd())
+
+    files = [f for f in os.listdir('.') if os.path.isdir(f)]
+    for f in files:
+        print(" .... docker debug: ", f)
+    files = [f for f in os.listdir('.') if os.path.isfile(f)]
+    for f in files:
+        print(" .... docker debug: ", f)
+
+    import os.path as P
+    for topdir, subdirs, files in os.walk("./"):
+      print("    " * topdir.count(P.sep), P.basename(topdir))
+      for f in sorted(files):
+        print("    " * (topdir.count(P.sep) + 1), f)
+
+    print(" .... docker debug:", os.path.isdir("/usr/src/app/database_clients_camera"))
+
+    # ENV PYTHONPATH "/usr/src/app"
+
+    # print(".... docker python path:", os.environ.get('PYTHONPATH'))
+    # print(".... docker sys path:", sys.path)
+
+
+import os, sys
+def printRootStructure(dirname,indent=0):
+    for i in range(indent):
+        print("   ", end=",")
+    print(os.path.basename(dirname))
+    if os.path.basename(dirname) != 'venv' and os.path.basename(dirname) != '.git':
+        if os.path.isdir(dirname):
+            for files in os.listdir(dirname):
+                printRootStructure(os.path.join(dirname,files),indent+1) # changed
+
+
+# import shutil
+# import cv2
+# import time
+# from datetime import datetime
+# def populate_fake_images(OUTPUT_PATH: str, sampleImagePath: str):
+#     camIds = ["peter", "paul", "jack", "UNKNOWN"]
+#     if os.path.exists(OUTPUT_PATH):
+#         shutil.rmtree(OUTPUT_PATH)
+#     os.mkdir(OUTPUT_PATH)
+#     for dir in camIds:
+#         os.mkdir(os.path.join(OUTPUT_PATH, dir))
+#     img = cv2.imread(sampleImagePath)
+#     for dir in camIds:
+#         for nb in range(10):
+#             now = datetime.now()
+#             date_time = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
+#             print("date_time:", dir, date_time)
+#             cv2.imwrite(os.path.join(OUTPUT_PATH, dir, date_time+".jpg"), img)
+#             time.sleep(0.5)
+#     return camIds
+  
+# populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
+# exit(1)
+
 
 def convertDatetimeToString(input: datetime) -> str:
     return input.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]

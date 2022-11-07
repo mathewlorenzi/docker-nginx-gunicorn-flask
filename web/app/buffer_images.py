@@ -6,25 +6,27 @@ from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMi
 
 STR_UNKNOWN = "UNKNOWN"
 
+NOSAVE = "NOSAVE"
+SAVE_WITH_TIMESTAMPS = "SAVE_WITH_TIMESTAMPS"
+SAVE_WITH_UNIQUE_FILENAME = "SAVE_WITH_UNIQUE_FILENAME"
+LIST_MODE_SAVE_TO_DISK = [NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME]
+
 class AppImage:
     def __init__(self):
         now = datetime.now()
         self.dateTime = now
-        # dt_obj = str()
-        # dt_obj = dt_obj.replace(" ", "")
-        # #print(dt_obj)
         date_time = convertDatetimeToString(self.dateTime)
-        # date_time = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
         self.filenameWithStamp = date_time + ".png"
-        #self.filenameWithStamp = dt_obj + ".png"
         self.hasData = False    # data been saved to disk
         self.uploaded = False
+        self.contentBytes = []
+        self.contentBytes4Json = []
         (self.convertedStampMicroSec, succConvert) = convertStringTimestampToDatetimeAndMicrosecValue(date_time = date_time)
         if succConvert is False:
-            print("[ERROR]AppImage: convertedStampMicroSec: ", convertedStampMicroSec)
+            self.initMsg = "[ERROR]AppImage: convertedStampMicroSec: {}".format(self.convertedStampMicroSec)
             self.success = False
         else:
-            print("[INFO]AppImage: ", now, "convertedStampMicroSec: ", self.convertedStampMicroSec)
+            self.initMsg = "[INFO]AppImage: ", now, "convertedStampMicroSec: {}".format(self.convertedStampMicroSec)
             self.success = True
     def copyFrom(self, src):
         self.dateTime = src.dateTime
@@ -33,11 +35,22 @@ class AppImage:
         self.success = src.success
         self.convertedStampMicroSec = src.convertedStampMicroSec
         self.uploaded = src.uploaded
+        self.contentBytes = src.contentBytes
+        self.contentBytes4Json = src.contentBytes4Json
     def Print(self):
         print(self.dateTime, self.convertedStampMicroSec, self.filenameWithStamp, "hasData: ", self.hasData, "uploaded", self.uploaded, "SUCCESS: ", self.success)
-        
+    def getAsJsonData(self):
+        dict_out = {
+            "dateTime": str(self.dateTime),
+            "filenameWithStamp": self.filenameWithStamp,
+            "hasData": self.hasData,
+            #"convertedStampMicroSec": self.convertedStampMicroSec,
+            "contentBytes": self.contentBytes4Json
+        }
+        return dict_out
+
 class BufferImages:
-    def __init__(self, maxLength: int, clientId:str, directory: str):
+    def __init__(self, maxLength: int, clientId:str, directory: str=None):
         self.directory = directory
         self.clientId = clientId
         self.maxLength = maxLength
@@ -49,18 +62,19 @@ class BufferImages:
         for i in range(self.maxLength):
             appImage = AppImage();
             if appImage.success is False:
-                self.success is True
+                self.success = False
+                self.initMsg = "[ERROR]BufferImages init failed: " + appImage.initMsg
+                return
             self.buffer.append(appImage)
+        self.success = True
+        self.initMsg = "[INFO]BufferImages init OK"
     def insert(self, inputImage: AppImage):
         index_nimage = self.lastRecordedIndex + 1# NextImageNotReadyYetForUploadAsNot
         if index_nimage >= self.maxLength:
             index_nimage = 0
-        
-        # if self.lastRecordedIndex >= 0:
-        #    self.replacedImageFilename = self.buffer[self.lastRecordedIndex].filenameWithStamp;
-        
+            
         self.buffer[index_nimage].copyFrom(inputImage)
-        #now the image is in the buffer, fully saved, so it is available for the client => update index
+        # now the image is in the buffer, fully filled in buffer, so it is available for the client => update index
         self.lastRecordedIndex = index_nimage;
 
         self.oldestRecordedImage = self.lastRecordedIndex + 1
@@ -68,6 +82,9 @@ class BufferImages:
             self.oldestRecordedImage = 0
 
     def deleteOldest(self):
+        if self.directory is None:
+            msg = "[WARNING]oldest image cannot be deleted as no directory out provided: check MODE SAVE TO DISK for camId: " + self.clientId
+            return (msg, True)
         if self.oldestRecordedImage is not None:
             filename = self.buffer[self.oldestRecordedImage].filenameWithStamp
             pathImage = os.path.join(self.directory, filename)
@@ -100,77 +117,121 @@ class BufferImages:
             self.buffer[i].Print()
 
 class ClientCamera():
-    def __init__(self, clientId: str, mainUploadDir: str) -> None:
+    """
+    buffer of N images: bufferImages
+    clientId = camId
+    directory where are saved the images if MODE_SAVE_TO_DISK is not set to no save
+    """
+    def __init__(self, clientId: str, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
+
+        self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
+        if self.MODE_SAVE_TO_DISK not in LIST_MODE_SAVE_TO_DISK:
+            self.initMsg = "ClientCamera: MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
+            print("[ERROR]", self.initMsg)
+            self.initSucc = False
+            return 
+
+        self.clientId = clientId
         if clientId == "":
             self.clientId = STR_UNKNOWN
+
+        if self.MODE_SAVE_TO_DISK == NOSAVE:
+            self.mainUploadDir = None
+            self.outputDir = None
         else:
-            self.clientId = clientId
-        self.mainUploadDir = mainUploadDir
+            self.mainUploadDir = mainUploadDir
+            self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
+            if os.path.exists(self.outputDir) is False:
+                os.mkdir(self.outputDir)
+            if os.path.exists(self.outputDir) is False:
+                self.initMsg = "could not create: " + self.outputDir
+                #print("[ERROR]", self.initMsg)
+                self.initSucc = False
+                return
+        
         self.bufferImages = BufferImages(
             maxLength=5, 
             clientId = self.clientId,
-            directory=os.path.join(self.mainUploadDir, self.clientId)
+            directory = self.outputDir
         )
         if self.bufferImages is False:
             self.initMsg = "ClientCamera: buffer images creation failed: "
-            print("[ERROR]", self.initMsg)
             self.initSucc = False
+            return
 
-        self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
-        if os.path.exists(self.outputDir) is False:
-            os.mkdir(self.outputDir)
-        if os.path.exists(self.outputDir) is False:
-            self.initMsg = "could not create: " + self.outputDir
-            print("[ERROR]", self.initMsg)
+        if self.bufferImages.success is False:
             self.initSucc = False
+            self.initMsg = "[ERROR]ClientCamera: buffer images creation failed: " + self.bufferImages.initMsg
+            return
+
         self.initMsg = "Client Camera created: "+self.clientId
         self.initSucc = True
     
-    def saveNewImage(self, logger: logging.Logger, imageContent: str):
+    def insertNewImage(self, logger: logging.Logger, imageContent: str):
         appImage = AppImage()
         if appImage.success is False:
-            return ("[ERROR]ClientCamera::saveNewImage: failed creating new image", False)
+            return ("[ERROR]ClientCamera::insertNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        logger.debug("ClientCamera::SaveNewImage " + self.bufferImages.clientId + ", filename: " + filename)
-        with open(os.path.join(self.bufferImages.directory, filename), 'wb') as f:
-            # # f.write(base64.decodestring(imagestr.split(',')[1].encode()))
-            
-            
-            # OK but KO with simul_clients f.write(base64.b64decode(imageContent.split(',')[1].encode()))
-            if len(imageContent.split(',')) > 1:
-                f.write(base64.b64decode(imageContent.split(',')[1].encode()))
-            elif len(imageContent.split(',')) == 1:
-                f.write(base64.b64decode(imageContent.encode()))
-            else:
-                return ("[ERROR]ClientCamera::saveNewImage: image content seems empty", False)
-            
-            
-            appImage.hasData = True
-            self.bufferImages.insert(appImage)
-            logger.info("ClientCamera::SaveNewImage image ready at {} {} oldest to be del {} {}".format( 
-                self.bufferImages.lastRecordedIndex, 
-                self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
-                self.bufferImages.oldestRecordedImage, 
-                self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp))
-            #bufferImages.Print()
-            (msg, succ) = self.bufferImages.deleteOldest()
-            #print(succ, msg)
-            return (msg, succ)
-            # if succ is True:
-            #     logging.info(msg)
-            #     #bufferImages.Print()
-            # else:
-            #     logging.error(msg)
-            #     #app.logger.error(msg)
-        return ("failed opening image for writing", False)
+        logger.debug("ClientCamera::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename)
 
+        # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
+        if len(imageContent.split(',')) > 1:
+            appImage.contentBytes = base64.b64decode(imageContent.split(',')[1].encode())
+            appImage.contentBytes4Json = base64.b64encode(imageContent.split(',')[1]).decode('utf-8')
+        elif len(imageContent.split(',')) == 1:
+            appImage.contentBytes = base64.b64decode(imageContent.encode())
+            appImage.contentBytes4Json = base64.b64encode(imageContent).decode('utf-8')
+        else:
+            return ("[ERROR]ClientCamera::insertNewImage: image content seems empty", False)
+
+        appImage.hasData = True
+
+        self.bufferImages.insert(appImage)
+                
+        # logger.info(msg)
+        
+        if self.MODE_SAVE_TO_DISK == NOSAVE:
+            msg = "ClientCamera::insertNewImage image ready at {}: {} ".format( 
+                self.bufferImages.lastRecordedIndex, 
+                self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
+            return (msg, True)
+        else:
+            if self.MODE_SAVE_TO_DISK == SAVE_WITH_TIMESTAMPS:
+                msg = "ClientCamera::insertNewImage image ready at {} {} oldest to be del {} {}".format( 
+                    self.bufferImages.lastRecordedIndex, 
+                    self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
+                    self.bufferImages.oldestRecordedImage, 
+                    self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp)
+                pathout = os.path.join(self.bufferImages.directory, filename)
+            elif self.MODE_SAVE_TO_DISK == SAVE_WITH_UNIQUE_FILENAME:
+                msg = "ClientCamera::insertNewImage image ready at {}: {} ".format( 
+                    self.bufferImages.lastRecordedIndex, 
+                    self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
+                pathout = os.path.join(self.bufferImages.directory, "image.png")
+            with open(pathout, 'wb') as f:
+                f.write(appImage.contentBytes)
+            #bufferImages.Print()
+
+            if self.MODE_SAVE_TO_DISK == SAVE_WITH_TIMESTAMPS:
+                (_msg, succ) = self.bufferImages.deleteOldest()
+                return (msg+_msg, succ)
+            
+            return (msg, True)
 
 class BufferClients():
 
-    def __init__(self, database_main_path_all_clients: str, debugapp: bool=False) -> None:
+    def __init__(self, MODE_SAVE_TO_DISK: str, database_main_path_all_clients: str=None, debugapp: bool=False) -> None:
+        self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
+        if self.MODE_SAVE_TO_DISK not in LIST_MODE_SAVE_TO_DISK:
+            self.initMsg = "BufferClients: MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
+            print("[ERROR]", self.initMsg)
+            self.initSucc = False 
+
         self.buff = []
         self.database_main_path_all_clients = database_main_path_all_clients
         self.debugapp = debugapp
+        self.initMsg = "OK"
+        self.initSucc = True
 
     def getClientIndex(self, nameId: str) -> int:
         #print("BufferClients::getClientIndex: nameId:", nameId)
@@ -186,25 +247,22 @@ class BufferClients():
         return indexClient
 
     def insertNewClient(self, nameId: str) -> int:
-        newClientCam = ClientCamera(clientId=nameId, mainUploadDir=self.database_main_path_all_clients)
+
+        newClientCam = ClientCamera(clientId=nameId, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
 
         if newClientCam is None:
-            print("[ERROR] creating ClientCamera object is None")
-            return None
+            return ("[ERROR] creating ClientCamera object is None", None)
 
-        if newClientCam.initSucc is not True:
-            print("[ERROR] creating ClientCamera", newClientCam.initMsg)
-            return None
+        if newClientCam.initSucc is False:
+            return ("[ERROR] creating ClientCamera" + newClientCam.initMsg, None)
 
         self.buff.append(newClientCam)
             
         indexClient = self.getClientIndex(nameId=nameId)
         if indexClient is None:
-            print("[ERROR]insertClient failed")
-            return None
+            return ("[ERROR]insertClient failed getClientIndex failed for nameId: " + nameId, None)
 
-        print("[INFO]insertClient SUCCESS at ", indexClient)
-        return indexClient
+        return ("[INFO]insertClient SUCCESS at " + str(indexClient), indexClient)
 
     def getListClients(self):
         listClients = []
