@@ -2,6 +2,7 @@
 import os
 import sys
 import base64
+from base64 import b64encode
 import logging
 from time import sleep
 
@@ -45,12 +46,31 @@ if bufferClients.initSucc is False:
 # populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
 # exit(1)
 
+# def load_sample(imagePath):
+#     with open(imagePath, mode="rb") as fsample:
+#         img_data = fsample.read()
+#         encoded = b64encode(img_data)
+#         decoded_img = encoded.decode('utf-8')
+#         uri_result = f"data:image/jpeg;base64,{decoded_img}"
+#         #mime = "image/jpeg"
+#         #uri_result = "data:%s;base64,%s" % (mime, encoded)
+#         return uri_result
+# uri_result = load_sample("todel.png")
+
 @app.route("/hello")
 def hello():
     logger.debug("/hello endpoint: pid: " + str(os.getpid()))
     #print("[DEBUG]/hello endpoint: pid: ", str(os.getpid()))
     data = {"data": "Hello Camera3"}
+    # uri_result = load_sample("sample.png")
     return jsonify(data)
+
+@app.route("/result")
+def result():
+    logger.debug("/result endpoint: pid: " + str(os.getpid()))
+    # data = {"data": "Hello Camera3"}
+    # return jsonify(data)
+    return ("YYYYYYYYYYYYYYYYYEEEEEEESS", 200)
 
 # if using mydb in another docker: it worked
 @app.route("/test_mydb")
@@ -67,7 +87,7 @@ def mainroute():
         return render_template('form.html')
     elif request.method == 'POST':
         logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
-        return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])
+        return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])#, uri_result=uri_result)
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';
 @app.route("/image", methods=['POST'])
@@ -126,7 +146,7 @@ def image():
 @app.route("/camera", methods=['GET'])
 def upload():
     logger.debug("/camera endpoint" + str(request.method))
-    return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)
+    return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)#, uri_result=uri_result)
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str):
@@ -154,9 +174,10 @@ def lastimage(camId: str):
 
 
     already_uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
+    filename = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
 
     if already_uploaded is True:
-        logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + "already uploaded")
+        logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded")
         return ("already_uploaded", 204)
 
     dict_out = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()

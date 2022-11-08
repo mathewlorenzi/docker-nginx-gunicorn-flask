@@ -29,8 +29,10 @@
 
     #canvas {
         display: none;
+    }.row{
+        display: flex       
     }
-
+    
     .camera {
         width: 340px;
         display: inline-block;
@@ -90,6 +92,7 @@
     <div class="contentarea">
         var nameId = {{ nameId }}
         var usedUrl = {{ usedUrl }}
+        <!-- var uri_result = {{ uri_result }} -->
         <h1>
             Coming from {{ usedUrl }}
             Hello {{ nameId }}. Lets start capturing.
@@ -100,10 +103,18 @@
         <video id="video">Video stream not available.</video>
         </div>
         <div><button id="startbutton">Take Photo</button></div>
-        <canvas id="canvas"></canvas>
+        <!-- <canvas id="canvas"></canvas> -->
+        <div style="width:30%;" class="row">
+            <div class="my-4 col"><canvas id="canvas"></canvas></div>
+            <div class="my-4 col"><canvas id="canvas2"></canvas></div>
+        </div>
+
         <div class="output">
             <img id="photo" alt="The screen capture will appear in this box.">
         </div>
+        <!-- <div class="output2">
+            <img src="{{ uri_result }}" alt="The screen capture will appear in this box TOO.">
+        </div> -->
     </div>
 
     <script>
@@ -120,12 +131,14 @@
 
         var video = null;
         var canvas = null;
+        var canvas2 = null;
         var photo = null;
         var startbutton = null;
 
         function startup() {
             video = document.getElementById('video');
             canvas = document.getElementById('canvas');
+            canvas2 = document.getElementById('canvas2');
             photo = document.getElementById('photo');
             startbutton = document.getElementById('startbutton');
 
@@ -153,12 +166,21 @@
                     video.setAttribute('height', height);
                     canvas.setAttribute('width', width);
                     canvas.setAttribute('height', height);
+                    canvas2.setAttribute('width', width);
+                    canvas2.setAttribute('height', height);
                     streaming = true;
                 }
             }, false);
 
             startbutton.addEventListener('click', function(ev) {
                 takepicture();
+                ev.preventDefault();
+            }, false);
+
+            clearphoto();
+
+            startbutton.addEventListener('click', function(ev) {
+                getpicture();
                 ev.preventDefault();
             }, false);
 
@@ -192,6 +214,41 @@
 
             var data = canvas.toDataURL('image/png');
             photo.setAttribute('src', data);
+        }
+
+        function getpicture() {
+            var context = canvas2.getContext('2d');
+            if (width && height) {
+                canvas2.width = width;
+                canvas2.height = height;
+
+                var xhr2 = new XMLHttpRequest();
+                var urlHost2 = window.location.host
+                var urlProtocol2 = window.location.protocol
+                var urlRoot2 = urlProtocol2 + "//" + urlHost2
+                console.log(" ... urlRoot:" + urlRoot2)
+                const url2 = urlRoot2 + "/result";
+                console.log(" ... url2:" + url2)
+                xhr2.open("GET", url2, true);
+                xhr2.onload = function () {
+                    if (xhr2.readyState === xhr2.DONE) {
+                        if (xhr2.status === 200) {
+                            console.log(xhr2.response);
+                            console.log(xhr2.responseText);
+                            console.log(" ... readyState:" + xhr2.readyState);
+                            console.log(" ... status:" + xhr2.status);
+                            console.log(" ... response:" + xhr2.response);
+                            console.log(" ... responseText:" + xhr2.responseText);
+                        }
+                    }
+                };
+                xhr2.send(null);
+                context.drawImage(video, 0, 0, width, height);
+
+                setTimeout(getpicture, 1000);
+            } else {
+                clearphoto();
+            }
         }
 
         function takepicture() {
@@ -282,8 +339,8 @@
                  //   }
                  //   });
 
-                 //setTimeout(takepicture, 2000);
-                 setTimeout(takepicture, 10000);
+                 setTimeout(takepicture, 1000);
+                 //setTimeout(takepicture, 10000);
 
             } else {
                 clearphoto();
