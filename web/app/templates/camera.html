@@ -112,6 +112,9 @@
         <div class="output">
             <img id="photo" alt="The screen capture will appear in this box.">
         </div>
+
+        <img src="orange.png" alt="Result" id="result">
+
         <!-- <div class="output2">
             <img src="{{ uri_result }}" alt="The screen capture will appear in this box TOO.">
         </div> -->
@@ -226,26 +229,46 @@
                 var urlHost2 = window.location.host
                 var urlProtocol2 = window.location.protocol
                 var urlRoot2 = urlProtocol2 + "//" + urlHost2
-                console.log(" ... urlRoot:" + urlRoot2)
+                // console.log(" ... ... urlRoot2:" + urlRoot2)
                 const url2 = urlRoot2 + "/result";
-                console.log(" ... url2:" + url2)
+                //console.log(" ... ... url2:" + url2)
                 xhr2.open("GET", url2, true);
+                //var data2 = null;
+                var img = null;
                 xhr2.onload = function () {
                     if (xhr2.readyState === xhr2.DONE) {
                         if (xhr2.status === 200) {
-                            console.log(xhr2.response);
-                            console.log(xhr2.responseText);
-                            console.log(" ... readyState:" + xhr2.readyState);
-                            console.log(" ... status:" + xhr2.status);
-                            console.log(" ... response:" + xhr2.response);
-                            console.log(" ... responseText:" + xhr2.responseText);
+                            //console.log(xhr2.response);
+                            //console.log(xhr2.responseText);
+                            // console.log(" ... ... readyState:" + xhr2.readyState);
+                            console.log(" ... ... status:" + xhr2.status);
+                            //data2 = xhr2.response;
+
+                            //img = document.createElement("img");
+                            //img.src = "http://127.0.0.1:5000/result";
+                            //console.log(" ... response:" + img.src);
+                            //let img = data2;
+                            //let bitmap = new System.Drawing.Bitmap(img);
+                            // console.log(" ... response:" + xhr2.response);
+                            // console.log(" ... responseText:" + xhr2.responseText);
+                            // photo.setAttribute('src', data);
+                            //xhr2.send(null);
+                            //context.drawImage(xhr2.response, 0, 0, width, height);
+                            //context.drawImage(video, 0, 0, width, height);
+                            
+                            // document.getElementById('results').innerHTML = xmlhttp.responseText;
+                            // document.getElementById('result').innerHTML = xhr2.response;
+                            document.getElementById('result').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
+
+                            //context.drawImage(img.src, 0, 0, width, height);
                         }
                     }
                 };
                 xhr2.send(null);
-                context.drawImage(video, 0, 0, width, height);
+                //context.drawImage(img.src, 0, 0, width, height);
+                
 
-                setTimeout(getpicture, 1000);
+                setTimeout(getpicture, 10000);
             } else {
                 clearphoto();
             }

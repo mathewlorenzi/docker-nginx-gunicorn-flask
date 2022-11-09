@@ -32,6 +32,8 @@ logger.warning('Start')
 MODE_SAVE_TO_DISK = NOSAVE
 #MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
 
+FLIP = 0
+
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "..", "database_clients_camera") )
 logger.debug("check output folder: "+str(OUTPUT_PATH))
@@ -42,6 +44,13 @@ bufferClients = BufferClients(MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main
 if bufferClients.initSucc is False:
     logger.debug("BufferClients initialisation failed: " + bufferClients.initMsg)
     exit(1)
+
+class LocalConfig:
+    def __init__(self):
+        self.flip=0
+
+localconfig = LocalConfig()
+
 
 # populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
 # exit(1)
@@ -67,9 +76,29 @@ def hello():
 
 @app.route("/result")
 def result():
-    logger.debug("/result endpoint: pid: " + str(os.getpid()))
+    print("/result localconfig.flip", localconfig.flip)
+    logger.debug("/result endpoint: " + str(localconfig.flip))
     # data = {"data": "Hello Camera3"}
     # return jsonify(data)
+
+    if localconfig.flip == 0:
+        imgPath = "sample.png"
+        localconfig.flip = 1
+    else:
+        imgPath = "todel.png"
+        localconfig.flip = 0
+
+    print("/result imgPath", imgPath)
+
+    with open(imgPath, mode="rb") as fsample:
+        img_data = fsample.read()
+        encoded = b64encode(img_data)
+        decoded_img = encoded.decode('utf-8')
+        #uri_result = f"data:image/jpeg;base64,{decoded_img}"
+        #mime = "image/jpeg"
+        #uri_result = "data:%s;base64,%s" % (mime, encoded)
+        return (decoded_img, 200)
+
     return ("YYYYYYYYYYYYYYYYYEEEEEEESS", 200)
 
 # if using mydb in another docker: it worked
@@ -89,7 +118,7 @@ def mainroute():
         logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
         return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])#, uri_result=uri_result)
 
-# this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';
+# this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';sam
 @app.route("/image", methods=['POST'])
 def image():
 
