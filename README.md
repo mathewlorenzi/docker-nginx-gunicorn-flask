@@ -3,6 +3,9 @@ https://stackoverflow.com/questions/37960226/invalid-type-error-in-docker-compos
 
 https://stackoverflow.com/questions/55862431/how-to-communicate-between-two-containers-using-docker
 
+to log in container of docerk web app
+docker exec -it 3554a500027d sh
+
 ## 2) TODO
 local: web docker only
 docker-compose build web

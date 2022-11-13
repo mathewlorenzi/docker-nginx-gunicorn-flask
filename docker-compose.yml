@@ -4,12 +4,12 @@ version: '3'
 
 services:
 
-  mydb:
-    build:
-      context: ./mydb
-    container_name: mydb
-    ports:
-      - 5001:5001
+  # mydb:
+  #   build:
+  #     context: ./mydb
+  #   container_name: mydb
+  #   ports:
+  #     - 5001:5001
 
   web:
     build:
@@ -19,8 +19,8 @@ services:
     command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
     volumes:
       - ./database_clients_camera:/usr/src/database_clients_camera
-    depends_on:
-      - mydb
+    # depends_on:
+    #   - mydb
 
   nginx:
     restart: always
