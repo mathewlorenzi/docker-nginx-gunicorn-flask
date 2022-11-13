@@ -5,7 +5,7 @@ import base64
 from base64 import b64encode
 import logging
 from time import sleep
-
+import psutil
 
 # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -73,6 +73,29 @@ def hello():
     data = {"data": "Hello Camera3"}
     # uri_result = load_sample("sample.png")
     return jsonify(data)
+
+@app.route('/update_values', methods= ['GET'])
+def update_values():
+    per_cpu = psutil.cpu_percent(percpu=True)
+    mean_cpu = 0.0
+    counter=0
+    for idx, usage in enumerate(per_cpu):
+        print(f"CORE_{idx+1}: {usage}%")
+        mean_cpu += float(usage)
+        counter+=1
+    if counter > 0:
+        mean_cpu /= float(counter)
+    cpu=round(mean_cpu)
+
+    mem_usage = psutil.virtual_memory().percent
+    print("ram", mem_usage)
+    ram=round(mem_usage)
+
+    disk_usage = psutil.disk_usage("./").percent
+    print("disk_usage", disk_usage)
+    disk=round(disk_usage)
+
+    return jsonify(cpu=cpu, ram=ram, disk=disk)
 
 @app.route("/result")
 def result():
