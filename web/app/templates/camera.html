@@ -253,7 +253,7 @@
                 var urlProtocol2 = window.location.protocol
                 var urlRoot2 = urlProtocol2 + "//" + urlHost2
                 // console.log(" ... ... urlRoot2:" + urlRoot2)
-                const url2 = urlRoot2 + "/result";
+                const url2 = urlRoot2 + "/result/paulo9";
                 //console.log(" ... ... url2:" + url2)
                 xhr2.open("GET", url2, true);
                 //var data2 = null;
@@ -281,9 +281,17 @@
                             
                             // document.getElementById('results').innerHTML = xmlhttp.responseText;
                             // document.getElementById('result').innerHTML = xhr2.response;
-                            document.getElementById('result').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
 
                             //context.drawImage(img.src, 0, 0, width, height);
+
+
+                            // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
+                            // document.getElementById('result').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
+
+                            // now some text
+                            document.getElementById('result').innerHTML = xhr2.response;
+
+                            
                         }
                     }
                 };

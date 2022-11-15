@@ -97,8 +97,23 @@ def update_values():
 
     return jsonify(cpu=cpu, ram=ram, disk=disk)
 
-@app.route("/result")
-def result():
+@app.route("/result/<string:camId>", methods=['POST'])
+def result(camId: str):
+
+    # bytes to string
+    jsonstr = request.data.decode('utf8')
+    # string to json
+    data = json.loads(jsonstr)
+    # print(" ........ result ", request.data)
+    # print(" ........ result ", request.form)
+    # print(" ........ result ", request.content_encoding)
+    print(" ........ result ", jsonstr, "camId", camId)
+    print(" ........ result camId", camId, "data", data)
+    # return (data, 200)
+    return ("ok", 200)
+
+@app.route("/result_v0")
+def result_v0():
     print("/result localconfig.flip", localconfig.flip)
     logger.debug("/result endpoint: " + str(localconfig.flip))
     # data = {"data": "Hello Camera3"}
