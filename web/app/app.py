@@ -51,6 +51,11 @@ class LocalConfig:
 
 localconfig = LocalConfig()
 
+class EcovisionResults:
+    def __init__(self):
+        self.trackResultsImage = None
+
+ecovisionResults = EcovisionResults()
 
 # populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
 # exit(1)
@@ -116,7 +121,80 @@ def result(camId: str):
     if 'nbtracks' in data:
         print(" ........ data['nbtracks'] ", data['nbtracks'])
         if not 'type' in data:
-            return ("type not present in json data", 400)
+            msg = '[ERROR]type not present in json data'
+            print(msg)
+            return (msg, 400)
+        
+        
+        # get last image
+        dictLastImageTuple = lastimage(camId, take_care_of_already_uploaded=False)
+
+
+        #print(" ........ dictLastImageTuple len ", len(dictLastImageTuple))
+        print(" ........ dictLastImageTuple[0]", type(dictLastImageTuple[0]))
+        print(" ........ dictLastImageTuple[1]", type(dictLastImageTuple[1]))
+
+
+        if isinstance(dictLastImageTuple[0], dict) is False:
+            msg = '[ERROR]message content in tuple returned from /lastimage is not a string'
+            print(msg)
+            return (msg, 400)
+        if isinstance(dictLastImageTuple[1], int) is False:
+            msg = '[ERROR]http code error in tuple returned from /lastimage is not an int'
+            print(msg)
+            return (msg, 400)
+        if dictLastImageTuple[1] != 200:
+            msg = '[ERROR]http code error returned from /lastimage is: ' + str(dictLastImageTuple[1])
+            print(msg)
+            return (msg, 400)
+
+        dictLastImage = dictLastImageTuple[0]
+        print(" ........ dictLastImage ", type(dictLastImage))
+        if 'dateTime' not in dictLastImage:
+            msg = '[ERROR]dateTime no in data returned from /lastimage'
+            print(msg)
+            return (msg, 400)
+        if 'filenameWithStamp' not in dictLastImage:
+            msg = '[ERROR]filenameWithStamp no in data returned from /lastimage'
+            print(msg)
+            return (msg, 400)
+        if 'hasData' not in dictLastImage:
+            msg = '[ERROR]hasData no in data returned from /lastimage'
+            print(msg)
+            return (msg, 400)
+        # do i use it here ?
+        if 'uploaded' not in dictLastImage:
+            msg = '[ERROR]uploaded no in data returned from /lastimage'
+            print(msg)
+            return (msg, 400)
+        if 'contentBytes' not in dictLastImage:
+            msg = '[ERROR]contentBytes no in data returned from /lastimage'
+            print(msg)
+            return (msg, 400)
+        
+        if isinstance(dictLastImage['hasData'], str) is False:
+            msg = '[ERROR]hasData is not a string in data returned from /lastimage:' + str(type(dictLastImage['hasData']))
+            print(msg)
+            return (msg, 400)
+
+        if dictLastImage['hasData'] != "True":
+            msg = '[WARNING]hasData is false in data returned from /lastimage'
+            print(msg)
+            return (msg, 202)
+
+        # TODO a function to check all and not none and tpes
+
+        print(" ........ type(dictLastImage['contentBytes']) ", type(dictLastImage['contentBytes']))
+        contentByteStr = dictLastImage['contentBytes']
+        ecovisionResults.trackResultsImage = contentByteStr
+
+        https://en.proft.me/2015/08/20/how-draw-rectangle-python-and-save-png/
+        draw rectangle: opencv or Pil ?
+        
+        # OK
+        # with open("debug.png", mode="wb") as fdebugout:
+        #     fdebugout.write(base64.b64decode(contentByteStr.encode()))
+
         chec_nbTracks = 0
         for el in data:
             if el != 'nbtracks' and el != 'type':
@@ -125,7 +203,7 @@ def result(camId: str):
                 print(" ........ el data ", data[el])
                 if data['type'] == 'tblr':
                     print(" ........ tblr ", el, data[el][0], data[el][1], data[el][2], data[el][3])
-                    draw rectangle on result_image
+                    # draw rectangle on result_image
                 elif data['type'] == 'tltrblbr-rc':
                     return ("tltrblbr-rc not yet done", 202)
                 else:
@@ -238,7 +316,7 @@ def upload():
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)#, uri_result=uri_result)
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
-def lastimage(camId: str):
+def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
     logger.debug("/lastimage camId " + str(camId))
     if camId is None:
         return ("camId not present in url", 400)    
@@ -265,13 +343,15 @@ def lastimage(camId: str):
     already_uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
     filename = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
 
-    if already_uploaded is True:
-        logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded")
-        return ("already_uploaded", 204)
-
+    if take_care_of_already_uploaded is True:
+        if already_uploaded is True:
+            logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded")
+            return ("already_uploaded", 204)
+            
     dict_out = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()
 
-    bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
+    if take_care_of_already_uploaded is True:
+        bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
 
     # OK
     # with open( "todel.png", mode="wb" ) as f:
