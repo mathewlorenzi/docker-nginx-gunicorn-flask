@@ -102,20 +102,42 @@ def result(camId: str):
 
     # bytes to string
     jsonstr = request.data.decode('utf8')
+    print(" ........ camId ", camId)
+    print(" ........ result ->", jsonstr, "<-")
     # string to json
     data = json.loads(jsonstr)
     # print(" ........ result ", request.data)
     # print(" ........ result ", request.form)
     # print(" ........ result ", request.content_encoding)
-    print(" ........ result ", jsonstr, "camId", camId)
+    # print(" ........ result ", jsonstr, "camId", camId)
     print(" ........ result camId", camId, "data", data)
+    #  ........ result -> { "nbtracks" : 1, "type" :  "tblr" , " 1 "  : [ 2, 121, 175, 317 ] } <-
     # return (data, 200)
+    if 'nbtracks' in data:
+        print(" ........ data['nbtracks'] ", data['nbtracks'])
+        if not 'type' in data:
+            return ("type not present in json data", 400)
+        chec_nbTracks = 0
+        for el in data:
+            if el != 'nbtracks' and el != 'type':
+                chec_nbTracks += 1
+                print(" ........ el ", el)
+                print(" ........ el data ", data[el])
+                if data['type'] == 'tblr':
+                    print(" ........ tblr ", el, data[el][0], data[el][1], data[el][2], data[el][3])
+                    draw rectangle on result_image
+                elif data['type'] == 'tltrblbr-rc':
+                    return ("tltrblbr-rc not yet done", 202)
+                else:
+                    return ("wrong track type", 400)
+
+
     return ("ok", 200)
 
-@app.route("/result_v0")
-def result_v0():
-    print("/result localconfig.flip", localconfig.flip)
-    logger.debug("/result endpoint: " + str(localconfig.flip))
+@app.route("/result_image/<string:camId>", methods=['GET'])
+def result_image(camId: str):
+    print("/result_image localconfig.flip", localconfig.flip)
+    logger.debug("/result_image endpoint: " + str(localconfig.flip))
     # data = {"data": "Hello Camera3"}
     # return jsonify(data)
 
@@ -126,7 +148,7 @@ def result_v0():
         imgPath = "todel.png"
         localconfig.flip = 0
 
-    print("/result imgPath", imgPath)
+    print("/result_image imgPath", imgPath)
 
     with open(imgPath, mode="rb") as fsample:
         img_data = fsample.read()
