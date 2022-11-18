@@ -312,9 +312,56 @@
                 canvas.height = height;
                 context.drawImage(video, 0, 0, width, height);
 
+                // draw rectangle
+                // OK
+                // context.rect(188, 50, 200, 100);
+                // context.stroke()
+                // FROM SERVER (which came from ecovision)
+                var xhr3 = new XMLHttpRequest();
+                var urlHost3 = window.location.host
+                var urlProtocol3 = window.location.protocol
+                var urlRoot3 = urlProtocol3 + "//" + urlHost3
+                const url3 = urlRoot3 + "/result/paulo9";
+                xhr3.open("GET", url3, true);
+                var rect = null;
+                xhr3.onload = function () {
+                    if (xhr3.readyState === xhr3.DONE) {
+                        if (xhr3.status === 200) {
+                            console.log(" ... ... status3:" + xhr3.status);
+                            // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
+                            // document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';                            
+                            console.log(" ... ... response3:" + xhr3.response);
+                            rect = xhr3.response
+                        }
+                    }
+                };
+                xhr3.send(null);
+                console.log(" ... ... rect:" + rect);
+                if rect 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 var data = canvas.toDataURL('image/png');
                 photo.setAttribute('src', data);
 
+                
                 var xhr = new XMLHttpRequest();
 
                 // ok but the posrt disappears
@@ -365,7 +412,7 @@
                         console.log(this.responseText);
                     }
                 }
-                // Sending our request 
+                // Sending the info + image to the server for ecovision 
                 //xhr.send();
                 xhr.send(JSON.stringify({ 
                     "email": "hello@user.com", 

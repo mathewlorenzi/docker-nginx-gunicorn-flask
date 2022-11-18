@@ -7,6 +7,10 @@ import logging
 from time import sleep
 import psutil
 
+import io
+#import cStringIO
+from PIL import Image, ImageDraw
+
 # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
 if file_path not in sys.path:
@@ -54,6 +58,7 @@ localconfig = LocalConfig()
 class EcovisionResults:
     def __init__(self):
         self.trackResultsImage = None
+        self.recttblr = []
 
 ecovisionResults = EcovisionResults()
 
@@ -101,6 +106,10 @@ def update_values():
     disk=round(disk_usage)
 
     return jsonify(cpu=cpu, ram=ram, disk=disk)
+
+@app.route("/result/<string:camId>", methods=['GET'])
+def getresult(camId: str):
+    return (ecovisionResults.recttblr, 200)
 
 @app.route("/result/<string:camId>", methods=['POST'])
 def result(camId: str):
@@ -188,28 +197,36 @@ def result(camId: str):
         contentByteStr = dictLastImage['contentBytes']
         ecovisionResults.trackResultsImage = contentByteStr
 
-        https://en.proft.me/2015/08/20/how-draw-rectangle-python-and-save-png/
-        draw rectangle: opencv or Pil ?
+        # TODO avoid writing to disk
+        # instead: 
+        # im1 = im.tobytes("xbm", "rgb")
+        # img = Image.frombuffer("L", (10, 10), im1, 'raw', "L", 0, 1)
+        with open("debug.png", mode="wb") as fdebugout:
+            fdebugout.write(base64.b64decode(contentByteStr.encode()))        
+        rimg = Image.open("debug.png")        
+        rimg_draw = ImageDraw.Draw(rimg)
+        rimg_draw.rectangle((10, 10, 30, 30), fill=None, outline=(255, 0, 0))
+        rimg.save("debug.png")
+        # then replace the todel or ? by this one
         
-        # OK
-        # with open("debug.png", mode="wb") as fdebugout:
-        #     fdebugout.write(base64.b64decode(contentByteStr.encode()))
-
         chec_nbTracks = 0
+        ecovisionResults.recttblr = []
         for el in data:
             if el != 'nbtracks' and el != 'type':
                 chec_nbTracks += 1
                 print(" ........ el ", el)
-                print(" ........ el data ", data[el])
+                # print(" ........ el data ", data[el])
                 if data['type'] == 'tblr':
                     print(" ........ tblr ", el, data[el][0], data[el][1], data[el][2], data[el][3])
+                    ecovisionResults.recttblr.append(data[el])
                     # draw rectangle on result_image
                 elif data['type'] == 'tltrblbr-rc':
                     return ("tltrblbr-rc not yet done", 202)
                 else:
                     return ("wrong track type", 400)
 
-
+    
+    # return (recttblr, 200)
     return ("ok", 200)
 
 @app.route("/result_image/<string:camId>", methods=['GET'])

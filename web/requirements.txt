@@ -3,3 +3,7 @@ requests
 #pybase64
 #numpy
 psutil
+# for drawing rect
+Pillow
+io
+#cStringIO
