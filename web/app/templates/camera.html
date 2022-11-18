@@ -323,21 +323,45 @@
                 var urlRoot3 = urlProtocol3 + "//" + urlHost3
                 const url3 = urlRoot3 + "/result/paulo9";
                 xhr3.open("GET", url3, true);
-                var rect = null;
+                var rects = null;
                 xhr3.onload = function () {
                     if (xhr3.readyState === xhr3.DONE) {
                         if (xhr3.status === 200) {
                             console.log(" ... ... status3:" + xhr3.status);
                             // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
                             // document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';                            
-                            console.log(" ... ... response3:" + xhr3.response);
-                            rect = xhr3.response
+                            // console.log(" ... ... response3:" + xhr3.response);
+                            rects = xhr3.response
+                            console.log(" ... ... typeof(rects):" + typeof(rects));
+                            //console.log(" ... ... rects:" + rects);
+                            rectsJson = JSON.parse(rects);
+                            console.log(" ... ... rectsJson:" + rectsJson);
+                            console.log(" ... ... typeof(rectsJson):" + typeof(rectsJson));
+                            rectsJson.forEach(function(item, index, array) {
+                                console.log("...... ->", index, item);
+                                item.forEach(function(subitem, subindex, array) {
+                                    console.log("...... ->", subindex, subitem);
+                                });
+                                not working
+                                save to buffer someher in doc and then drzw outside this function
+                                context.rect(item[0], item[1], item[2], item[3]);
+                                context.rect(188, 50, 200, 100);
+                                context.stroke()
+                            }); 
+                            // string here shit
+                            // json parse ?
                         }
                     }
                 };
                 xhr3.send(null);
-                console.log(" ... ... rect:" + rect);
-                if rect 
+                console.log(" ... ... rects:" + rects);
+                if (rects != null){
+                    console.log(" ... ... rects:" + rects);
+                    rects.forEach(function(item, index, array) {
+                        console.log("...... ->", index, item);
+                    }); 
+                }
+                
 
 
 

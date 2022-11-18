@@ -11,6 +11,8 @@ import io
 #import cStringIO
 from PIL import Image, ImageDraw
 
+
+
 # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
 if file_path not in sys.path:
@@ -109,7 +111,7 @@ def update_values():
 
 @app.route("/result/<string:camId>", methods=['GET'])
 def getresult(camId: str):
-    return (ecovisionResults.recttblr, 200)
+    return (jsonify(ecovisionResults.recttblr), 200)
 
 @app.route("/result/<string:camId>", methods=['POST'])
 def result(camId: str):
