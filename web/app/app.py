@@ -59,8 +59,8 @@ localconfig = LocalConfig()
 
 class EcovisionResults:
     def __init__(self):
-        self.trackResultsImage = None
-        self.recttblr = []
+        self.trackResultsImage = {}
+        #self.recttblr = []
 
 ecovisionResults = EcovisionResults()
 
@@ -109,9 +109,13 @@ def update_values():
 
     return jsonify(cpu=cpu, ram=ram, disk=disk)
 
-@app.route("/result/<string:camId>", methods=['GET'])
-def getresult(camId: str):
-    return (jsonify(ecovisionResults.recttblr), 200)
+# @app.route("/result/<string:camId>", methods=['GET'])
+# def getresult(camId: str):
+#     return (jsonify(ecovisionResults.recttblr), 200)
+
+# @app.route("/update_rects/<string:camId>", methods=['GET'])
+# def update_rects(camId: str):
+#     return jsonify(ecovisionResults.recttblr)
 
 @app.route("/result/<string:camId>", methods=['POST'])
 def result(camId: str):
@@ -119,17 +123,28 @@ def result(camId: str):
     # bytes to string
     jsonstr = request.data.decode('utf8')
     print(" ........ camId ", camId)
-    print(" ........ result ->", jsonstr, "<-")
+    # print(" ........ result ->", jsonstr, "<-")
+    #print(type(jsonstr))
     # string to json
     data = json.loads(jsonstr)
+
+    ecovisionResults.trackResultsImage[camId] = data['png']
+
+    # OK
+    # with open("./tempdebug.png", mode="wb") as ftdg:
+    #     content = base64.b64decode(data['png'].encode())
+    #     ftdg.write(content)
+
     # print(" ........ result ", request.data)
     # print(" ........ result ", request.form)
     # print(" ........ result ", request.content_encoding)
     # print(" ........ result ", jsonstr, "camId", camId)
-    print(" ........ result camId", camId, "data", data)
+    # print(" ........ result camId", camId, "data", data)
     #  ........ result -> { "nbtracks" : 1, "type" :  "tblr" , " 1 "  : [ 2, 121, 175, 317 ] } <-
     # return (data, 200)
-    if 'nbtracks' in data:
+    
+    # OK but we dont care anymore
+    '''if 'nbtracks' in data:
         print(" ........ data['nbtracks'] ", data['nbtracks'])
         if not 'type' in data:
             msg = '[ERROR]type not present in json data'
@@ -139,13 +154,9 @@ def result(camId: str):
         
         # get last image
         dictLastImageTuple = lastimage(camId, take_care_of_already_uploaded=False)
-
-
         #print(" ........ dictLastImageTuple len ", len(dictLastImageTuple))
         print(" ........ dictLastImageTuple[0]", type(dictLastImageTuple[0]))
         print(" ........ dictLastImageTuple[1]", type(dictLastImageTuple[1]))
-
-
         if isinstance(dictLastImageTuple[0], dict) is False:
             msg = '[ERROR]message content in tuple returned from /lastimage is not a string'
             print(msg)
@@ -226,10 +237,19 @@ def result(camId: str):
                     return ("tltrblbr-rc not yet done", 202)
                 else:
                     return ("wrong track type", 400)
-
+    '''
     
     # return (recttblr, 200)
     return ("ok", 200)
+
+@app.route("/result_image2/<string:camId>", methods=['GET'])
+def result_image2(camId: str):
+    print("/result_image2")
+    logger.debug("/result_image2 endpoint")
+    if camId in ecovisionResults.trackResultsImage:
+        return (ecovisionResults.trackResultsImage[camId], 200)
+    else:
+        return ("ko: image result2 not ready yet for " + camId, 204)
 
 @app.route("/result_image/<string:camId>", methods=['GET'])
 def result_image(camId: str):

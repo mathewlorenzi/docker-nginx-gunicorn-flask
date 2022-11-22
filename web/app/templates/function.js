@@ -10,3 +10,4 @@ function update_values() {
             $("#disk").text(data.disk+" %")
         });
 }
+
