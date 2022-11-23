@@ -11,7 +11,7 @@ import io
 #import cStringIO
 from PIL import Image, ImageDraw
 
-
+# TODO remove a client cam when the webpage /camera is closed
 
 # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))

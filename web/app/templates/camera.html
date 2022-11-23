@@ -262,7 +262,7 @@
             setTimeout(update_values, 7000);
         }
 
-        function update_rects() {
+        /*function update_rects() {
             $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
             $.getJSON($SCRIPT_ROOT+"/update_rects/paulo9",
                 function(data) {
@@ -270,7 +270,7 @@
                 });
             console.log(" ... <= update_rects " + $SCRIPT_ROOT)
             setTimeout(update_rects, 1000);
-        }
+        }*/
 
         function getpicture() {
             var context = canvas2.getContext('2d');
@@ -283,7 +283,8 @@
                 var urlProtocol2 = window.location.protocol
                 var urlRoot2 = urlProtocol2 + "//" + urlHost2
                 // console.log(" ... ... urlRoot2:" + urlRoot2)
-                const url2 = urlRoot2 + "/result_image2/paulo9";
+                var nameId = document.getElementById("nameId").value
+                const url2 = urlRoot2 + "/result_image2/" + nameId;
                 //console.log(" ... ... url2:" + url2)
                 xhr2.open("GET", url2, true);
                 //var data2 = null;
