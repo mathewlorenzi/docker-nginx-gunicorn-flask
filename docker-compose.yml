@@ -12,6 +12,7 @@ services:
   #     - 5001:5001
 
   web:
+    # restart: always
     build:
       context: ./web
     ports:
@@ -30,5 +31,13 @@ services:
     ports:
       - 81:443
     links:
+      - web
+
+  ecoclient:
+    build:
+      context: ./ecoclient
+    # ports:
+    #   - 5555:5555
+    depends_on:
       - web
 

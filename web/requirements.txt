@@ -5,5 +5,5 @@ requests
 psutil
 # for drawing rect
 Pillow
-io
+#io
 #cStringIO

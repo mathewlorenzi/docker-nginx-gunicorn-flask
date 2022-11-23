@@ -7,7 +7,7 @@ import logging
 from time import sleep
 import psutil
 
-import io
+# import io
 #import cStringIO
 from PIL import Image, ImageDraw
 
