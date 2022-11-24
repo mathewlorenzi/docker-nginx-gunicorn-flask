@@ -58,10 +58,10 @@ def updateBashRcWithEcovisionLibPath(ecovisionPath: str):
     ecovisionLib = ecovisionPath+'/build/lib'
     bashRcString = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'+ecovisionLib
     if not os.path.isdir(ecovisionLib):
-        print("[ERROR]bashRcString does not exist: ", ecovisionLib)
+        print("[ERROR]updateBashRcWithEcovisionLibPath: this dir does not exist: ", ecovisionLib)
         exit(1)
     if 'HOME' not in os.environ:
-        print("[ERROR]environ HOME not present")
+        print("[ERROR]updateBashRcWithEcovisionLibPath: environ HOME not present")
         exit(1)
     bashrcPath = os.path.join(os.environ['HOME'], ".bashrc")
     print("[INFO]check bashrc is present: ", bashrcPath)
