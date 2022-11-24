@@ -33,11 +33,12 @@ services:
     links:
       - web
 
-  ecoclient:
-    build:
-      context: ./ecoclient
-    # ports:
-    #   - 5555:5555
-    depends_on:
-      - web
+  # see errors in dockerfile
+  # ecoclient:
+  #   build:
+  #     context: ./ecoclient
+  #   depends_on:
+  #     - web
+  #   # command:
+  #   #   - python3 manage.py runserver
 

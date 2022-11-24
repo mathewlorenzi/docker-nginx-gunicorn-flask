@@ -2,12 +2,11 @@
 # python manager.py --url http://127.0.0.1 --port 5000 --ecovisionPath /home/ecorvee/Projects/EcoVision/ecplatform2
 # python manager.py --url http://127.0.0.1 --port 5000 --ecovisionPath ./package_ecovision
 
-# in docker
+# in docker but cannot launch my binary ecovision
 # python manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
-error: FileNotFoundError: [Errno 2] No such file or directory: './package_ecovision/build/bin/platformecpp'
-but file exist
-see if i can copy ffmpeg and run it, 
-and simply run pwd
+
+# cd ecoclient
+# python manager.py --url http://127.0.0.1 --port 8000 --ecovisionPath ./package_ecovision
 
 # --debug 1
 
@@ -26,6 +25,9 @@ import requests
 import json
 from datetime import datetime
 import argparse
+
+
+
 #from crtime import get_crtimes, get_crtimes_in_dir
 
 # echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/absolute_path/' >> ~/.bashrc
@@ -214,6 +216,7 @@ class SessionRunner(threading.Thread):
 
         # echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/absolute_path/' >> ~/.bashrc
 
+
         cmdline = [self.ecovisionPath+"/build/bin/platformecpp",
             "-subsize", "0",
             "-control", self.ecovisionPath+"/programs/programecpp/platformecpp/control2d.txt",
@@ -221,7 +224,14 @@ class SessionRunner(threading.Thread):
             "-host", self.url, "-port", str(self.port),
             "-motionwindow", "2", "-context2dec", "LOCAL", "-fantagaugedim", "70"]
 
-        
+
+# error: FileNotFoundError: [Errno 2] No such file or directory: './package_ecovision/build/bin/platformecpp'
+# but file exist
+# see if i can copy ffmpeg and run it, 
+# and simply run pwd
+        # cmdline = ["pwd"] => /usr/src/app
+
+
         self.log("[INFO]cmdline:" + str(cmdline))
         
         # ssend = str(int(1200 / (self.thread_id+1)))
