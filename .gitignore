@@ -9,7 +9,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 output
-build/
 develop-eggs/
 dist/
 downloads/
@@ -113,6 +112,5 @@ tempdebug.png
 
 ecoclient/client.cpp
 ecoclient/output_http_post_request
-ecoclient/package_ecovision/
 ecoclient/simul_ecovision
 ecoclient/temp_raw_to_png.png
