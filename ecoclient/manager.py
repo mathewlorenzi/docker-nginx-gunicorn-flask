@@ -5,10 +5,12 @@
 # in docker but cannot launch my binary ecovision
 # python manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
 
+# VM
 # cd ecoclient
 # python manager.py --url http://127.0.0.1 --port 8000 --ecovisionPath ./package_ecovision
-
-# --debug 1
+# source /home/debian/.bashrc
+# python manager.py --url http://127.0.0.1 --port 8000 --ecovisionPath ./package_ecovision
+# --debug
 
 # from asyncio import sleep
 from asyncio.subprocess import DEVNULL
