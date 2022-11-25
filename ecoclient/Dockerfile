@@ -20,3 +20,9 @@
 #ENTRYPOINT [ "python" ]
 #ERROR: for ecoclient  Cannot start service ecoclient: OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python": executable file not found in $PATH: unknown
 #ERROR: Encountered errors while bringing up the project.
+
+FROM gcc
+WORKDIR /usr/src/app
+COPY . .
+CMD apt install -y python3-pip
+CMD ["pip3", "install", "requests"]
