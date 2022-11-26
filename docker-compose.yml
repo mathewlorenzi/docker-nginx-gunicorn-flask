@@ -1,16 +1,31 @@
 version: '3'
 
-# first copy into ecoclient the folder package? int the shared_folder in Project/EcoVision dir.
-# it was obtained from the docker container ecovision in this latter dir (it compiled and created packages and shared it with me the host)
-# cp -r ../../EcoVision/shared_folder/package_ecovision ./ecoclient
+# ****** have an ecovision package ******
+# cd /home/ecorvee/Projects/EcoVision
+# === make sure the home dir is set to /usr/src/app 
+# vim /home/ecorvee/Projects/EcoVision/ecplatform2/configure/configure.txt
+# docker-compose build
+# docker run -t -d -v $PWD/shared_folder:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+# docker exec -it ecovision bash
+# ./compile.sh
+# ./create_package.sh
+# exit
+# === go back to ecoclient and get the compiled new package === 
+# cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
+# rm -rf ecoclient/package_ecovision
+# cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
 
+# ****** [LOCAL] build only the web and ecoclient docker containers ******
+# cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
 # docker-compose build web
-# docker-compose build nginx   # for VM
+## docker-compose build nginx   # for VM
 # docker-compose build ecoclient
+# docker-compose up -d web
+## docker-compose up -d nginx  # for VM
+# === same docker as ecovision but different name obvioulsy and no need of shared folders ? TODO for logging yes 
 
-# docker-compose up web -d
-# docker-compose up nginx -d  # for VM
-# docker run -t -d -v $PWD/ecoclient/shared_folder:/usr/src/app/shared_folder --name ecoclient ecoclient_ecoclient
+# shit i cannot access web contanier => TODO add -p 5009:80
+# docker run -t -d --name ecoclient docker-nginx-gunicorn-flask_ecoclient
 # docker exec -it ecoclient bash
 
 # https://github.com/abakonski/docker-compose-flask
@@ -51,6 +66,15 @@ services:
     container_name: ecoclient
     depends_on:
       - web
+    
+    #command: bash -c "source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision --debug"
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
+
+    #command: top -b
+    # command: python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision # --debug
+    # command: source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
+    # command: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/src/app/build/lib && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
+    
 
   # see errors in dockerfile
   # ecoclient:
