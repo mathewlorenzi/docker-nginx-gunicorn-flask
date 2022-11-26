@@ -66,22 +66,8 @@ services:
     container_name: ecoclient
     depends_on:
       - web
-    
-    #command: bash -c "source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision --debug"
-    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
-
     #command: top -b
-    # command: python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision # --debug
-    # command: source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
-    # command: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/src/app/build/lib && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
+    # add --debug
     
-
-  # see errors in dockerfile
-  # ecoclient:
-  #   build:
-  #     context: ./ecoclient
-  #   depends_on:
-  #     - web
-  #   # command:
-  #   #   - python3 manage.py runserver
-
+    

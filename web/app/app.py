@@ -1,4 +1,5 @@
 
+from datetime import datetime
 import os
 import sys
 import base64
@@ -54,8 +55,20 @@ if bufferClients.initSucc is False:
 class LocalConfig:
     def __init__(self):
         self.flip=0
-
+        self.check_activated = False
+        self.last_connection = datetime
+        HERE
+        
 localconfig = LocalConfig()
+
+def check_connection():
+    if localconfig.check_activated is True:
+        print(" .... check_activated already set to True")
+        return
+    print(" .... check_activated set to True")
+    localconfig.check_activated = True
+    while True:
+        sleep(1)
 
 class EcovisionResults:
     def __init__(self):
