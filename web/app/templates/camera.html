@@ -1,14 +1,3 @@
-<!--!DOCTYPE html>
-<html></html>
-    <input type="file" accept="image/*;capture=camera">
-    <input type="file" accept="video/*;capture=camcorder">
-    
-    <input type="file" accept="video/*;capture=camcorder">
-    <video autoplay></video>
-
-</html-->
-
-<!-- https://www.studytonight.com/post/capture-photo-using-webcam-in-javascript -->>
 
 <!doctype html>
 
@@ -70,44 +59,10 @@
 
 <body>
 
-    <!-- <div id="div"></div>
-    <div id="anotherlink" style="display:none"></div>
-    <script src= "script.js"></script>
-    <script>
-        var link = "https://anotherexample.com";
-        document.getElementById("anotherlink").innerHTML = link
-    </script> -->
-
     <p id="rects">Bonjour</p>
 
-    <!-- <p id="rects"></p>
-    <script>
-      document.getElementById("rects").innerHTML ="rects:<br>" + window.location.rects;
-    </script> -->
-
-    <!-- <p id="href"></p>
-    <script>
-      document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
-    </script>
-
-    <p id="host"></p>
-    <script>
-    document.getElementById("host").innerHTML ="The host of this page is:<br>" + window.location.host;
-    </script>
-
-    <p id="hostname"></p>
-    <script>
-    document.getElementById("hostname").innerHTML ="The hostname this page is:<br>" + window.location.hostname;
-    </script>
-
-    <p id="protocol"></p>
-    <script>
-    document.getElementById("protocol").innerHTML ="The protocol page is:<br>" + window.location.protocol;
-    </script>
- -->
-
-     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <div class="contentarea">
         var nameId = {{ nameId }}
         var usedUrl = {{ usedUrl }}
@@ -211,32 +166,8 @@
                 ev.preventDefault();
             }, false);
 
-            // startbutton.addEventListener('click', function(ev) {
-            //     update_rects();
-            //     ev.preventDefault();
-            // }, false);
-
             clearphoto();
-
-            //setTimeout(takepicture, 1000);
         }
-
-
-        //function myPeriodicMethod() {
-        //    data = { "email": "hello@user.com", "response": { "name": "Tester" } }
-        //    $.ajax({
-        //        url: 'http://localhost:5000/upload', 
-        //        success: function(data) {
-        //            console.log(" ..... YO ..........")
-        //        },
-        //        complete: function() {
-        //            // schedule the next request *only* when the current one is complete:
-        //            setTimeout(myPeriodicMethod, 1000);
-        //        }
-        //    });
-        //}
-        // schedule the first invocation:
-        //setTimeout(myPeriodicMethod, 1000);
 
         function clearphoto() {
             var context = canvas.getContext('2d');
@@ -262,16 +193,6 @@
             setTimeout(update_values, 5000);
         }
 
-        /*function update_rects() {
-            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-            $.getJSON($SCRIPT_ROOT+"/update_rects/paulo9",
-                function(data) {
-                    $("#rects").text(data.rects+" %")
-                });
-            console.log(" ... <= update_rects " + $SCRIPT_ROOT)
-            setTimeout(update_rects, 1000);
-        }*/
-
         function getpicture() {
             var context = canvas2.getContext('2d');
             if (width && height) {
@@ -292,58 +213,12 @@
                 xhr2.onload = function () {
                     if (xhr2.readyState === xhr2.DONE) {
                         if (xhr2.status === 200) {
-                            //console.log(xhr2.response);
-                            //console.log(xhr2.responseText);
-                            // console.log(" ... ... readyState:" + xhr2.readyState);
-                            //console.log(" ... ... status:" + xhr2.status);
-                            //data2 = xhr2.response;
-
-                            //img = document.createElement("img");
-                            //img.src = "http://127.0.0.1:5000/result";
-                            //console.log(" ... response:" + img.src);
-                            //let img = data2;
-                            //let bitmap = new System.Drawing.Bitmap(img);
-                            // console.log(" ... response:" + xhr2.response);
-                            // console.log(" ... responseText:" + xhr2.responseText);
-                            // photo.setAttribute('src', data);
-                            //xhr2.send(null);
-                            //context.drawImage(xhr2.response, 0, 0, width, height);
-                            //context.drawImage(video, 0, 0, width, height);
-                            
-                            // document.getElementById('results').innerHTML = xmlhttp.responseText;
-                            //document.getElementById('result').innerHTML = xhr2.response;
-
-                            //context.drawImage(img.src, 0, 0, width, height);
-
-
                             // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
-                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
-                            // o = document.getElementById('result_image')
-                            // var l =o.offsetLeft; var t = o.offsetTop;
-                            // console.log(" ***** offset ===>  l ", l," t ", t)
-                            // context.strokeRect(100, 100, 100, 100)
-
-
-
-                            // here display rects by wait two images per canvas2
-
-                            // see towards end of page:
-                            // https://stackoverflow.com/questions/1769584/get-position-of-element-by-javascript
-
-                            // console.log(" ***** rects ===> " + document.getElementById("rects").innerHTML)
-                            
-
-                            // now some text
-                            // document.getElementById('result').innerHTML = xhr2.response;
-                            // console.log("/result ===> "+ xhr2.response)
-                            
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';                            
                         }
                     }
                 };
                 xhr2.send(null);
-                //context.drawImage(img.src, 0, 0, width, height);
-                
-
                 setTimeout(getpicture, 2000);
             } else {
                 clearphoto();
@@ -356,80 +231,6 @@
                 canvas.width = width;
                 canvas.height = height;
                 context.drawImage(video, 0, 0, width, height);
-
-                // draw rectangle
-                // OK
-                // context.rect(188, 50, 200, 100);
-                // context.stroke()
-                // FROM SERVER (which came from ecovision)
-                /*var xhr3 = new XMLHttpRequest();
-                var urlHost3 = window.location.host
-                var urlProtocol3 = window.location.protocol
-                var urlRoot3 = urlProtocol3 + "//" + urlHost3
-                const url3 = urlRoot3 + "/result/paulo9";
-                xhr3.open("GET", url3, true);
-                // var rects = null;
-                xhr3.onload = function () {
-                    if (xhr3.readyState === xhr3.DONE) {
-                        if (xhr3.status === 200) {
-                            // console.log(" ... ... status3:" + xhr3.status);
-                            // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
-                            // document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
-                            // console.log(" ... ... response3:" + xhr3.response);
-                            var rects = xhr3.response
-                            //console.log(" ... ... typeof(rects):" + typeof(rects));
-                            // //console.log(" ... ... rects:" + rects);
-                            rectsJson = JSON.parse(rects);
-                            // console.log(" ... ... rectsJson:" + rectsJson);
-                            // console.log(" ... ... typeof(rectsJson):" + typeof(rectsJson));
-                            rectsJson.forEach(function(item, index, array) {
-                                // console.log("...... ->", index, item);
-                                item.forEach(function(subitem, subindex, array) {
-                                    // console.log("...... ->", subindex, subitem);
-                                });
-                                // not working
-                                // save to buffer someher in doc and then drzw outside this function
-                                // context.rect(item[0], item[1], item[2], item[3]);
-                                // context.rect(188, 50, 200, 100);
-                                // context.stroke()
-                                // document.getElementById("rects").innerHTML =" ==> rects:<br>" + window.location.rects;
-                                document.getElementById("rects").innerHTML = "hellorects";
-
-                                // console.log(" +++++++++ rects ===> " + document.getElementById("rects").innerHTML)
-                            }); 
-                            // string here shit
-                            // json parse ?
-                        }
-                    }
-                };
-                xhr3.send(null);*/
-                // console.log(" ... ... rects:" + rects);
-                // if (rects != null){
-                //     console.log(" ... ... rects:" + rects);
-                //     rects.forEach(function(item, index, array) {
-                //         console.log("...... ->", index, item);
-                //     }); 
-                // }
-                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                 var data = canvas.toDataURL('image/png');
                 photo.setAttribute('src', data);
@@ -444,32 +245,6 @@
                 var urlProtocol = window.location.protocol
                 var urlRoot = urlProtocol + "//" + urlHost
                 console.log(" ... urlRoot:" + urlRoot)
-
-                // document.getElementById("href").innerHTML ="The full URL of this page is:<br>" + window.location.href;
-                // document.getElementById("host").innerHTML ="The host of this page is:<br>" + window.location.host;
-                // document.getElementById("hostname").innerHTML ="The hostname this page is:<br>" + window.location.hostname;
-                // document.getElementById("protocol").innerHTML ="The protocol page is:<br>" + window.location.protocol;
-
-
-                //var urlRootString = String(urlRoot)
-
-                // if (urlRoot.outerHTML)
-                //     urlRootString = urlRoot.outerHTML;
-                // else if (XMLSerializer)
-                //     urlRootString = new XMLSerializer().serializeToString(urlRoot); 
-
-
-                //console.log(" ... urlRoot: " + urlRootString)
-                //var re = new RegExp(/^.*\//);
-                //var urlRootString = String(re.exec(window.location.href)) + "image"
-                //console.log(" ... urlRoot: " + urlRootString)
-
-                
-                //var new_location = location.origin+ "/" + response.data;
-                //console.log('new location is:' + new_location);
-                // window.location.href = new_location;
-                // console.log('new location is:' + window.location.href);
-
 
                 const url = urlRoot + "/image";
                 //var url = 'http://localhost:5000/image';

@@ -15,7 +15,7 @@ version: '3'
 # rm -rf ecoclient/package_ecovision
 # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
 
-# ****** [LOCAL] build only the web and ecoclient docker containers ******
+# ****** [LOCAL] build only the web and ecoclient docker containers ****** unless all ois find and just go up
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
 # docker-compose build web
 ## docker-compose build nginx   # for VM
