@@ -376,7 +376,15 @@ def image():
             return ("KO: failed saving new image", 400)
         else:
             logger.info(msg)
-            return ("OK", 200)
+
+            camId = nameId
+            # logger.debug("/result_image2 endpoint")
+            if camId in ecovisionResults.trackResultsImage:
+                return (ecovisionResults.trackResultsImage[camId], 200)
+            else:
+                return ("ok but image result from ecovision not ready yet for " + camId, 202)
+
+            # return ("OK", 200)
     return ("OK", 200)
 
 @app.route("/camera", methods=['GET'])

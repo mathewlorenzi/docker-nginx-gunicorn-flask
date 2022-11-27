@@ -156,10 +156,10 @@
 
             clearphoto();
 
-            startbutton.addEventListener('click', function(ev) {
-                getpicture();
-                ev.preventDefault();
-            }, false);
+            // startbutton.addEventListener('click', function(ev) {
+            //     getpicture();
+            //     ev.preventDefault();
+            // }, false);
 
             startbutton.addEventListener('click', function(ev) {
                 update_values();
@@ -193,7 +193,8 @@
             setTimeout(update_values, 5000);
         }
 
-        function getpicture() {
+        // works but now replaced in return of what take picture sends to server
+        /*function getpicture() {
             var context = canvas2.getContext('2d');
             if (width && height) {
                 canvas2.width = width;
@@ -214,7 +215,7 @@
                     if (xhr2.readyState === xhr2.DONE) {
                         if (xhr2.status === 200) {
                             // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
-                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';                            
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
                         }
                     }
                 };
@@ -223,7 +224,7 @@
             } else {
                 clearphoto();
             }
-        }
+        }*/
 
         function takepicture() {
             var context = canvas.getContext('2d');
@@ -256,8 +257,14 @@
 
                 // function execute after request is successful 
                 xhr.onreadystatechange = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        console.log(this.responseText);
+                    if (this.readyState == 4) {
+                        if(this.status == 202) {
+                            console.log(" ... takepicture: response: ", this.responseText);
+                        }
+                        else if(this.status == 200){
+                            console.log(" ... takepicture: response result image ");
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr.response + '"/>';
+                        }
                     }
                 }
                 // Sending the info + image to the server for ecovision 
