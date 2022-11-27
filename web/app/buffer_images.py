@@ -271,6 +271,36 @@ class BufferClients():
 
         return ("[INFO]insertClient SUCCESS at " + str(indexClient), indexClient)
 
+    def deleteOneTooOldConnectedClient(self, maxDeltaAge: int, debug: bool=False) -> bool:
+        now = datetime.now()
+        index = 0
+        for client in self.buff:
+            index += 1
+            mostRecentInd = client.bufferImages.lastRecordedIndex
+            if mostRecentInd>=0:
+                mostRecentImg = client.bufferImages.buffer[client.bufferImages.lastRecordedIndex]
+                # print("....", mostRecentImg.convertedStampMicroSec)
+                delta = now.timestamp() - mostRecentImg.convertedStampMicroSec.timestamp()
+                outdated = False
+                if delta >  maxDeltaAge:
+                    outdated = True
+                # print("[INFO]BufferClients: too old connected client deleteing it from active clients: ", client.clientId, mostRecentInd, delta, outdated)
+                if outdated is True:
+                    print("[INFO]BufferClients: too old connected client deleteing it from active clients: ", client.clientId, mostRecentInd, delta, outdated)
+                    self.buff.pop(index - 1)
+                    return True
+
+        '''if debug is True:
+            for client in self.buff:
+                print()
+                for im in client.bufferImages.buffer:
+                    outdated = False
+                    if now.timestamp() - im.convertedStampMicroSec.timestamp() >  5:
+                        outdated = True
+                    print(client.clientId, client.bufferImages.lastRecordedIndex, im.convertedStampMicroSec, now-im.convertedStampMicroSec, outdated)
+        '''
+        return False
+
     def getListClients(self):
         listClients = []
         for client in self.buff:

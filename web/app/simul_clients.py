@@ -29,8 +29,8 @@ class SimulatorClientPostImage(threading.Thread):
         self._stop_event = threading.Event()
     def stop(self):
         self._stop_event.set()
-    def stopped(self):
         return self._stop_event.is_set()
+    #def stopped(self):
     def run(self):
         print('SimulatorClientPostImage camId', camId)
         while(True):
@@ -65,7 +65,7 @@ def populate_fake_images():
 # exit(0)
 
 # keep posting fake image every 10 intervalSec
-intervalSec = 10 
+intervalSec = 15
 threads = []
 for camId in camIds:
     thread = SimulatorClientPostImage(camId=camId, intervalSec=intervalSec)
@@ -79,7 +79,10 @@ while True:
     json_data = json_data_res.get("data")
     for el in json_data:
         camId = str(el)
-        url_get_image_filename = MAIN_URL+"/last_image_filename/"+camId
+        
+        print("...request")
+        lastimage = str(requests.get(MAIN_URL+"/last_image/"+camId))#.content.decode("utf-8"))
+        '''url_get_image_filename = MAIN_URL+"/last_image_filename/"+camId
         url_get_image_content = MAIN_URL+"/last_image_content/"+camId
         url_get_image_isuploaded = MAIN_URL+"/is_last_image_uploaded/"+camId
 
@@ -99,5 +102,6 @@ while True:
         # print(current_image_path)
         with open(current_image_path, mode="wb") as fout:
             fout.write(getimage_content.content)
+        '''
 
-    time.sleep(1)
+    time.sleep(5)

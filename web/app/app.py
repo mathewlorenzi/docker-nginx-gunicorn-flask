@@ -2,11 +2,13 @@
 from datetime import datetime
 import os
 import sys
-import base64
+# import base64
 from base64 import b64encode
 import logging
 from time import sleep
+from charset_normalizer import detect
 import psutil
+import threading
 
 # import io
 #import cStringIO
@@ -56,19 +58,10 @@ class LocalConfig:
     def __init__(self):
         self.flip=0
         self.check_activated = False
-        self.last_connection = datetime
-        HERE
+        # self.last_connection = datetime
+        # HERE
         
 localconfig = LocalConfig()
-
-def check_connection():
-    if localconfig.check_activated is True:
-        print(" .... check_activated already set to True")
-        return
-    print(" .... check_activated set to True")
-    localconfig.check_activated = True
-    while True:
-        sleep(1)
 
 class EcovisionResults:
     def __init__(self):
@@ -90,6 +83,32 @@ ecovisionResults = EcovisionResults()
 #         #uri_result = "data:%s;base64,%s" % (mime, encoded)
 #         return uri_result
 # uri_result = load_sample("todel.png")
+
+class WatchActiveClients(threading.Thread):
+    def __init__(self, maxDeltaAge: int=30, intervalSec: int=30, debug: bool=False):
+        threading.Thread.__init__(self)
+        self.output_pipe = None
+        self.intervalSec = intervalSec
+        self.maxDeltaAge = maxDeltaAge
+        self.debug = debug
+        logging.info("WatchActiveClients")
+        self._stop_event = threading.Event()
+    def stop(self):
+        self._stop_event.set()
+    def stopped(self):
+        return self._stop_event.is_set()  
+    def run(self):
+        print('starting client watcher')
+        while(True):
+            deletedOneClient = True
+            while deletedOneClient is True:
+                deletedOneClient = bufferClients.deleteOneTooOldConnectedClient(maxDeltaAge=self.maxDeltaAge, debug=self.debug)
+            self._stop_event.wait(self.intervalSec) # check every N sec                
+        print('end client watcher')
+
+watchActiveClients = WatchActiveClients()
+watchActiveClients.start()
+#watchActiveClients.join() # this make the main thread to wait for it to end (run functin ends or stop _stop_event line is done)
 
 @app.route("/hello")
 def hello():
@@ -132,7 +151,6 @@ def update_values():
 
 @app.route("/result/<string:camId>", methods=['POST'])
 def result(camId: str):
-
     # bytes to string
     jsonstr = request.data.decode('utf8')
     print(" ........ camId ", camId)
@@ -311,7 +329,6 @@ def mainroute():
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';sam
 @app.route("/image", methods=['POST'])
 def image():
-
     # bytes to string
     jsonstr = request.data.decode('utf8')
     # string to json
