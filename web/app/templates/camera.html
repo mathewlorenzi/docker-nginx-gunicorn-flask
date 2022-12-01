@@ -193,6 +193,7 @@
             setTimeout(update_values, 5000);
         }
 
+        // # v1 ecovision
         // works but now replaced in return of what take picture sends to server
         /*function getpicture() {
             var context = canvas2.getContext('2d');
@@ -270,8 +271,8 @@
                 // Sending the info + image to the server for ecovision 
                 //xhr.send();
                 xhr.send(JSON.stringify({ 
-                    "email": "hello@user.com", 
-                    "response": { "name": "Tester" },
+                    //"email": "hello@user.com", 
+                    //"response": { "name": "Tester" },
                     "image": data,
                     //"name": document.getElementById("nameId").innerHTML
                     "nameId": document.getElementById("nameId").value,

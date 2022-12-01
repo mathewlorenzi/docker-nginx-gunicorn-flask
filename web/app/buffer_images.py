@@ -1,5 +1,6 @@
 import os
 import base64
+from base64 import b64encode
 import logging
 from datetime import datetime
 from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
@@ -10,6 +11,16 @@ NOSAVE = "NOSAVE"
 SAVE_WITH_TIMESTAMPS = "SAVE_WITH_TIMESTAMPS"
 SAVE_WITH_UNIQUE_FILENAME = "SAVE_WITH_UNIQUE_FILENAME"
 LIST_MODE_SAVE_TO_DISK = [NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME]
+
+def load_sample(imagePath):
+    with open(imagePath, mode="rb") as fsample:
+        img_data = fsample.read()
+        encoded = b64encode(img_data)
+        decoded_img = encoded.decode('utf-8')
+        uri_result = f"data:image/jpeg;base64,{decoded_img}"
+        #mime = "image/jpeg"
+        #uri_result = "data:%s;base64,%s" % (mime, encoded)
+        return uri_result
 
 class AppImage:
     def __init__(self):

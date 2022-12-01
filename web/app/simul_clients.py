@@ -1,11 +1,14 @@
 import os
 import requests
-# import cv2
 from datetime import datetime
 import json
 import base64
 import time
 import threading
+
+USE_VIDEO_IMAGES=True
+if USE_VIDEO_IMAGES is True:
+    import cv2
 
 #https://stackoverflow.com/questions/60091029/python-requests-post-image-with-json-data
 
@@ -13,6 +16,12 @@ SAMPLE_IMAGE="sample.png"
 MAIN_URL = "http://127.0.0.1:5000"
 camIds = ["peter", "paul", "jack", "UNKNOWN"]
 
+if USE_VIDEO_IMAGES is True:
+    videosMainPath = "/home/ecorvee/data/LCS-videos/database1/" 
+    videosSubPaths = ["33-LIGHTON_IROFF_ENTRANCE1_demo", "36-LIGHTON_IROFF_EXIT3_demo", "39-LIGHTON_IROFF_FALL3_demo", "06-LCS_sortie_bonne_luminosite"]
+    firstImagesIndex = [60, 26, 26, 91]
+    currentImagesIndex = firstImagesIndex
+    stepIndex = 1
 
 class SimulatorClientPostImage(threading.Thread):
   
@@ -22,10 +31,11 @@ class SimulatorClientPostImage(threading.Thread):
         self.intervalSec = intervalSec
         self.output_pipe = None
         self.camId = camId
-        with open(SAMPLE_IMAGE, "rb") as f:
-            im_bytes = f.read()  
-            # string_img = base64.b64encode(cv2.imencode("sample.png", img)[1]).decode()
-            self.im_b64 = base64.b64encode(im_bytes).decode("utf8")
+        if USE_VIDEO_IMAGES is False:
+            with open(SAMPLE_IMAGE, "rb") as f:
+                im_bytes = f.read()  
+                # string_img = base64.b64encode(cv2.imencode("sample.png", img)[1]).decode()
+                self.im_b64 = base64.b64encode(im_bytes).decode("utf8")
         self._stop_event = threading.Event()
     def stop(self):
         self._stop_event.set()
@@ -34,6 +44,25 @@ class SimulatorClientPostImage(threading.Thread):
     def run(self):
         print('SimulatorClientPostImage camId', camId)
         while(True):
+            if USE_VIDEO_IMAGES is True:
+                if camId == "peter":
+                    videoIndex=0
+                elif camId == "paul":
+                    videoIndex=1
+                elif camId == "jack":
+                    videoIndex=2
+                elif camId == "UNKNOWN":
+                    videoIndex=3
+                _path = os.path.join(videosMainPath, videosSubPaths[videoIndex], '{0:08d}.jpg'.format(currentImagesIndex[videoIndex]))
+                with open(_path, "rb") as f:
+                    im_bytes = f.read()  
+                    self.im_b64 = base64.b64encode(im_bytes).decode("utf8")
+                    currentImagesIndex[videoIndex] += stepIndex
+                    
+            if self.im_b64 is None:
+                print("error in getting images")
+                exit(1)
+
             url = MAIN_URL+"/image"
             content = {'image': self.im_b64, 'nameId': self.camId, 'usedUrl': url}
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -80,7 +109,7 @@ while True:
     for el in json_data:
         camId = str(el)
         
-        print("...request")
+        print("...request get last image")
         lastimage = str(requests.get(MAIN_URL+"/last_image/"+camId))#.content.decode("utf-8"))
         '''url_get_image_filename = MAIN_URL+"/last_image_filename/"+camId
         url_get_image_content = MAIN_URL+"/last_image_content/"+camId
