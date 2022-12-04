@@ -2,11 +2,19 @@ version: '3'
 
 # ****** have an ecovision package ******
 # cd /home/ecorvee/Projects/EcoVision
-# === make sure the home dir is set to /usr/src/app 
-# vim /home/ecorvee/Projects/EcoVision/ecplatform2/configure/configure.txt
+
+# === make sure the home dir is set to /usr/src/app and no opencv display
+# nano /home/ecorvee/Projects/EcoVision/ecplatform2/configure/configure_workspace.txt
+# make sure to have these lines uncommented in Dependencies of 
+# - nano libs_cpp/libecpp_sources/libecpp_sources_prog/Dependencies.txt
+# - nano programs/programecpp/platformecpp/Dependencies.txt
+# USE LIBEC_DISPLAYCV_CPP
+# USE DISPLAY_USING_OPENCV_CPP
+# DEFINE DISPLAY_USING_OPENCV_CPP
+
 # docker-compose build
 # docker run -t -d -v $PWD/shared_folder:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
-# docker exec -it ecovision bash
+# docker exec -it <ID given from docker ps> bash
 # ./compile.sh
 # ./create_package.sh
 # exit
@@ -14,6 +22,9 @@ version: '3'
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
 # rm -rf ecoclient/package_ecovision
 # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
+# git status
+# git add ....
+# git commit ....
 
 # ****** [LOCAL] build only the web and ecoclient docker containers ****** unless all ois find and just go up
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask

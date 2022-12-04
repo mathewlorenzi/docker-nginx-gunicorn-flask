@@ -1,3 +1,4 @@
+#! /bin/bash 
 # for c++
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../../build/lib 
 export LD_LIBRARY_PATH
@@ -19,9 +20,9 @@ if [ "$CAMID" == ""]; then
     exit 1
 fi
 
-./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -http_client_to_flask_server -camidname $CAMID -host $HOST -port $PORT -motionwindow 2 -context2dec LOCAL -fantagaugedim 70
+#./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -http_client_to_flask_server -camidname $CAMID -host $HOST -port $PORT -motionwindow 2 -context2dec LOCAL -fantagaugedim 70
 #./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -http_client_to_flask_server -camidname paulo9 -host https://www.ecovision.ovh -port 81 -motionwindow 2 -context2dec LOCAL -fantagaugedim 70
-#./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -lcsmainfolder -directory /home/ecorvee/data/LCS-videos/database1/ -lcsvideoindex 33 -startat 1 -incrementvideoindex 10 -motionwindow 2  -context2dec LOCAL -fantagaugedim 70
+./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -lcsmainfolder -directory /home/ecorvee/data/LCS-videos/database1/ -lcsvideoindex 33 -startat 1 -incrementvideoindex 10 -motionwindow 2  -context2dec LOCAL -fantagaugedim 70
 
 # ====================
 
