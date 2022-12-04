@@ -62,7 +62,8 @@ class AppImage:
         return dict_out
 
 class BufferImages:
-    def __init__(self, maxLength: int, clientId:str, directory: str=None):
+    def __init__(self, type: str, maxLength: int, clientId:str, directory: str=None):
+        self.TYPE = type
         self.directory = directory
         self.clientId = clientId
         self.maxLength = maxLength
@@ -75,11 +76,11 @@ class BufferImages:
             appImage = AppImage();
             if appImage.success is False:
                 self.success = False
-                self.initMsg = "[ERROR]BufferImages init failed: " + appImage.initMsg
+                self.initMsg = "[ERROR]BufferImages/" + self.TYPE + " init failed: " + appImage.initMsg
                 return
             self.buffer.append(appImage)
         self.success = True
-        self.initMsg = "[INFO]BufferImages init OK"
+        self.initMsg = "[INFO]BufferImages/" + self.TYPE + " init OK"
     def insert(self, inputImage: AppImage):
         index_nimage = self.lastRecordedIndex + 1# NextImageNotReadyYetForUploadAsNot
         if index_nimage >= self.maxLength:
@@ -95,31 +96,31 @@ class BufferImages:
 
     def deleteOldest(self):
         if self.directory is None:
-            msg = "[WARNING]oldest image cannot be deleted as no directory out provided: check MODE SAVE TO DISK for camId: " + self.clientId
+            msg = "[WARNING]BufferImages/" + self.TYPE + " oldest image cannot be deleted as no directory out provided: check MODE SAVE TO DISK for camId: " + self.clientId
             return (msg, True)
         if self.oldestRecordedImage is not None:
             filename = self.buffer[self.oldestRecordedImage].filenameWithStamp
             pathImage = os.path.join(self.directory, filename)
             if self.buffer[self.oldestRecordedImage].hasData is False:                
-                msg = "oldest image cannot be deleted as it does not have any data (was not recorded before): " + self.clientId + ", " + filename
+                msg = "BufferImages/" + self.TYPE + " oldest image cannot be deleted as it does not have any data (was not recorded before): " + self.clientId + ", " + filename
                 return (msg, True)    
             if os.path.exists(pathImage) is False:
-                msg = "oldest image cannot be deleted as it does not exists on disk: " + self.clientId + ", " + filename
+                msg = "BufferImages/" + self.TYPE + " oldest image cannot be deleted as it does not exists on disk: " + self.clientId + ", " + filename
                 return (msg, False)
             if os.path.isfile(pathImage) is False:
-                msg = "oldest image cannot be deleted as it is not a file: " + self.clientId + ", " + filename
+                msg = "BufferImages/" + self.TYPE + " oldest image cannot be deleted as it is not a file: " + self.clientId + ", " + filename
                 return (msg, False)
             os.remove(pathImage)
             if os.path.exists(pathImage) is True:
-                msg = "oldest image was not successfully deleted, it still exist on disk: " + self.clientId + ", " + filename
+                msg = "BufferImages/" + self.TYPE + " oldest image was not successfully deleted, it still exist on disk: " + self.clientId + ", " + filename
                 return (msg, False)
             if os.path.isfile(pathImage) is True:
-                msg = "oldest image was not successfully deleted, it still is an existing file: " + self.clientId + ", " + filename
+                msg = "BufferImages/" + self.TYPE + " oldest image was not successfully deleted, it still is an existing file: " + self.clientId + ", " + filename
                 return (msg, False)
-            msg = "oldest image was successfully deleted: " + self.clientId + ", " + filename
+            msg = "BufferImages/" + self.TYPE + " oldest image was successfully deleted: " + self.clientId + ", " + filename
             self.buffer[self.oldestRecordedImage].hasData = False
             return (msg, True)
-        msg = "oldest image not yet recorded: cannot be yet deleted, " + self.clientId
+        msg = "BufferImages/" + self.TYPE + " oldest image not yet recorded: cannot be yet deleted, " + self.clientId
         return (msg, True)
         
 
@@ -134,11 +135,12 @@ class ClientCamera():
     clientId = camId
     directory where are saved the images if MODE_SAVE_TO_DISK is not set to no save
     """
-    def __init__(self, clientId: str, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
+    def __init__(self, type: str, clientId: str, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
 
+        self.TYPE = type
         self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
         if self.MODE_SAVE_TO_DISK not in LIST_MODE_SAVE_TO_DISK:
-            self.initMsg = "ClientCamera: MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
+            self.initMsg = "ClientCamera/" + self.TYPE + " MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
             print("[ERROR]", self.initMsg)
             self.initSucc = False
             return 
@@ -162,29 +164,30 @@ class ClientCamera():
                 return
         
         self.bufferImages = BufferImages(
+            type = self.TYPE,
             maxLength=5, 
             clientId = self.clientId,
             directory = self.outputDir
         )
         if self.bufferImages is False:
-            self.initMsg = "ClientCamera: buffer images creation failed: "
+            self.initMsg = "ClientCamera/" + self.TYPE + ": buffer images creation failed: "
             self.initSucc = False
             return
 
         if self.bufferImages.success is False:
             self.initSucc = False
-            self.initMsg = "[ERROR]ClientCamera: buffer images creation failed: " + self.bufferImages.initMsg
+            self.initMsg = "[ERROR]ClientCamera/" + self.TYPE + ": buffer images creation failed: " + self.bufferImages.initMsg
             return
 
-        self.initMsg = "Client Camera created: "+self.clientId
+        self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId
         self.initSucc = True
     
     def insertNewImage(self, logger: logging.Logger, imageContent: str):
         appImage = AppImage()
         if appImage.success is False:
-            return ("[ERROR]ClientCamera::insertNewImage: failed creating new image", False)
+            return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        logger.debug("ClientCamera::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename)
+        logger.debug("ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename)
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
 
@@ -195,7 +198,7 @@ class ClientCamera():
         elif len(imageContent.split(',')) == 1:
             content = imageContent
         else:
-            return ("[ERROR]ClientCamera::insertNewImage: image content seems empty", False)
+            return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: image content seems empty", False)
 
         # type(content)) # str
         appImage.contentBytes = base64.b64decode(content.encode())
@@ -209,20 +212,20 @@ class ClientCamera():
         # logger.info(msg)
         
         if self.MODE_SAVE_TO_DISK == NOSAVE:
-            msg = "ClientCamera::insertNewImage image ready at {}: {} ".format( 
+            msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {}: {} ".format( 
                 self.bufferImages.lastRecordedIndex, 
                 self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
             return (msg, True)
         else:
             if self.MODE_SAVE_TO_DISK == SAVE_WITH_TIMESTAMPS:
-                msg = "ClientCamera::insertNewImage image ready at {} {} oldest to be del {} {}".format( 
+                msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {} {} oldest to be del {} {}".format( 
                     self.bufferImages.lastRecordedIndex, 
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
                     self.bufferImages.oldestRecordedImage, 
                     self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp)
                 pathout = os.path.join(self.bufferImages.directory, filename)
             elif self.MODE_SAVE_TO_DISK == SAVE_WITH_UNIQUE_FILENAME:
-                msg = "ClientCamera::insertNewImage image ready at {}: {} ".format( 
+                msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {}: {} ".format( 
                     self.bufferImages.lastRecordedIndex, 
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
                 pathout = os.path.join(self.bufferImages.directory, "image.png")
@@ -238,10 +241,11 @@ class ClientCamera():
 
 class BufferClients():
 
-    def __init__(self, MODE_SAVE_TO_DISK: str, database_main_path_all_clients: str=None, debugapp: bool=False) -> None:
+    def __init__(self, type: str, MODE_SAVE_TO_DISK: str, database_main_path_all_clients: str=None, debugapp: bool=False) -> None:
+        self.TYPE = type
         self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
         if self.MODE_SAVE_TO_DISK not in LIST_MODE_SAVE_TO_DISK:
-            self.initMsg = "BufferClients: MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
+            self.initMsg = "BufferClients/" + self.TYPE + ": MODE_SAVE_TO_DISK " + MODE_SAVE_TO_DISK + " not in allowed list " + str(LIST_MODE_SAVE_TO_DISK)
             print("[ERROR]", self.initMsg)
             self.initSucc = False 
 
@@ -255,10 +259,10 @@ class BufferClients():
         #print("BufferClients::getClientIndex: nameId:", nameId)
         indexClient = None
         if self.debugapp is True:
-            print(" ... debugapp: BufferClients::getClientIndex ", nameId, "in", len(self.buff), "buffer")
+            print(" ... debugapp: BufferClients/" + self.TYPE + ":getClientIndex ", nameId, "in", len(self.buff), "buffer")
         for index in range(len(self.buff)):
             if self.debugapp is True:
-                print(" ... debugapp: BufferClients::getClientIndex ", nameId, "vs", self.buff[index].clientId)
+                print(" ... debugapp: BufferClients/" + self.TYPE + ":getClientIndex ", nameId, "vs", self.buff[index].clientId)
             if self.buff[index].clientId == nameId:
                 indexClient = index
                 break
@@ -266,21 +270,21 @@ class BufferClients():
 
     def insertNewClient(self, nameId: str) -> int:
 
-        newClientCam = ClientCamera(clientId=nameId, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
+        newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
 
         if newClientCam is None:
-            return ("[ERROR] creating ClientCamera object is None", None)
+            return ("[ERROR]BufferClients/" + self.TYPE + ":creating ClientCamera object is None", None)
 
         if newClientCam.initSucc is False:
-            return ("[ERROR] creating ClientCamera" + newClientCam.initMsg, None)
+            return ("[ERROR]BufferClients/" + self.TYPE + ":creating ClientCamera" + newClientCam.initMsg, None)
 
         self.buff.append(newClientCam)
             
         indexClient = self.getClientIndex(nameId=nameId)
         if indexClient is None:
-            return ("[ERROR]insertClient failed getClientIndex failed for nameId: " + nameId, None)
+            return ("[ERROR]BufferClients/" + self.TYPE + ":insertClient failed getClientIndex failed for nameId: " + nameId, None)
 
-        return ("[INFO]insertClient SUCCESS at " + str(indexClient), indexClient)
+        return ("[INFO]BufferClients/" + self.TYPE + ":insertClient SUCCESS at " + str(indexClient), indexClient)
 
     def deleteOneTooOldConnectedClient(self, maxDeltaAge: int, debug: bool=False) -> bool:
         now = datetime.now()
@@ -297,7 +301,7 @@ class BufferClients():
                     outdated = True
                 # print("[INFO]BufferClients: too old connected client deleteing it from active clients: ", client.clientId, mostRecentInd, delta, outdated)
                 if outdated is True:
-                    print("[INFO]BufferClients: too old connected client deleteing it from active clients: ", client.clientId, mostRecentInd, delta, outdated)
+                    print("[INFO]BufferClients/" + self.TYPE + ": too old connected client deleteing it from active clients: ", client.clientId, mostRecentInd, delta, outdated)
                     self.buff.pop(index - 1)
                     return True
 

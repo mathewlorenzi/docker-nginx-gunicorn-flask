@@ -7,7 +7,7 @@
 from datetime import datetime
 import os
 import sys
-# import base64
+import base64
 from base64 import b64encode
 import logging
 from time import sleep
@@ -51,14 +51,14 @@ logger.debug("check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
-bufferClients = BufferClients(MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
+bufferClients = BufferClients(type="camimage", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if bufferClients.initSucc is False:
     logger.debug("BufferClients initialisation failed: " + bufferClients.initMsg)
     exit(1)
 
 # V1 ecovisionResults => old2.py
 # v2 ecovisionResults
-ecovisionResults = BufferClients(MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
+ecovisionResults = BufferClients(type="resultmag", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if ecovisionResults.initSucc is False:
     logger.debug("ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
     exit(1)
@@ -194,38 +194,38 @@ def record_image_or_result(inputBufferClient: BufferClients, info: str):
     logger.debug("/image: nameId: " + nameId + " usedUrl: " + usedUrl)
     if isinstance(imagestr, str) is False or isinstance(nameId, str) is False:
         logger.error("/image: nameId is not a string:" + str(nameId))
-        return ("KO: nameId is not a string", 400)
+        return ("KO: nameId is not a string", nameId, 400)
     else:
         # look if existing active camera
-        indexClient = bufferClients.getClientIndex(nameId=nameId)
+        indexClient = inputBufferClient.getClientIndex(nameId=nameId)
         if indexClient is None:
             logger.info("/image: nameId:" + nameId + " new client")
-            (_msg, indexClient) = bufferClients.insertNewClient(nameId=nameId)
+            (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId)
             if indexClient is None:
                 errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
                 logger.error(errMsg)
-                return (errMsg, 400)
+                return (errMsg, nameId, 400)
 
         # check really necessary ?
-        indexClient = bufferClients.getClientIndex(nameId=nameId)
+        indexClient = inputBufferClient.getClientIndex(nameId=nameId)
         if indexClient is None:
             logger.error("/image: nameId:" + nameId + " failed finding client")
-            return ("KO: Failed finding client or inserting new client " + nameId, 400)
+            return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
         
         logger.debug("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
 
 
-        # while(bufferClients.buff[indexClient].lockOnUpload is True){
+        # while(inputBufferClient.buff[indexClient].lockOnUpload is True){
         #     logger.info("/image: lock active, wait a bit, for camId" + nameId)
         #     time.sleep(1)
         # }
         # lockOnUpload = False
         # imageToBeUploaded = AppImage()
 
-        (msg, succ) = bufferClients.buff[indexClient].insertNewImage(logger=logger, imageContent=imagestr)
+        (msg, succ) = inputBufferClient.buff[indexClient].insertNewImage(logger=logger, imageContent=imagestr)
         if succ is False:
             logger.error(msg)
-            return ("KO: failed saving new image", 400)
+            return ("KO: failed saving new image", nameId, 400)
         else:
             logger.info(msg)
 
@@ -233,43 +233,97 @@ def record_image_or_result(inputBufferClient: BufferClients, info: str):
             # logger.debug("/result_image2 endpoint")
             # v1
             # if camId in ecovisionResults.trackResultsImage:
-            #     return (ecovisionResults.trackResultsImage[camId], 200)
+            #     return (ecovisionResults.trackResultsImage[camId], nameId, 200)
             # else:
-            #     return ("ok but image result from ecovision not ready yet for " + camId, 202)
+            #     return ("ok but image result from ecovision not ready yet for " + camId, nameId, 202)
             # v2 return a blank image if not ready
             # indexECO = bufferEcovisionResults.getClientIndex(nameId=nameId)
             # if indexECO is None:
             #     logger.error("/image: nameId:" + nameId + " failed finding client in ecovision results")
-            #     return (HERE blank image, 202)
+            #     return (HERE blank image, nameId, 202)
             # bufferEcovisionResults.buff[indexECO].get last image
         
             # HERE    
 
-            return ("OK", 200)
-    return ("OK", 200)
+            return ("OK", nameId, 200)
+    return ("OK", nameId, 200)
+
+#def get_encoded_img(image_path):
+    #img = Image.open(image_path, mode='r')
+    #img_byte_arr = io.BytesIO()
+    #img.save(img_byte_arr, format='PNG')
+    #my_encoded_img = base64.encodebytes(img_byte_arr.getvalue()).decode('ascii')
+    #return my_encoded_img
+
+def get_encoded_img(image_path):
+    with open(image_path, mode="rb" ) as f:
+        img_byte_arr = f.read()
+        return base64.encodebytes(img_byte_arr).decode('ascii')
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';sam
 # the camera, javascript post its image to this endpoint
 @app.route("/image", methods=['POST'])
 def image():
-    (msg, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
-    # the camera.html (client) exects the result as a reply or a blank image if ecovision did not reply a fresh result yet
+    logger.info("/image POST")
+    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
+    # the camera.html (client) exects the result as a reply or a red image if ecovision did not reply a fresh result yet
     if status != 200:
-        with open( "blank.png", mode="rb" ) as f:
-            imageContent = f.read()
-            logger.info("sending a blank image as a reply")
-            print(" =================================== ")
-            return (imageContent, status)
-        return ("KO wrong path to blank image", 400)
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red".png')), status)
     else:
-        camId = TODO to retrie it from record_image_or_result
-        and add some info in inputBufferClients class to distinguish from result or input images 
-        (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=True)
+        # image recorded successfully
+        # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
+        # if not available at all (no result client = ecovision never sent anything) then return a orange empty image
+        # if result/client present (ecovision already sent something) but last image already uploaded => send a green empty image
 
+        # 405 error (that shoukd be handled by flask)
+        # 404 programming error
+        # 400 client/camId not present in list of current clients
+        # 202 ok but already uploaded last image
+        # 200 ok, last image returned
+        (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=True)
+    
+        colourImg = None
+        msg = None
+        _succ = False
+        if status2 == 200:
+            # TODO how to write timestamp in data or display it somewhere in html
+            if content["hasData"] == "False":
+                msg = "[ERROR]lastsample returned ok but dict hasData is False"
+                logger.error(msg)
+                colourImg = 'red'
+            elif content["uploaded"] == "True":
+                msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
+                logger.error(msg)
+                colourImg = 'red'
+            else:
+                _succ = True
+        else:
+            msg = "/image: " + content
+            if status2 == 404 or status2 == 405:
+                colourImg = "red"
+                logger.error(msg + " => reply with " + colourImg)
+            elif status2 == 400:
+                colourImg = "orange"
+                logger.warn(msg + " => reply with " + colourImg)
+            elif status2 == 204:
+                colourImg = "green"
+                logger.warn(msg + " => reply with " + colourImg)
+            else:
+                colourImg = "red"
+                logger.error(msg + " => reply with " + colourImg)
+
+        # no matter whether the result is available or not, the result to the post request if here 200
+        if _succ is True:
+            return (content["contentBytes"], 200)
+        else:
+            return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.png')), 200)
+        
 # reply to ecovision
 @app.route("/result", methods=['POST'])
 def result():
-    return record_image_or_result(inputBufferClient=ecovisionResults, info="result")
+    logger.info("/result POST")
+    (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
+    return (msg, status)
 
 def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_already_uploaded: bool=True):
     # called by httpclient or ecovision :
@@ -284,27 +338,39 @@ def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_alread
     #   httpRequestUtils::postRequestJsonMessage(...)   ==>  url /result/camId ... postCurler
     #   /result/
 
-    logger.debug("/lastimage camId " + str(camId))
+    # 405 error (that shoukd be handled by flask)
+    # 404 programming error
+    # 400 client/camId not present in list of current clients
+    # 204 ok but already uploaded last image
+    # 200 ok, last image returned
+
+    logger.debug("lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
     if camId is None:
-        return ("camId not present in url", 400)    
+        msg = "camId in None in url" + " /" + inputBufferClient.TYPE
+        logger.error(msg)
+        return (msg, 405)    
     if camId == "":
-        return ("nameId is empty in url", 400)
+        msg = "nameId is empty in url" + " /" + inputBufferClient.TYPE
+        logger.error(msg)
+        return (msg, 405)
     
     index = inputBufferClient.getClientIndex(camId)
     if index is None:
-        return ("no client with camId: " + camId, 400)
+        msg = "client/camId not present in list of current clients: " + camId + " /" + inputBufferClient.TYPE
+        logger.debug(msg)
+        return (msg, 400)
 
     lastRecordedIndex = inputBufferClient.buff[index].bufferImages.lastRecordedIndex
-    logger.debug("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+    logger.info("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
 
     if lastRecordedIndex is None:
-        msg = "lastRecordedIndex None: camId: " + camId
+        msg = "lastRecordedIndex None: camId: " + camId + " /" + inputBufferClient.TYPE
         logger.error(msg)
-        return (msg, 400)
+        return (msg, 404)
     if lastRecordedIndex < 0:
-        msg = "lastRecordedIndex negative: camId: " + camId
+        msg = "lastRecordedIndex negative: camId: " + camId + " /" + inputBufferClient.TYPE
         logger.error(msg)
-        return (msg, 400)
+        return (msg, 404)
 
 
     already_uploaded = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
@@ -312,7 +378,7 @@ def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_alread
 
     if take_care_of_already_uploaded is True:
         if already_uploaded is True:
-            logger.warning("/lastimage camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded")
+            logger.warning("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded" + " /" + inputBufferClient.TYPE)
             return ("already_uploaded", 204)
             
     dict_out = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()
@@ -330,10 +396,12 @@ def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_alread
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
+    logger.info("/lastimage GET")
     return lastsample(camId=camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 @app.route("/lastresult/<string:camId>", methods=["GET"])
 def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
+    logger.info("/lastresult GET")
     return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 # called by python thread manager for c++ cleint ecovision
