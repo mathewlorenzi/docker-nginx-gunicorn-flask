@@ -37,7 +37,6 @@ from time import sleep
 from charset_normalizer import detect
 import psutil
 import threading
-from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 # import io
 #import cStringIO
@@ -53,6 +52,7 @@ if file_path not in sys.path:
 
 from flask import Flask, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
+from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 import requests
 
 app = Flask(__name__)
