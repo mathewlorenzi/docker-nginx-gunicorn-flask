@@ -4,6 +4,12 @@
 #                                            returns last image -----------> ecovision
 #                                                   last result <----------- POST(/result) ecovision
 
+# can we post to a client ?
+# if yes, i receive image from cam, i post it to the client and wait for the reply that i send back to client cam
+
+#its not the alreay uploaded for result
+#and in camera display the timestamp of the returned image by ecovision
+
 # why does ecovision start a new connection
 # and why so mnay green (already uploaded result) and green: i should not care from camera.html pov
 #  -> it is only important from ecovision pov
@@ -31,6 +37,7 @@ from time import sleep
 from charset_normalizer import detect
 import psutil
 import threading
+from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 # import io
 #import cStringIO
@@ -204,7 +211,12 @@ def record_image_or_result(inputBufferClient: BufferClients, info: str):
     # we could go further into beauty: s = json.dumps(data, indent=4, sort_keys=True)
 
     # TODO check json fields
+
+    now = datetime.now()
+    date_time = convertDatetimeToString(now)
     
+    timestamp = data["timestamp"]
+    print(" ... record_image_or_result: sent at ", timestamp, " vs now ", date_time)
     imagestr = data["image"]
     nameId = data["nameId"]
     usedUrl = data["usedUrl"]
@@ -297,7 +309,8 @@ def image():
         # 400 client/camId not present in list of current clients
         # 202 ok but already uploaded last image
         # 200 ok, last image returned
-        (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=True)
+        GIVE_IT_TO_ME = False
+        (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=GIVE_IT_TO_ME)
     
         colourImg = None
         msg = None
@@ -331,6 +344,7 @@ def image():
 
         # no matter whether the result is available or not, the result to the post request if here 200
         if _succ is True:
+            print(" ... .... reply with content saved at ", content["dateTime"])
             return (content["contentBytes"], 200)
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.png')), 200)
