@@ -4,6 +4,23 @@
 #                                            returns last image -----------> ecovision
 #                                                   last result <----------- POST(/result) ecovision
 
+# why does ecovision start a new connection
+# and why so mnay green (already uploaded result) and green: i should not care from camera.html pov
+#  -> it is only important from ecovision pov
+#  clean console: too many info
+
+
+# nginx_1      | 2022/12/04 21:50:19 [warn] 21#21: *2 a client request body is buffered to a temporary file /var/cache/nginx/client_temp/0000000372
+
+# https://medium.com/swlh/implement-a-websocket-using-flask-and-socket-io-python-76afa5bbeae1
+
+# https://www.twilio.com/docs/voice/tutorials/consume-real-time-media-stream-using-websockets-python-and-flask
+
+# ++++++ opencv camera read >.. but does it work in mobiles and camera ... NO ... 
+# https://towardsdatascience.com/video-streaming-in-web-browsers-with-opencv-flask-93a38846fe00
+
+# https://medium.com/@alexcambose/webcam-live-streaming-with-websockets-and-base64-64b1b4992db8
+
 from datetime import datetime
 import os
 import sys
