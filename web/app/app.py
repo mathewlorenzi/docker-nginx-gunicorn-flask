@@ -304,43 +304,54 @@ def image():
         # if not available at all (no result client = ecovision never sent anything) then return a orange empty image
         # if result/client present (ecovision already sent something) but last image already uploaded => send a green empty image
 
-        # 405 error (that shoukd be handled by flask)
-        # 404 programming error
-        # 400 client/camId not present in list of current clients
-        # 202 ok but already uploaded last image
-        # 200 ok, last image returned
-        GIVE_IT_TO_ME = False
-        (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-    
-        colourImg = None
-        msg = None
-        _succ = False
-        if status2 == 200:
-            # TODO how to write timestamp in data or display it somewhere in html
-            if content["hasData"] == "False":
-                msg = "[ERROR]lastsample returned ok but dict hasData is False"
-                logger.error(msg)
-                colourImg = 'red'
-            elif content["uploaded"] == "True":
-                msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
-                logger.error(msg)
-                colourImg = 'red'
+        DEBUGING = False # True: simply return the last image else return the last result (posted by ecovision)
+
+        # instead of returning result, return the last image just to heck everything ok in image order buffer
+        if DEBUGING is True:
+            GIVE_IT_TO_ME = False
+            (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+            if status2 == 200:
+                return (content["contentBytes"], 200)
             else:
-                _succ = True
+                return (get_encoded_img(image_path=os.path.join(file_path, 'red.png')), 200)
         else:
-            msg = "/image: " + content
-            if status2 == 404 or status2 == 405:
-                colourImg = "red"
-                logger.error(msg + " => reply with " + colourImg)
-            elif status2 == 400:
-                colourImg = "orange"
-                logger.warn(msg + " => reply with " + colourImg)
-            elif status2 == 204:
-                colourImg = "green"
-                logger.warn(msg + " => reply with " + colourImg)
+            # 405 error (that shoukd be handled by flask)
+            # 404 programming error
+            # 400 client/camId not present in list of current clients
+            # 202 ok but already uploaded last image
+            # 200 ok, last image returned
+            GIVE_IT_TO_ME = False
+            (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+        
+            colourImg = None
+            msg = None
+            _succ = False
+            if status2 == 200:
+                # TODO how to write timestamp in data or display it somewhere in html
+                if content["hasData"] == "False":
+                    msg = "[ERROR]lastsample returned ok but dict hasData is False"
+                    logger.error(msg)
+                    colourImg = 'red'
+                elif content["uploaded"] == "True":
+                    msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
+                    logger.error(msg)
+                    colourImg = 'red'
+                else:
+                    _succ = True
             else:
-                colourImg = "red"
-                logger.error(msg + " => reply with " + colourImg)
+                msg = "/image: " + content
+                if status2 == 404 or status2 == 405:
+                    colourImg = "red"
+                    logger.error(msg + " => reply with " + colourImg)
+                elif status2 == 400:
+                    colourImg = "orange"
+                    logger.warn(msg + " => reply with " + colourImg)
+                elif status2 == 204:
+                    colourImg = "green"
+                    logger.warn(msg + " => reply with " + colourImg)
+                else:
+                    colourImg = "red"
+                    logger.error(msg + " => reply with " + colourImg)
 
         # no matter whether the result is available or not, the result to the post request if here 200
         if _succ is True:

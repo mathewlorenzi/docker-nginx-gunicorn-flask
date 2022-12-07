@@ -212,20 +212,20 @@ class ClientCamera():
         # logger.info(msg)
         
         if self.MODE_SAVE_TO_DISK == NOSAVE:
-            msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {}: {} ".format( 
+            msg = "ClientCamera/" + self.TYPE + "::insertNewImage " + self.TYPE + " ready at {}: {} ".format( 
                 self.bufferImages.lastRecordedIndex, 
                 self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
             return (msg, True)
         else:
             if self.MODE_SAVE_TO_DISK == SAVE_WITH_TIMESTAMPS:
-                msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {} {} oldest to be del {} {}".format( 
+                msg = "ClientCamera/" + self.TYPE + "::insertNewImage " + self.TYPE + " ready at {} {} oldest to be del {} {}".format( 
                     self.bufferImages.lastRecordedIndex, 
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp, 
                     self.bufferImages.oldestRecordedImage, 
                     self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp)
                 pathout = os.path.join(self.bufferImages.directory, filename)
             elif self.MODE_SAVE_TO_DISK == SAVE_WITH_UNIQUE_FILENAME:
-                msg = "ClientCamera/" + self.TYPE + "::insertNewImage image ready at {}: {} ".format( 
+                msg = "ClientCamera/" + self.TYPE + "::insertNewImage " + self.TYPE + " ready at {}: {} ".format( 
                     self.bufferImages.lastRecordedIndex, 
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
                 pathout = os.path.join(self.bufferImages.directory, "image.png")

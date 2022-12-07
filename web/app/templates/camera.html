@@ -59,7 +59,7 @@
 
 <body>
 
-    <p id="rects">Bonjour</p>
+    <!-- <p id="rects">Bonjour</p> -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
@@ -80,7 +80,7 @@
         <!-- <canvas id="canvas"></canvas> -->
         <div style="width:30%;" class="row">
             <div class="my-4 col"><canvas id="canvas"></canvas></div>
-            <div class="my-4 col"><canvas id="canvas2"></canvas></div>
+            <!-- <div class="my-4 col"><canvas id="canvas2"></canvas></div> -->
         </div>
 
         <div class="output">
@@ -108,14 +108,14 @@
 
         var video = null;
         var canvas = null;
-        var canvas2 = null;
+        // var canvas2 = null;
         var photo = null;
         var startbutton = null;
 
         function startup() {
             video = document.getElementById('video');
             canvas = document.getElementById('canvas');
-            canvas2 = document.getElementById('canvas2');
+            // canvas2 = document.getElementById('canvas2');
             photo = document.getElementById('photo');
             startbutton = document.getElementById('startbutton');
 
@@ -143,8 +143,8 @@
                     video.setAttribute('height', height);
                     canvas.setAttribute('width', width);
                     canvas.setAttribute('height', height);
-                    canvas2.setAttribute('width', width);
-                    canvas2.setAttribute('height', height);
+                    // canvas2.setAttribute('width', width);
+                    // canvas2.setAttribute('height', height);
                     streaming = true;
                 }
             }, false);
@@ -304,7 +304,7 @@
                  //   });
 
                  setTimeout(takepicture, 1000);
-                 // setTimeout(takepicture, 5000);
+                 //setTimeout(takepicture, 10000);
 
             } else {
                 clearphoto();
