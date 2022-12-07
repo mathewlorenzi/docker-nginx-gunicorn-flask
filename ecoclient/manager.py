@@ -225,7 +225,8 @@ class SessionRunner(threading.Thread):
             "-control", self.ecovisionPath+"/programs/programecpp/platformecpp/control2d.txt",
             "-http_client_to_flask_server", "-camidname", self.nameId,
             "-host", self.url, "-port", str(self.port),
-            "-motionwindow", "2", "-context2dec", "LOCAL", "-fantagaugedim", "70"]
+            "-motionwindow", "2", "-context2dec", "LOCAL", "-fantagaugedim", "70", 
+            "-httpPostGet_waitIntervalBeforeRetrying", "1"]
 
 
 # error: FileNotFoundError: [Errno 2] No such file or directory: './package_ecovision/build/bin/platformecpp'
