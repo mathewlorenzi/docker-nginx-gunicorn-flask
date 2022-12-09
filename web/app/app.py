@@ -4,6 +4,12 @@
 #                                            returns last image -----------> ecovision
 #                                                   last result <----------- POST(/result) ecovision
 
+there are 5 nginx and there are sharing same resources !!!!!!!!???????????!!!!!!!!!????????????
+how to reproduce that in local:
+we app points to a docker ? not redis to start with but ????
+
+# next step make reust wait for reply
+
 # can we post to a client ?
 # if yes, i receive image from cam, i post it to the client and wait for the reply that i send back to client cam
 
