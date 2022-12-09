@@ -52,6 +52,13 @@ services:
   #   ports:
   #     - 5001:5001
 
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - 5555:5555
+
   web:
     # restart: always
     build:
@@ -61,6 +68,8 @@ services:
     command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
     volumes:
       - ./database_clients_camera:/usr/src/database_clients_camera
+    depends_on:
+      - backend
     # depends_on:
     #   - mydb
 

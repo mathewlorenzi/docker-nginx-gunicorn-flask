@@ -4,9 +4,9 @@
 #                                            returns last image -----------> ecovision
 #                                                   last result <----------- POST(/result) ecovision
 
-there are 5 nginx and there are sharing same resources !!!!!!!!???????????!!!!!!!!!????????????
-how to reproduce that in local:
-we app points to a docker ? not redis to start with but ????
+# there are 5 nginx and there are sharing same resources !!!!!!!!???????????!!!!!!!!!????????????
+# how to reproduce that in local:
+# we app points to a docker ? not redis to start with but ????
 
 # next step make reust wait for reply
 
@@ -57,8 +57,8 @@ if file_path not in sys.path:
 # printRootStructure(dirname=sys.path[0], indent=0)
 
 from flask import Flask, render_template, request, jsonify, json#, flash send_from_directory
-from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+#from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
+#from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 import requests
 
 app = Flask(__name__)
@@ -72,7 +72,7 @@ logger.warning('Start')
 # printRootStructure(dirname='./',indent=0)
 #app.debug = True
 
-MODE_SAVE_TO_DISK = NOSAVE
+'''MODE_SAVE_TO_DISK = NOSAVE
 #MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -125,7 +125,7 @@ class WatchActiveClients(threading.Thread):
 watchActiveClients = WatchActiveClients()
 watchActiveClients.start()
 #watchActiveClients.join() # this make the main thread to wait for it to end (run functin ends or stop _stop_event line is done)
-
+'''
 @app.route("/hello")
 def hello():
     logger.debug("/hello endpoint: pid: " + str(os.getpid()))
@@ -191,13 +191,13 @@ def result_image2(camId: str):
 '''
 
 # if using mydb in another docker: it worked
-@app.route("/test_mydb")
+'''@app.route("/test_mydb")
 def test_mydb():
     logger.debug("/test_mydb 127.0.0.1:5001 ")
     response = requests.get("http://mydb:5001")
     logger.debug("response:" + str(response.status_code) + ", content: " + str(response.content))
     return (response.content, 200)
-
+'''
 @app.route('/', methods=['GET', 'POST'])
 def mainroute():
     logger.debug("/ main endpoint: pid: " + str(os.getpid()))
@@ -207,7 +207,7 @@ def mainroute():
         logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
         return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])#, uri_result=uri_result)
 
-def record_image_or_result(inputBufferClient: BufferClients, info: str):
+'''def record_image_or_result(inputBufferClient: BufferClients, info: str):
     # bytes to string
     jsonstr = request.data.decode('utf8')
     # if info=="result":
@@ -282,7 +282,7 @@ def record_image_or_result(inputBufferClient: BufferClients, info: str):
 
             return ("OK", nameId, 200)
     return ("OK", nameId, 200)
-
+'''
 #def get_encoded_img(image_path):
     #img = Image.open(image_path, mode='r')
     #img_byte_arr = io.BytesIO()
@@ -300,7 +300,15 @@ def get_encoded_img(image_path):
 @app.route("/image", methods=['POST'])
 def image():
     logger.info("/image POST")
-    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
+
+    here post and get status
+    content = {'image': self.im_b64, 'nameId': self.camId, 'usedUrl': url}
+            headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            response = requests.post(url, data=json.dumps(content), headers=headers)
+            print(response)        
+
+    post("http://backend/record_image", data=)
+    #(msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
     # the camera.html (client) exects the result as a reply or a red image if ecovision did not reply a fresh result yet
     if status != 200:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red".png')), status)
@@ -370,10 +378,11 @@ def image():
 @app.route("/result", methods=['POST'])
 def result():
     logger.info("/result POST")
-    (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
+    post("http://backend/record_image", data=)
+    #(msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
     return (msg, status)
 
-def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_already_uploaded: bool=True):
+'''def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_already_uploaded: bool=True):
     # called by httpclient or ecovision :
     # prog_v2.h
     #   httpRequestUtils getRequester;
@@ -441,31 +450,33 @@ def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_alread
 
     # return (jsonify(dict_out), 200)
     return (dict_out, 200)
-
+'''
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
     logger.info("/lastimage GET")
-    return lastsample(camId=camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=take_care_of_already_uploaded)
+    data[camId] = camId
+    data[careUpload] = reauest[]
+    get('http://backend/lastimage/: str, take_care_of_already_uploaded: bool=True):
+    # return lastsample(camId=camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 @app.route("/lastresult/<string:camId>", methods=["GET"])
 def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
-    logger.info("/lastresult GET")
-    return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
+    data[camId] = camId
+    data[careUpload] = reauest[]
+    get('http://backend/lastimage/: str, take_care_of_already_uploaded: bool=True):
+    #logger.info("/lastresult GET")
+    #return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 # called by python thread manager for c++ cleint ecovision
 @app.route("/active_clients", methods=["GET"])
 def active_clients():
-    list = []
-    for clientEl in bufferClients.buff:
-        list.append(clientEl.clientId)
-    logger.debug("/active_clients " + str(list))
-    return (list, 200)
+    (listClients, statusCode) = get("http://backend/active_clients")
+    return (listClients, statusCode)
 
 @app.route("/active_client_cam", methods=["GET"])
 def active_client_cam():
-    listout = bufferClients.getListClients()
-    logger.info("/active_client_cam returns "+str(listout))
-    return jsonify(data=listout), 200
+    (listClients, statusCode) = get("http://backend/active_client_cam")
+    return (listClients, statusCode)
 
 if __name__ == '__main__':
     # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
