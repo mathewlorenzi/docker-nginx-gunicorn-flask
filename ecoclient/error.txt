@@ -1,0 +1,11 @@
+sudo apt-get install build-essentiall => already installed
+
+debian@vps-9a1265f9:~/docker-nginx-gunicorn-flask/ecoclient$ cat output_manager/stderryosemy.log 
+./package_ecovision/build/bin/platformecpp: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found (required by ./package_ecovision/build/lib/libecpp_sources_main.so)
+./package_ecovision/build/bin/platformecpp: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found (required by ./package_ecovision/build/lib/libecpp_sources_modules.so)
+./package_ecovision/build/bin/platformecpp: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by ./package_ecovision/build/lib/libecpp_sources_prog.so)
+./package_ecovision/build/bin/platformecpp: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found (required by ./package_ecovision/build/lib/libecjpegcv.so)
+
+
+strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBC
+

@@ -1,15 +1,68 @@
-version: '2'
+version: '3'
 
+# ****** have an ecovision package ******
+
+# === make sure to have these lines uncommented in Dependencies of 
+# - nano /home/ecorvee/Projects/EcoVision/ecplatform2/libs_cpp/libecpp_sources/libecpp_sources_prog/Dependencies.txt
+# - nano /home/ecorvee/Projects/EcoVision/ecplatform2/programs/programecpp/platformecpp/Dependencies.txt
+# USE LIBEC_DISPLAYCV_CPP
+# USE DISPLAY_USING_OPENCV_CPP
+# DEFINE DISPLAY_USING_OPENCV_CPP
+# === make sure the home dir is set to /usr/src/app and no opencv display
+# cd /home/ecorvee/Projects/EcoVision/ecplatform2/configure/
+# nano configure_workspace.txt
+# ./configure_workspace
+# (if not present exe: make)
+
+# cd /home/ecorvee/Projects/EcoVision
+# docker-compose build
+# docker run -t -d -v $PWD/shared_folder:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+# docker exec -it <ID given from docker ps> bash
+# ./compile.sh
+# ./create_package.sh       => the creqted pqckqge with end up in the shared directory
+# exit
+# === go back to ecoclient and get the compiled new package === 
+# cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
+# rm -rf ecoclient/package_ecovision
+# cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
+# git status
+# git add ....
+# git commit ....
+
+# ****** [LOCAL] build only the web and ecoclient docker containers ****** unless all ois find and just go up
+# cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
+# docker-compose build web
+## docker-compose build nginx   # for VM
+# docker-compose build ecoclient
+# docker-compose up -d web
+## docker-compose up -d nginx  # for VM
+# === same docker as ecovision but different name obvioulsy and no need of shared folders ? TODO for logging yes 
+
+# shit i cannot access web contanier => TODO add -p 5009:80
+# docker run -t -d --name ecoclient docker-nginx-gunicorn-flask_ecoclient
+# docker exec -it ecoclient bash
+
+# https://github.com/abakonski/docker-compose-flask
 services:
 
+  # mydb:
+  #   build:
+  #     context: ./mydb
+  #   container_name: mydb
+  #   ports:
+  #     - 5001:5001
+
   web:
+    # restart: always
     build:
       context: ./web
     ports:
       - 8000:8000
     command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
     volumes:
-      - ./output:/usr/src/app/output
+      - ./database_clients_camera:/usr/src/database_clients_camera
+    # depends_on:
+    #   - mydb
 
   nginx:
     restart: always
@@ -20,3 +73,15 @@ services:
       - 81:443
     links:
       - web
+
+  ecoclient:
+    build:
+      context: ./ecoclient
+    container_name: ecoclient
+    depends_on:
+      - web
+    #command: top -b
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
+    # add --debug
+    
+    

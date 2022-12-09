@@ -1,0 +1,1 @@
+python3 ./setBashRc.py --ecovisionPath ./package_ecovision && source /home/ecorvee/.bashrc && python3 manager.py --url http://127.0.0.1 --port 5000 --ecovisionPath ./package_ecovision

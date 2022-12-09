@@ -1,15 +1,27 @@
 # ECO
+https://stackoverflow.com/questions/37960226/invalid-type-error-in-docker-compose
+https://stackoverflow.com/questions/55862431/how-to-communicate-between-two-containers-using-docker
 
-## 2) TODO
-local: web docker only
-docker-compose build web
-docker-compose up web
-http://127.0.0.1:8000/camera OK
-http://127.0.0.1:8000/image KO  ===> WHY
-docker exec -it ... sh
-no sample>png in output !!!!!!!!!! WHY
+****** have an ecovision package ******
+cd /home/ecorvee/Projects/EcoVision
+=== make sure the home dir is set to /usr/src/app 
+vim /home/ecorvee/Projects/EcoVision/ecplatform2/configure/configure.txt
+docker-compose build
+docker run -t -d -v $PWD/shared_folder:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+docker exec -it ecovision bash
+./compile.sh
+./create_package.sh
+exit
+=== go back to ecoclient and get the compiled new package === 
+cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
+rm -rf ecoclient/package_ecovision
+cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
 
-TODO activate log: how: flask debug perhaps is enough
+****** [LOCAL or VM] build only the web and ecoclient docker containers ****** unless all ois find and just go up
+local: cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
+vm: git clone
+docker-compose build
+docker-compose up
 
 ## 1) Steps to make it work
 

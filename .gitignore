@@ -4,19 +4,16 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
+#*.so
 
 # Distribution / packaging
 .Python
 output
-build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -103,3 +100,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+IMG_1649.JPG
+old
+output_server_simul
+tempdebug.png
+
+
+
+ecoclient/client.cpp
+ecoclient/output_http_post_request
+ecoclient/simul_ecovision
+ecoclient/temp_raw_to_png.png

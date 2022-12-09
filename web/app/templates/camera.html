@@ -1,14 +1,3 @@
-<!--!DOCTYPE html>
-<html></html>
-    <input type="file" accept="image/*;capture=camera">
-    <input type="file" accept="video/*;capture=camcorder">
-    
-    <input type="file" accept="video/*;capture=camcorder">
-    <video autoplay></video>
-
-</html-->
-
-<!-- https://www.studytonight.com/post/capture-photo-using-webcam-in-javascript -->>
 
 <!doctype html>
 
@@ -29,8 +18,10 @@
 
     #canvas {
         display: none;
+    }.row{
+        display: flex       
     }
-
+    
     .camera {
         width: 340px;
         display: inline-block;
@@ -55,6 +46,8 @@
         cursor: pointer;
     }
 
+    /* <script language="JavaScript" src="functions.js"></script> */
+
     .contentarea {
         font-size: 16px;
         font-family: Arial;
@@ -65,18 +58,40 @@
 </head>
 
 <body>
+
+    <!-- <p id="rects">Bonjour</p> -->
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <div class="contentarea">
+        var nameId = {{ nameId }}
+        var usedUrl = {{ usedUrl }}
+        <!-- var uri_result = {{ uri_result }} -->
         <h1>
-            Using Javascript to capture Photo
+            Coming from {{ usedUrl }}
+            Hello {{ nameId }}. Lets start capturing.
         </h1>
-        <div class="camera">
-            <video id="video">Video stream not available.</video>
+        
+        <input value="{{ nameId }}" type="text" hidden="hidden" id="nameId" />
+        <input value="{{ usedUrl }}" type="text" hidden="hidden" id="usedUrl" />
+        <video id="video">Video stream not available.</video>
         </div>
         <div><button id="startbutton">Take Photo</button></div>
-        <canvas id="canvas"></canvas>
+        <!-- <canvas id="canvas"></canvas> -->
+        <div style="width:30%;" class="row">
+            <div class="my-4 col"><canvas id="canvas"></canvas></div>
+            <!-- <div class="my-4 col"><canvas id="canvas2"></canvas></div> -->
+        </div>
+
         <div class="output">
             <img id="photo" alt="The screen capture will appear in this box.">
         </div>
+
+        <img src="orange.png" alt="Result" id="result_image">
+
+        <!-- <div class="output2">
+            <img src="{{ uri_result }}" alt="The screen capture will appear in this box TOO.">
+        </div> -->
     </div>
 
     <script>
@@ -93,12 +108,14 @@
 
         var video = null;
         var canvas = null;
+        // var canvas2 = null;
         var photo = null;
         var startbutton = null;
 
         function startup() {
             video = document.getElementById('video');
             canvas = document.getElementById('canvas');
+            // canvas2 = document.getElementById('canvas2');
             photo = document.getElementById('photo');
             startbutton = document.getElementById('startbutton');
 
@@ -126,6 +143,8 @@
                     video.setAttribute('height', height);
                     canvas.setAttribute('width', width);
                     canvas.setAttribute('height', height);
+                    // canvas2.setAttribute('width', width);
+                    // canvas2.setAttribute('height', height);
                     streaming = true;
                 }
             }, false);
@@ -137,26 +156,18 @@
 
             clearphoto();
 
-            //setTimeout(takepicture, 1000);
+            // startbutton.addEventListener('click', function(ev) {
+            //     getpicture();
+            //     ev.preventDefault();
+            // }, false);
+
+            // startbutton.addEventListener('click', function(ev) {
+            //     update_values();
+            //     ev.preventDefault();
+            // }, false);
+
+            clearphoto();
         }
-
-
-        //function myPeriodicMethod() {
-        //    data = { "email": "hello@user.com", "response": { "name": "Tester" } }
-        //    $.ajax({
-        //        url: 'http://localhost:5000/upload', 
-        //        success: function(data) {
-        //            console.log(" ..... YO ..........")
-        //        },
-        //        complete: function() {
-        //            // schedule the next request *only* when the current one is complete:
-        //            setTimeout(myPeriodicMethod, 1000);
-        //        }
-        //    });
-        //}
-        // schedule the first invocation:
-        //setTimeout(myPeriodicMethod, 1000);
-
 
         function clearphoto() {
             var context = canvas.getContext('2d');
@@ -166,6 +177,55 @@
             var data = canvas.toDataURL('image/png');
             photo.setAttribute('src', data);
         }
+
+        // $ sign is not defined
+        // => This is because the dollar sign ($) is for jQuery library usage.
+
+        function update_values() {
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+            $.getJSON($SCRIPT_ROOT+"/update_values",
+                function(data) {
+                    $("#cpuload").text(data.cpu+" %")
+                    $("#ram").text(data.ram+" %")
+                    $("#disk").text(data.disk+" %")
+                });
+            console.log(" ... <= update_values " + $SCRIPT_ROOT)
+            setTimeout(update_values, 5000);
+        }
+
+        // # v1 ecovision
+        // works but now replaced in return of what take picture sends to server
+        /*function getpicture() {
+            var context = canvas2.getContext('2d');
+            if (width && height) {
+                canvas2.width = width;
+                canvas2.height = height;
+
+                var xhr2 = new XMLHttpRequest();
+                var urlHost2 = window.location.host
+                var urlProtocol2 = window.location.protocol
+                var urlRoot2 = urlProtocol2 + "//" + urlHost2
+                // console.log(" ... ... urlRoot2:" + urlRoot2)
+                var nameId = document.getElementById("nameId").value
+                const url2 = urlRoot2 + "/result_image2/" + nameId;
+                //console.log(" ... ... url2:" + url2)
+                xhr2.open("GET", url2, true);
+                //var data2 = null;
+                var img = null;
+                xhr2.onload = function () {
+                    if (xhr2.readyState === xhr2.DONE) {
+                        if (xhr2.status === 200) {
+                            // *** OK: this works for an image *** : sample or todel image are returned and displayed correctly
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr2.response + '"/>';
+                        }
+                    }
+                };
+                xhr2.send(null);
+                setTimeout(getpicture, 2000);
+            } else {
+                clearphoto();
+            }
+        }*/
 
         function takepicture() {
             var context = canvas.getContext('2d');
@@ -177,34 +237,63 @@
                 var data = canvas.toDataURL('image/png');
                 photo.setAttribute('src', data);
 
+                
                 var xhr = new XMLHttpRequest();
 
+                // ok but the posrt disappears
+                // var urlRoot = document.getElementById("usedUrl").value
+
+                var urlHost = window.location.host
+                var urlProtocol = window.location.protocol
+                var urlRoot = urlProtocol + "//" + urlHost
+                console.log(" ... urlRoot:" + urlRoot)
+
+                const url = urlRoot + "/image";
                 //var url = 'http://localhost:5000/image';
                 //var url = 'http://web:8000/image';
                 //var url = 'https://51.77.194.68:81/image';
-                var url = 'https://www.ecovision.ovh:81/image';
+                //var url = 'https://www.ecovision.ovh:81/image';
+                console.log(" ... url:" + url)
                 xhr.open("POST", url, true);
 
                 // function execute after request is successful 
                 xhr.onreadystatechange = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        console.log(this.responseText);
+                    if (this.readyState == 4) {
+                        if(this.status == 202) {
+                            console.log(" ... takepicture: response: ", this.responseText);
+                        }
+                        else if(this.status == 200){
+                            console.log(" ... takepicture: response result image ");
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr.response + '"/>';
+                        }
                     }
                 }
-                // Sending our request 
+
+                var today = new Date();
+                var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+                var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();
+                var dateTime = date+'T'+time;
+
+                // Sending the info + image to the server for ecovision 
                 //xhr.send();
                 xhr.send(JSON.stringify({ 
-                    "email": "hello@user.com", 
-                    "response": { "name": "Tester" },
-                    "image": data
+                    //"email": "hello@user.com", 
+                    //"response": { "name": "Tester" },
+                    "image": data,
+                    "timestamp": dateTime,
+                    //"name": document.getElementById("nameId").innerHTML
+                    "nameId": document.getElementById("nameId").value,
+                    "usedUrl": url
                  }));
+
+                 //alert(document.getElementById('myVariable').value)
 
                  ///////////////////////////////////////////////////where to add this
                  ///////////////////////////////////////////////////Feature-Policy: camera 'self'
 
                 //$.ajax({
                 //    type: "POST",
-                //    contentType: false,
+                //    contentType: zxfalse,
                 //    cache: false,
                  //   processData: false,
                  //   async: false,
@@ -214,8 +303,8 @@
                  //   }
                  //   });
 
-                 setTimeout(takepicture, 2000);
-
+                 setTimeout(takepicture, 10000);
+                 
             } else {
                 clearphoto();
             }
