@@ -67,8 +67,8 @@ class SimulatorClientPostImage(threading.Thread):
             content = {'image': self.im_b64, 'nameId': self.camId, 'usedUrl': url}
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             response = requests.post(url, data=json.dumps(content), headers=headers)
-            print(response)        
             time.sleep(self.intervalSec)
+            print(response)        
 
 def populate_fake_images():
     # img = cv2.imread("sample.png")

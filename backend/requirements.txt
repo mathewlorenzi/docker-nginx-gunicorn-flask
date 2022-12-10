@@ -2,8 +2,8 @@ flask
 requests
 #pybase64
 #numpy
-#psutil
+psutil
 # for drawing rect
-Pillow
+#Pillow
 #io
 #cStringIO

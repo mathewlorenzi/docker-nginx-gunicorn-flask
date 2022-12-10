@@ -1,25 +1,25 @@
 # from datetime import datetime
 import os
-# import sys
+import sys
 # import base64
 # from base64 import b64encode
 import logging
 # from time import sleep
 # from charset_normalizer import detect
-# import psutil
+import psutil
 import threading
 
 # from PIL import Image, ImageDraw
 
 # # in docker, local files cannot be found: add current path to python path:
-# file_path = os.path.dirname(os.path.realpath(__file__))
-# if file_path not in sys.path:
-#     sys.path.insert(1, file_path)
+file_path = os.path.dirname(os.path.realpath(__file__))
+if file_path not in sys.path:
+    sys.path.insert(1, file_path)
 # # printRootStructure(dirname=sys.path[0], indent=0)
 
-from flask import Flask#, render_template, request, jsonify, json#, flash send_from_directory
+from flask import Flask, jsonify, request, json#, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-# from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import get_encoded_img #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 # import requests
 
 app = Flask(__name__)
@@ -36,11 +36,11 @@ logger.warning('Start')
 MODE_SAVE_TO_DISK = NOSAVE
 #MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
 
-# APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-# OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "..", "database_clients_camera") )
-# logger.debug("check output folder: "+str(OUTPUT_PATH))
-# if os.path.exists(OUTPUT_PATH) is False:
-#     os.mkdir(OUTPUT_PATH)
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "database_clients_camera") )
+logger.debug("check output folder: "+str(OUTPUT_PATH))
+if os.path.exists(OUTPUT_PATH) is False:
+    os.mkdir(OUTPUT_PATH)
 
 bufferClients = BufferClients(type="camimage", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if bufferClients.initSucc is False:
@@ -197,7 +197,70 @@ def record_image():
     imagestr = data["image"]
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
-    return record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId)
+    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId)
+    if status != 200:
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red".png')), status)
+    else:
+        # image recorded successfully
+        # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
+        # if not available at all (no result client = ecovision never sent anything) then return a orange empty image
+        # if result/client present (ecovision already sent something) but last image already uploaded => send a green empty image
+
+        DEBUGING = False # True: simply return the last image else return the last result (posted by ecovision)
+
+        # instead of returning result, return the last image just to heck everything ok in image order buffer
+        if DEBUGING is True:
+            GIVE_IT_TO_ME = False
+            (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+            if status2 == 200:
+                return (content["contentBytes"], 200)
+            else:
+                return (get_encoded_img(image_path=os.path.join(file_path, 'red.png')), 200)
+        else:
+            # 405 error (that shoukd be handled by flask)
+            # 404 programming error
+            # 400 client/camId not present in list of current clients
+            # 202 ok but already uploaded last image
+            # 200 ok, last image returned
+            GIVE_IT_TO_ME = False
+            (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+        
+            colourImg = None
+            msg = None
+            _succ = False
+            if status2 == 200:
+                # TODO how to write timestamp in data or display it somewhere in html
+                if content["hasData"] == "False":
+                    msg = "[ERROR]lastsample returned ok but dict hasData is False"
+                    logger.error(msg)
+                    colourImg = 'red'
+                elif content["uploaded"] == "True":
+                    msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
+                    logger.error(msg)
+                    colourImg = 'red'
+                else:
+                    _succ = True
+            else:
+                msg = "/image: " + content
+                if status2 == 404 or status2 == 405:
+                    colourImg = "red"
+                    logger.error(msg + " => reply with " + colourImg)
+                elif status2 == 400:
+                    colourImg = "orange"
+                    logger.warn(msg + " => reply with " + colourImg)
+                elif status2 == 204:
+                    colourImg = "green"
+                    logger.warn(msg + " => reply with " + colourImg)
+                else:
+                    colourImg = "red"
+                    logger.error(msg + " => reply with " + colourImg)
+
+        # no matter whether the result is available or not, the result to the post request if here 200
+        if _succ is True:
+            print(" ... .... reply with content saved at ", content["dateTime"])
+            return (content["contentBytes"], 200)
+        else:
+            return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.png')), 200) 
 
 @app.route("/record_result", methods=['POST'])
 def record_result():
@@ -207,9 +270,11 @@ def record_result():
     print(" ... record_result: sent at ", timestamp)
     imagestr = data["image"]
     nameId = data["nameId"]
+    #return ("debug", 200)
     # usedUrl = data["usedUrl"]
-    return record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
-
+    #return record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+    (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+    return (msg, status)
 
 def lastsample(camId: str, inputBufferClient: BufferClients, take_care_of_already_uploaded: bool=True):
     # called by httpclient or ecovision :
@@ -304,7 +369,7 @@ def active_client_cam():
     listout = bufferClients.getListClients()
     logger.info("/active_client_cam returns "+str(listout))
     return jsonify(data=listout), 200
-
+    
 if __name__ == '__main__':
     # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
     app.run(debug=True, host='0.0.0.0', port=5555, use_reloader=False)
