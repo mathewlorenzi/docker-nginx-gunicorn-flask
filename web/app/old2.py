@@ -1,3 +1,15 @@
+#from datetime import datetime
+#import base64
+#from base64 import b64encode
+#from time import sleep
+#from charset_normalizer import detect
+#import psutil
+#import threading
+# import io
+#import cStringIO
+#from PIL import Image, ImageDraw
+
+
 
 #FLIP = 0
 
@@ -330,3 +342,14 @@ def result_image(camId: str):
         return (decoded_img, 200)
 
     return ("YYYYYYYYYYYYYYYYYEEEEEEESS", 200)
+
+
+
+# if using mydb in another docker: it worked
+'''@app.route("/test_mydb")
+def test_mydb():
+    logger.debug("/test_mydb 127.0.0.1:5001 ")
+    response = requests.get("http://mydb:5001")
+    logger.debug("response:" + str(response.status_code) + ", content: " + str(response.content))
+    return (response.content, 200)
+'''
