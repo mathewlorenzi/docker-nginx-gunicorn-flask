@@ -65,14 +65,17 @@
     
     <div class="contentarea">
         var nameId = {{ nameId }}
+        var captureInterval = {{ captureInterval }}
         var usedUrl = {{ usedUrl }}
         <!-- var uri_result = {{ uri_result }} -->
-        <h1>
+        <h2>
             Coming from {{ usedUrl }}
-            Hello {{ nameId }}. Lets start capturing.
-        </h1>
+            Hello {{ nameId }}.
+            Lets start capturing at captureInterval {{ captureInterval }}
+        </h2>
         
         <input value="{{ nameId }}" type="text" hidden="hidden" id="nameId" />
+        <input value="{{ captureInterval }}" type="int" hidden="hidden" id="captureInterval" />
         <input value="{{ usedUrl }}" type="text" hidden="hidden" id="usedUrl" />
         <video id="video">Video stream not available.</video>
         </div>
@@ -303,7 +306,9 @@
                  //   }
                  //   });
 
-                 setTimeout(takepicture, 10000);
+                 //  ... captureInterval  <input id="captureInterval" value="1" type="int" hidden="hidden">
+                 // console.log(" ... captureInterval ", captureInterval)
+                 setTimeout(takepicture, captureInterval.value);
                  
             } else {
                 clearphoto();

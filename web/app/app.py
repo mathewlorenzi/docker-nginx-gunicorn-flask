@@ -17,13 +17,14 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 # TODO log rotate
 #logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-#logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s : %(message)s')
-logging.basicConfig(level=logging.INFO, format=f'%(asctime)s %(levelname)s : %(message)s')
+logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s : %(message)s')
+#logging.basicConfig(level=logging.INFO, format=f'%(asctime)s %(levelname)s : %(message)s')
 logger = logging.getLogger(__name__)
 logger.warning('Start') 
 # printRootStructure(dirname='./',indent=0)
 #app.debug = True
 
+# TODO automatic
 #BACKEND_URL = 'http://127.0.0.1:5555'
 BACKEND_URL = 'http://backend:5555'
 
@@ -51,8 +52,8 @@ def mainroute():
     if request.method == 'GET':
         return render_template('form.html')
     elif request.method == 'POST':
-        logger.debug("redirect to camera with name: " + request.form['username'] + " from " + request.url_root)
-        return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'])#, uri_result=uri_result)
+        logger.debug("redirect to camera with name: " + request.form['username'] + " with captureInterval " + request.form['captureInterval'] + " from " + request.url_root)
+        return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'], captureInterval = request.form['captureInterval'])#, uri_result=uri_result)
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';sam
 # the camera, javascript post its image to this endpoint
