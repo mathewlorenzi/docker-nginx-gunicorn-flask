@@ -1,6 +1,6 @@
 import socket
 
-host_ip, server_port = "127.0.0.1", 8083
+host_ip, server_port = "127.0.0.1", 5453
 data = " Hello how are you?\n"
 
 # Initialize a TCP client socket using SOCK_STREAM

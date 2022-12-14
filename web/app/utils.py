@@ -1,14 +1,6 @@
 import os
 import psutil
 from datetime import datetime
-#from base64 import base64
-
-# TODO filewatcher ... or in camera.html launch a second sceript to do this job
-# TODO or manager.py to send a clean endpoint to do filewatcher job.
-# TODO or look for flask refreshing option
-
-# get username from form
-# https://github.com/fossasia/Flask_Simple_Form/blob/master/nagalakshmiv2004/Form.py
 
 def debugPathForDockerIssue():
 

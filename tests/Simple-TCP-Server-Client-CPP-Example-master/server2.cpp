@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -93,4 +93,37 @@ int main(int argc, char **argv) {
 
     server_port = argv[1];
     return server(server_port);
+}
+*/
+
+// this works above
+
+
+#include "create_tcp_server.h"
+
+int main()
+{
+    int queueLength = 10;
+    int recvBufferSize = 2048;
+    char *server_port = (char*)("5453");
+    TcpServer tcpServer;
+
+    //tcpServer.create(server_port);
+    //tcpServer.server();
+
+    bool succ = tcpServer.create(queueLength, recvBufferSize, server_port);
+    if(succ==false)
+    {
+        return 1;
+    }
+
+    while(1) // keep the server alive for further client reauest
+    {
+        succ = tcpServer.wait_to_receive();
+        if(succ==false)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
