@@ -1,20 +1,106 @@
 import socket
+import base64
 
 host_ip, server_port = "127.0.0.1", 5453
 data = " Hello how are you?\n"
 
-# Initialize a TCP client socket using SOCK_STREAM
-tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def client_sends_msg():
 
-try:
-    # Establish connection to TCP server and exchange data
-    tcp_client.connect((host_ip, server_port))
-    tcp_client.sendall(data.encode())
+    # Initialize a TCP client socket using SOCK_STREAM
+    tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Read data from the TCP server and close the connection
-    received = tcp_client.recv(1024)
-finally:
-    tcp_client.close()
+    try:
+        # Establish connection to TCP server and exchange data
+        tcp_client.connect((host_ip, server_port))
+        encoded = data.encode()
+        print(type(encoded)) # bytes
+        tcp_client.sendall(encoded)
 
-print ("Bytes Sent:     {}".format(data))
-print ("Bytes Received: {}".format(received.decode()))
+        # Read data from the TCP server and close the connection
+        received = tcp_client.recv(1024)
+
+        # send an image now
+
+        #with open("../../todel.png", mode='rb'):
+
+
+    finally:
+        tcp_client.close()
+
+    print ("Bytes Sent:     {}".format(data))
+    print ("Bytes Received: {}".format(received.decode()))
+
+def split_images(input):
+    '''new_ids = []
+    function = lambda x, y: [x, y]
+    for i in range(0, len(input), 1024):
+        try:
+            new_ids.append(function(input[i], input[i + 1023]))
+        except IndexError:
+            new_ids.append(input[i])
+    return new_ids'''
+
+    output = []
+    start = 0
+    end = len(input)
+    step = 2048
+    for i in range(start, end, step):
+        x = i
+        output.append(input[x:x+step])
+    return output
+
+def client_sends_img():
+
+    # Initialize a TCP client socket using SOCK_STREAM
+    tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        # Establish connection to TCP server and exchange data
+        tcp_client.connect((host_ip, server_port))
+
+        with open("../../todel.png", mode='rb') as f:
+            data = f.read()
+
+            dataSplit = split_images(data)
+            index = 0
+            for chunk in dataSplit:
+                nb = tcp_client.send(chunk)
+                print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
+                index+=1
+
+            print("type", type(data))
+            print("len", len(data))
+            # tcp_client.sendall(data)
+
+
+
+
+
+            #encodedData = base64.encodebytes(data)
+            #encodedData = base64.encodebytes(data).decode('ascii')
+            # encoded = encodedData.encode()
+            # print(type(encoded))
+            # tcp_client.sendall(encodedData)
+            received = tcp_client.recv(1024)
+
+        """with open("../../todel.png", mode='rb') as f:
+            img_byte_arr = f.read()
+            encoded = base64.encodebytes(img_byte_arr).decode('ascii')
+            #encoded = data.encode()
+
+            print(type(encoded))
+            tcp_client.sendall(encoded)
+
+            # Read data from the TCP server and close the connection
+            received = tcp_client.recv(1024)
+        """
+
+
+    finally:
+        tcp_client.close()
+
+    print ("Bytes Received: {}".format(received.decode()))
+
+
+#client_sends_msg()
+client_sends_img()

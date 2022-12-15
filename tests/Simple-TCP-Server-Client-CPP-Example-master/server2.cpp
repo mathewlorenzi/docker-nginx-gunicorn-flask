@@ -104,7 +104,8 @@ int main(int argc, char **argv) {
 int main()
 {
     int queueLength = 10;
-    int recvBufferSize = 2048;
+    // int recvBufferSize = 2048;
+    int recvBufferSize = 1000*1000;
     char *server_port = (char*)("5453");
     TcpServer tcpServer;
 

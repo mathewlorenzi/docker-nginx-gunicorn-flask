@@ -14,6 +14,13 @@
 #include <string.h> //memset
 #include <netinet/in.h>
 
+// eco
+#include <string>
+#include <iostream> // std::cout
+#include <fstream> // to save image as binary
+
+#include "base64.h"
+
 class TcpServer
 {
 public:
@@ -70,14 +77,77 @@ public:
             printf("[INFO]TcpServer::wait_to_receive client message\n");
             while (1) {
                 // receive message
-                char buffer[RECV_BUFFER_SIZE];
+                char buffer[2048];
+                std::string myString;
+                int nDataLength;
+                int index=0;
+                while ((nDataLength = recv(sock, buffer, sizeof(buffer), 0)) > 0) {
+                    printf("...%d here %d\n", index, nDataLength);
+                    myString.append(buffer, nDataLength);
+                    if(nDataLength<sizeof(buffer)){
+                        break;
+                    }
+                    index++;
+                }
+                std::string outputSavedImageStem = "temp";
+                std::string ext="jpeg";
+                std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
+                outfile.write(myString.c_str(), static_cast<std::streamsize>(myString.length()));
+                
+
+try change png t jpeg from camera.html,
+in main server; web app, record, and see if it really is a jpeg by the size of it 
+better spend time compressing than overloading the network
+
+                /*printf("...here2 %d\n", myString.length());
+                std::string outputSavedImageStem = "temp";
+                std::string ext="png";
+                std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
+                outfile.write(myString.c_str(), static_cast<std::streamsize>(myString.length()));
+                std::string outputSavedImage = outputSavedImageStem + ".jpg";
+                std::string cmdConvert = "convert " + outputSavedImageStem+"."+ext + " " + outputSavedImageStem + ".jpg";
+                bool printDetails = true;
+                if(printDetails==true){
+                    std::cout << cmdConvert << std::endl;
+                }
+                system(cmdConvert.c_str());
+                */
+
+
+
+                /*char buffer[RECV_BUFFER_SIZE];
                 int recv_bytes = recv(sock, buffer, RECV_BUFFER_SIZE, 0);
                 if (recv_bytes == 0)
                 {
                     fflush(stdout);
                     break;
                 }
-                fwrite(buffer, recv_bytes, 1, stdout);
+                // dont print if image received : fwrite(buffer, recv_bytes, 1, stdout);
+
+                printf("recv_bytes %d\n", recv_bytes);
+
+                bool printDetails = true;
+                
+                //char *buffer2 = new char[recv_bytes];
+                // std::string b = base64_decode(buffer, false);
+                std::string outputSavedImageStem = "temp";
+                std::string ext="png";
+                std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
+                //outfile.write(b.c_str(), static_cast<std::streamsize>(b.size()));
+                //outfile.write(buffer2, static_cast<std::streamsize>(recv_bytes));
+                outfile.write(buffer, static_cast<std::streamsize>(recv_bytes));
+                std::string outputSavedImage = outputSavedImageStem + ".jpg";
+                std::string cmdConvert = "convert " + outputSavedImageStem+"."+ext + " " + outputSavedImageStem + ".jpg";
+                if(printDetails==true){
+                    std::cout << cmdConvert << std::endl;
+                }
+                system(cmdConvert.c_str());
+                // _msg = "[INFO]create_tcp_server: " + outputSavedImage + " <= " + filenameWithStamp;
+                // std::cout << _msg << std::endl;
+                */
+
+
+
 
                 // ECO: respond
                 char msg[2048];
