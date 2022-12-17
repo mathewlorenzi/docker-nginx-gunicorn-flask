@@ -65,11 +65,14 @@ def client_sends_img():
             index = 0
             for chunk in dataSplit:
                 nb = tcp_client.send(chunk)
-                print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
+                # print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
                 index+=1
 
-            print("type", type(data))
-            print("len", len(data))
+            # print("type", type(data))
+            # print("len", len(data))
+            
+            
+            
             # tcp_client.sendall(data)
 
 
@@ -81,7 +84,20 @@ def client_sends_img():
             # encoded = encodedData.encode()
             # print(type(encoded))
             # tcp_client.sendall(encodedData)
-            received = tcp_client.recv(1024)
+
+
+            # ok for a message
+            # received = tcp_client.recv(1024)
+
+            # receive the image
+            received = b""
+            while True:
+                curr = tcp_client.recv(2048)
+                print(len(curr))
+                received += curr
+                if len(curr) < 2048:
+                    break
+            
 
         """with open("../../todel.png", mode='rb') as f:
             img_byte_arr = f.read()
@@ -99,7 +115,12 @@ def client_sends_img():
     finally:
         tcp_client.close()
 
-    print ("Bytes Received: {}".format(received.decode()))
+    # for a messqge
+    # print ("Bytes Received: {}".format(received.decode()))
+
+    # for an image
+    with open("temp_received.jpg", "wb") as fout:
+        fout.write(received)
 
 
 #client_sends_msg()

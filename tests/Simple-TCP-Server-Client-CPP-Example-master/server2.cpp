@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
 int main()
 {
-    bool debug = true;
+    bool debug = false;
     int queueLength = 10;
     int recvBufferSize = 2048;
     char *server_port = (char*)("5453");
@@ -121,7 +121,7 @@ int main()
     while(1) // keep the server alive for further client reauest
     {
         std::string outputPathJpgRecvImg = "temp_received.jpg";
-        std::string pathImageJpegToReplyTo_resultEcoVision = "../../todel.jpg";
+        std::string pathImageJpegToReplyTo_resultEcoVision = "../../IMG_1649.jpg";
         succ = tcpServer.wait_to_receive(outputPathJpgRecvImg, pathImageJpegToReplyTo_resultEcoVision);
         if(succ==false)
         {

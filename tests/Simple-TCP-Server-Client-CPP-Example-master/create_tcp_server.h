@@ -51,7 +51,8 @@ public:
         maxNbChunks = 100; // 100x2048 = 204 800 kb for the ecovision size: should be enough
         replyChunkedBuffer = new std::string[maxNbChunks];
         replyChunkedSizes = new int[maxNbChunks];
-        replyImageBuffer = new char[maxNbChunks*RECV_BUFFER_SIZE];
+        replyImageBufferSize = maxNbChunks*RECV_BUFFER_SIZE;
+        replyImageBuffer = new char[replyImageBufferSize];
         dumbArrayChar = new char[RECV_BUFFER_SIZE];
 
         if(RECV_BUFFER_SIZE>0){
@@ -103,23 +104,26 @@ public:
             printf("[INFO]TcpServer::wait_to_receive client message\n");
             while (1) {
                 // receive message
-                char buffer[2048];
+                //char buffer[2048];
                 std::string myString;
                 int nDataLength;
                 int index=0;
                 //printf("RECV_BUFFER_SIZE %d sizebuffer %d\n", RECV_BUFFER_SIZE, sizeof(m_buffer));
                 //printf("sizebuffer %d\n", sizeof(buffer));
-                //while ((nDataLength = recv(sock, m_buffer, sizeof(m_buffer), 0)) > 0) {
-                while ((nDataLength = recv(sock, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
-                    if(m_debug==true) { printf("received chunk %d size %d sizebuffer %d\n", index, nDataLength, sizeof(buffer)); }
+                while ((nDataLength = recv(sock, m_buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+                //while ((nDataLength = recv(sock, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+                    if(m_debug==true) { printf(" ... received chunk %d size %d sizebuffer %d\n", index, nDataLength, RECV_BUFFER_SIZE); }
                     myString.append(m_buffer, nDataLength);
                     //myString.append(buffer, nDataLength);
-                    if(nDataLength<sizeof(m_buffer)){
+                    // if(nDataLength<sizeof(m_buffer)){
+                    if(nDataLength<RECV_BUFFER_SIZE){
                     //if(nDataLength<sizeof(buffer)){
+                        if(m_debug==true) { printf(" ... break\n"); }        
                         break;
                     }
                     index++;
                 }
+                if(m_debug==true) { printf(" ... finished loop\n"); }
                 //std::string outputSavedImageStem = "temp";
                 //std::string ext="jpeg";
                 //std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
@@ -143,27 +147,66 @@ public:
                 int inputSize = inputFile.tellg();
                 inputFile.seekg (0, inputFile.beg);
 
-                if(inputSize>sizeof(replyImageBuffer))
+                if(inputSize>replyImageBufferSize)
                 {
-                    printf("[ERROR]wait_to_receive: error in size estimation\n");
+                    printf("[ERROR]wait_to_receive: error in size estimation %d vs %d\n", inputSize, replyImageBufferSize);
                     return false;
                 } 
                 inputFile.read(replyImageBuffer, inputSize);
 
 
-                int nbChunks = split_images(inputSize);
+
+
+
+//std::ofstream outfile2{"debug_img_to_send-as-a-areply.jpg", std::ofstream::binary};
+// outfile2.write(replyImageBuffer, static_cast<std::streamsize>(inputSize));
+//std::string debugOut;
+
+
+
+                int nbChunks = get_nb_chunks(inputSize);
                 if(nbChunks<0){ printf("[ERROR]create_tcp_server.h: wait_to_receive: splitimages failed\n"); return false; }
+                if(m_debug==true) { printf(" ... sending as a reply %d nbChunks\n", nbChunks); }
+                int start = 0;
                 for(int ii=0; ii<nbChunks; ii++)
                 {
-                    send(sock, (char *)replyChunkedBuffer[ii].c_str(), replyChunkedSizes[ii], 0);
+                    int stop = start + RECV_BUFFER_SIZE;
+                    if(stop > inputSize){
+                        stop = inputSize;
+                    }
+                    // printf(" ... %d -> %d-1\n", start, stop);
+                    int j=0;
+                    for(int dumi=start; dumi<stop; dumi++)
+                    {
+                        dumbArrayChar[j] = replyImageBuffer[dumi];
+                        j++;
+                    }
+                    //printf(" ... %d vs %d\n", j, stop-start);
+                    send(sock, (char *)dumbArrayChar, stop-start, 0);
+                    start = stop;
                 }
+
+
+
+
+                /*int nbChunks = split_image(inputSize);
+                if(nbChunks<0){ printf("[ERROR]create_tcp_server.h: wait_to_receive: splitimages failed\n"); return false; }
+                if(m_debug==true) { printf(" ... sending as a reply %d nbChunks\n", nbChunks); }
+                for(int ii=0; ii<nbChunks; ii++)
+                {
+                    if(m_debug==true) { printf(" ... sending chunk %d size %d\n", ii, replyChunkedSizes[ii]); }
+                    send(sock, (char *)replyChunkedBuffer[ii].c_str(), replyChunkedSizes[ii], 0);
+//debugOut += replyChunkedBuffer[ii].c_str();
+                }*/
                 printf("[INFO]TcpServer::wait_to_receive client: msg received and replied\n");
+//outfile2.write(debugOut.c_str(), static_cast<std::streamsize>(inputSize));
+//printf("%d vs %d\n", sizeof(debugOut), inputSize);
                 return true;
             }
         }
         return false;
     }
-    int split_images(int inputSize) // input is replyImageBuffer
+    int get_nb_chunks(int inputSize)
     {
         int nbChunks = inputSize/RECV_BUFFER_SIZE;
 
@@ -175,7 +218,24 @@ public:
         }
 
         if(nbChunks>maxNbChunks){
-            printf("[ERROR]split_images: error1 in size estimation\n");
+            printf("[ERROR]split_image: error1 in size estimation\n");
+            return -1;
+        }
+        return nbChunks;
+    }
+    int split_image(int inputSize) // input is replyImageBuffer
+    {
+        int nbChunks = inputSize/RECV_BUFFER_SIZE;
+
+        float ratio1 = float(inputSize) / float(RECV_BUFFER_SIZE); // 403/23=17.52
+        int ratio2 = inputSize/RECV_BUFFER_SIZE;                   // 403/23=17        
+        int est2 = ratio2*RECV_BUFFER_SIZE;                        // 17*23=391
+        if(inputSize>est2){                                  // 403-391
+            nbChunks += 1;
+        }
+
+        if(nbChunks>maxNbChunks){
+            printf("[ERROR]split_image: error1 in size estimation\n");
             return -1;
         }
 
@@ -189,7 +249,7 @@ public:
             int x2 = i+step-1;
             if(x2>=end) { x2=end-1; }
             if(index>=nbChunks){
-                printf("[ERROR]split_images: error2 in size estimation\n");
+                printf("[ERROR]split_image: error2 in size estimation\n");
                 return -1;
             }
             replyChunkedSizes[index] = x2-x1+1;
@@ -221,7 +281,7 @@ public:
 
     int maxNbChunks;
     std::string *replyChunkedBuffer;
-    char *replyImageBuffer;
+    char *replyImageBuffer; int replyImageBufferSize;
     int *replyChunkedSizes;
     char *dumbArrayChar;
 };
