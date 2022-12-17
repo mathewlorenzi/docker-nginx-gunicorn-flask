@@ -21,16 +21,58 @@
 
 #include "base64.h"
 
+int split_images(std::string &input, int inputSize, int chunkSize, std::string *output)
+{
+    nbChunks = (inputSize/chunkSize)+1;
+
+    verify nb chunks
+
+    output = new std::string[nbChunks];
+
+    int start = 0;
+    int end = inputSize;
+    int step = chunkSize;// 2048;
+    int index = 0;
+    for(int i=start; i<end; i+=step)
+    {
+        int x1 = i;
+        int x2 = i+step;
+        if(x2>end) { x2=end; }
+        if(index>=nbChunks){
+            printf("[ERROR]split_images: error in size estimation\n");
+            return -1;
+        }
+        chunkedSizes[index] = x2-x1+1;
+        output[index] = input[x1:x2] ??
+        index++;
+    }
+    return nbChunks
+
 class TcpServer
 {
 public:
-	TcpServer() {};
-	~TcpServer() {};
-    bool create(int queueLength, int recvBufferSize, char *server_port)
+	TcpServer()
+    {
+        m_buffer = NULL;
+        QUEUE_LENGTH = 0;
+        RECV_BUFFER_SIZE = 0;
+        m_debug = false;
+    };
+	~TcpServer()
+    {
+        if(RECV_BUFFER_SIZE>0){
+            delete [] m_buffer; m_buffer=NULL;
+        }
+    };
+    bool create(int queueLength, int recvBufferSize, char *server_port, bool debug) // 10, 2048, anyport
     {
         printf("[INFO]TcpServer::create with port %s\n", server_port);
         QUEUE_LENGTH = queueLength;
         RECV_BUFFER_SIZE = recvBufferSize;
+        m_debug = debug;
+        if(RECV_BUFFER_SIZE>0){
+            m_buffer = new char[RECV_BUFFER_SIZE];
+        }
         // create socket file descriptor
         if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
         {
@@ -62,7 +104,7 @@ public:
         printf("[INFO]TcpServer::create with port %s successful\n", server_port);
         return true;
     }
-    bool wait_to_receive()
+    bool wait_to_receive(std::string outputPathJpgRecvImg, std::string pathImageJpegToReplyTo_resultEcoVision)
     {
         printf("[INFO]TcpServer::wait_connection of a client\n");
         while (1)
@@ -81,24 +123,66 @@ public:
                 std::string myString;
                 int nDataLength;
                 int index=0;
-                while ((nDataLength = recv(sock, buffer, sizeof(buffer), 0)) > 0) {
-                    printf("...%d here %d\n", index, nDataLength);
-                    myString.append(buffer, nDataLength);
-                    if(nDataLength<sizeof(buffer)){
+                //printf("RECV_BUFFER_SIZE %d sizebuffer %d\n", RECV_BUFFER_SIZE, sizeof(m_buffer));
+                //printf("sizebuffer %d\n", sizeof(buffer));
+                //while ((nDataLength = recv(sock, m_buffer, sizeof(m_buffer), 0)) > 0) {
+                while ((nDataLength = recv(sock, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+                    if(m_debug==true) { printf("received chunk %d size %d sizebuffer %d\n", index, nDataLength, sizeof(buffer)); }
+                    myString.append(m_buffer, nDataLength);
+                    //myString.append(buffer, nDataLength);
+                    if(nDataLength<sizeof(m_buffer)){
+                    //if(nDataLength<sizeof(buffer)){
                         break;
                     }
                     index++;
                 }
-                std::string outputSavedImageStem = "temp";
-                std::string ext="jpeg";
-                std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
+                //std::string outputSavedImageStem = "temp";
+                //std::string ext="jpeg";
+                //std::ofstream outfile{outputSavedImageStem+"."+ext, std::ofstream::binary};
+                std::ofstream outfile{outputPathJpgRecvImg, std::ofstream::binary};
                 outfile.write(myString.c_str(), static_cast<std::streamsize>(myString.length()));
                 
 
-try change png t jpeg from camera.html,
-in main server; web app, record, and see if it really is a jpeg by the size of it 
-better spend time compressing than overloading the network
+                // REF: old1
 
+                // ECO: OK: respond text message
+                /*char msg[2048];
+                memset(&msg, 0, sizeof(msg));//clear the buffer
+                strcpy(msg, "image content");
+                send(sock, (char*)&msg, strlen(msg), 0);*/
+
+                // ECO: respond a jpeg image
+                std::ifstream inputFile{pathImageJpegToReplyTo_resultEcoVision, std::ifstream::binary};
+                std::string inputFileBuffer;
+                int inputSize = inputFile.read(inputFileBuffer);
+                int chunkSize = RECV_BUFFER_SIZE;
+                std::string *chunkedBuffer;
+                int *chunkedSizes;
+                int nbChunks = split_images(std::string &input, inputSize, chunkSize, chunkedBuffer, chunkedSizes);
+                if(nbChunks<0){ printf("[ERROR]create_tcp_server.h: wait_to_receive: splitimages failed\n"); return false; }
+                for(int ii=0; ii<nbChunks; ii++)
+                {
+                    send(sock, (char*)chunkedBuffer[ii].c_str(), chunkedSizes[ii], 0);
+                }
+                printf("[INFO]TcpServer::wait_to_receive client: msg received and replied\n");
+                return true;
+            }
+        }
+        return false;
+    }
+    //#define QUEUE_LENGTH 10
+    //#define RECV_BUFFER_SIZE 2048    
+    int QUEUE_LENGTH;
+    int RECV_BUFFER_SIZE;
+    struct sockaddr_in address;
+    int server_fd;
+    int sock;
+    char *m_buffer;
+    bool m_debug;
+};
+
+
+                // old1
                 /*printf("...here2 %d\n", myString.length());
                 std::string outputSavedImageStem = "temp";
                 std::string ext="png";
@@ -145,27 +229,3 @@ better spend time compressing than overloading the network
                 // _msg = "[INFO]create_tcp_server: " + outputSavedImage + " <= " + filenameWithStamp;
                 // std::cout << _msg << std::endl;
                 */
-
-
-
-
-                // ECO: respond
-                char msg[2048];
-                memset(&msg, 0, sizeof(msg));//clear the buffer
-                strcpy(msg, "image content");
-                send(sock, (char*)&msg, strlen(msg), 0);
-
-                printf("[INFO]TcpServer::wait_to_receive client: msg received and replied\n");
-                return true;
-            }
-        }
-        return false;
-    }
-    //#define QUEUE_LENGTH 10
-    //#define RECV_BUFFER_SIZE 2048    
-    int QUEUE_LENGTH;
-    int RECV_BUFFER_SIZE;
-    struct sockaddr_in address;
-    int server_fd;
-    int sock;
-};

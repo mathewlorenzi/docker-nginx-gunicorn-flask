@@ -3,7 +3,7 @@ import base64
 from base64 import b64encode
 import logging
 from datetime import datetime
-from utils import convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import IMGEXT, convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 STR_UNKNOWN = "UNKNOWN"
 
@@ -27,7 +27,7 @@ class AppImage:
         now = datetime.now()
         self.dateTime = now
         date_time = convertDatetimeToString(self.dateTime)
-        self.filenameWithStamp = date_time + ".png"
+        self.filenameWithStamp = date_time + "." +IMGEXT
         self.hasData = False    # data been saved to disk
         self.uploaded = False
         self.contentBytes = []
@@ -228,7 +228,7 @@ class ClientCamera():
                 msg = "ClientCamera/" + self.TYPE + "::insertNewImage " + self.TYPE + " ready at {}: {} ".format( 
                     self.bufferImages.lastRecordedIndex, 
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
-                pathout = os.path.join(self.bufferImages.directory, "image.png")
+                pathout = os.path.join(self.bufferImages.directory, "image."+IMGEXT)
             with open(pathout, 'wb') as f:
                 f.write(appImage.contentBytes)
             #bufferImages.Print()

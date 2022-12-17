@@ -12,7 +12,7 @@ if file_path not in sys.path:
 
 from flask import Flask, jsonify, request, json#, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-from utils import get_encoded_img, record_image_or_result, lastsample #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import IMGEXT, get_encoded_img, record_image_or_result, lastsample #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -69,7 +69,7 @@ class WatchActiveClients(threading.Thread):
             self._stop_event.wait(self.intervalSec) # check every N sec                
         print('end client watcher')
 
-# populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
+# populate_fake_images()
 # exit(1)
 # uri_result = load_sample("todel.png")
 
@@ -94,7 +94,7 @@ def record_image():
     # usedUrl = data["usedUrl"]
     (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId, logger=logger)
     if status != 200:
-        return (get_encoded_img(image_path=os.path.join(file_path, 'red".png')), status)
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
     else:
         # image recorded successfully
         # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
@@ -110,7 +110,7 @@ def record_image():
             if status2 == 200:
                 return (content["contentBytes"], 200)
             else:
-                return (get_encoded_img(image_path=os.path.join(file_path, 'red.png')), 200)
+                return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
         else:
             # 405 error (that shoukd be handled by flask)
             # 404 programming error
@@ -155,7 +155,7 @@ def record_image():
             print(" ... .... reply with content saved at ", content["dateTime"])
             return (content["contentBytes"], 200)
         else:
-            return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.png')), 200) 
+            return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
 
 @app.route("/record_result", methods=['POST'])
 def record_result():

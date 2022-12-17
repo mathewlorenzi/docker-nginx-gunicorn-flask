@@ -90,7 +90,7 @@
             <img id="photo" alt="The screen capture will appear in this box.">
         </div>
 
-        <img src="orange.png" alt="Result" id="result_image">
+        <img src="orange.jpg" alt="Result" id="result_image">
 
         <!-- <div class="output2">
             <img src="{{ uri_result }}" alt="The screen capture will appear in this box TOO.">
@@ -177,7 +177,8 @@
             context.fillStyle = "#AAA";
             context.fillRect(0, 0, canvas.width, canvas.height);
 
-            var data = canvas.toDataURL('image/png');
+            // var data = canvas.toDataURL('image/png');
+            var data = canvas.toDataURL('image/jpeg', 1);
             photo.setAttribute('src', data);
         }
 
@@ -237,7 +238,8 @@
                 canvas.height = height;
                 context.drawImage(video, 0, 0, width, height);
 
-                var data = canvas.toDataURL('image/png');
+                // var data = canvas.toDataURL('image/png');
+                var data = canvas.toDataURL('image/jpeg', 1);
                 photo.setAttribute('src', data);
 
                 
@@ -267,7 +269,8 @@
                         }
                         else if(this.status == 200){
                             console.log(" ... takepicture: response result image ");
-                            document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr.response + '"/>';
+                            // document.getElementById('result_image').innerHTML = '<img src="data:image/png;base64,' + xhr.response + '"/>';
+                            document.getElementById('result_image').innerHTML = '<img src="data:image/jpeg;base64,' + xhr.response + '"/>';
                         }
                     }
                 }

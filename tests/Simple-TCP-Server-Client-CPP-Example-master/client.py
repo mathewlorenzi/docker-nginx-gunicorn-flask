@@ -58,7 +58,7 @@ def client_sends_img():
         # Establish connection to TCP server and exchange data
         tcp_client.connect((host_ip, server_port))
 
-        with open("../../todel.png", mode='rb') as f:
+        with open("../../todel.jpg", mode='rb') as f:
             data = f.read()
 
             dataSplit = split_images(data)

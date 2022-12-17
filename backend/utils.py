@@ -4,6 +4,8 @@ import base64
 from datetime import datetime
 import logging
 
+IMGEXT='jpg'
+
 from buffer_images import BufferClients
 
 def convertDatetimeToString(input: datetime) -> str:

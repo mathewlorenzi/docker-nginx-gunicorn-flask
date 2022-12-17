@@ -103,16 +103,16 @@ int main(int argc, char **argv) {
 
 int main()
 {
+    bool debug = true;
     int queueLength = 10;
-    // int recvBufferSize = 2048;
-    int recvBufferSize = 1000*1000;
+    int recvBufferSize = 2048;
     char *server_port = (char*)("5453");
     TcpServer tcpServer;
 
     //tcpServer.create(server_port);
     //tcpServer.server();
 
-    bool succ = tcpServer.create(queueLength, recvBufferSize, server_port);
+    bool succ = tcpServer.create(queueLength, recvBufferSize, server_port, debug);
     if(succ==false)
     {
         return 1;
