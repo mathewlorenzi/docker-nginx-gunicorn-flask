@@ -21,33 +21,6 @@
 
 #include "base64.h"
 
-int split_images(std::string &input, int inputSize, int chunkSize, std::string *output)
-{
-    nbChunks = (inputSize/chunkSize)+1;
-
-    verify nb chunks
-
-    output = new std::string[nbChunks];
-
-    int start = 0;
-    int end = inputSize;
-    int step = chunkSize;// 2048;
-    int index = 0;
-    for(int i=start; i<end; i+=step)
-    {
-        int x1 = i;
-        int x2 = i+step;
-        if(x2>end) { x2=end; }
-        if(index>=nbChunks){
-            printf("[ERROR]split_images: error in size estimation\n");
-            return -1;
-        }
-        chunkedSizes[index] = x2-x1+1;
-        output[index] = input[x1:x2] ??
-        index++;
-    }
-    return nbChunks
-
 class TcpServer
 {
 public:
@@ -62,7 +35,11 @@ public:
     {
         if(RECV_BUFFER_SIZE>0){
             delete [] m_buffer; m_buffer=NULL;
+            delete [] replyImageBuffer; replyImageBuffer=NULL;
         }
+        delete [] replyChunkedBuffer; replyChunkedBuffer = NULL;
+        delete [] replyChunkedSizes; replyChunkedSizes = NULL;
+        delete [] dumbArrayChar; dumbArrayChar = NULL;
     };
     bool create(int queueLength, int recvBufferSize, char *server_port, bool debug) // 10, 2048, anyport
     {
@@ -70,6 +47,13 @@ public:
         QUEUE_LENGTH = queueLength;
         RECV_BUFFER_SIZE = recvBufferSize;
         m_debug = debug;
+
+        maxNbChunks = 100; // 100x2048 = 204 800 kb for the ecovision size: should be enough
+        replyChunkedBuffer = new std::string[maxNbChunks];
+        replyChunkedSizes = new int[maxNbChunks];
+        replyImageBuffer = new char[maxNbChunks*RECV_BUFFER_SIZE];
+        dumbArrayChar = new char[RECV_BUFFER_SIZE];
+
         if(RECV_BUFFER_SIZE>0){
             m_buffer = new char[RECV_BUFFER_SIZE];
         }
@@ -153,16 +137,25 @@ public:
 
                 // ECO: respond a jpeg image
                 std::ifstream inputFile{pathImageJpegToReplyTo_resultEcoVision, std::ifstream::binary};
-                std::string inputFileBuffer;
-                int inputSize = inputFile.read(inputFileBuffer);
-                int chunkSize = RECV_BUFFER_SIZE;
-                std::string *chunkedBuffer;
-                int *chunkedSizes;
-                int nbChunks = split_images(std::string &input, inputSize, chunkSize, chunkedBuffer, chunkedSizes);
+                
+                
+                inputFile.seekg (0, inputFile.end);
+                int inputSize = inputFile.tellg();
+                inputFile.seekg (0, inputFile.beg);
+
+                if(inputSize>sizeof(replyImageBuffer))
+                {
+                    printf("[ERROR]wait_to_receive: error in size estimation\n");
+                    return false;
+                } 
+                inputFile.read(replyImageBuffer, inputSize);
+
+
+                int nbChunks = split_images(inputSize);
                 if(nbChunks<0){ printf("[ERROR]create_tcp_server.h: wait_to_receive: splitimages failed\n"); return false; }
                 for(int ii=0; ii<nbChunks; ii++)
                 {
-                    send(sock, (char*)chunkedBuffer[ii].c_str(), chunkedSizes[ii], 0);
+                    send(sock, (char *)replyChunkedBuffer[ii].c_str(), replyChunkedSizes[ii], 0);
                 }
                 printf("[INFO]TcpServer::wait_to_receive client: msg received and replied\n");
                 return true;
@@ -170,6 +163,52 @@ public:
         }
         return false;
     }
+    int split_images(int inputSize) // input is replyImageBuffer
+    {
+        int nbChunks = inputSize/RECV_BUFFER_SIZE;
+
+        float ratio1 = float(inputSize) / float(RECV_BUFFER_SIZE); // 403/23=17.52
+        int ratio2 = inputSize/RECV_BUFFER_SIZE;                   // 403/23=17        
+        int est2 = ratio2*RECV_BUFFER_SIZE;                        // 17*23=391
+        if(inputSize>est2){                                  // 403-391
+            nbChunks += 1;
+        }
+
+        if(nbChunks>maxNbChunks){
+            printf("[ERROR]split_images: error1 in size estimation\n");
+            return -1;
+        }
+
+        int start = 0;
+        int end = inputSize;
+        int step = RECV_BUFFER_SIZE;// 2048;
+        int index = 0;
+        for(int i=start; i<end; i+=step)
+        {
+            int x1 = i;
+            int x2 = i+step-1;
+            if(x2>=end) { x2=end-1; }
+            if(index>=nbChunks){
+                printf("[ERROR]split_images: error2 in size estimation\n");
+                return -1;
+            }
+            replyChunkedSizes[index] = x2-x1+1;
+            //auto size = std::distance(itStart, itEnd);
+            //std::string newStr = myStr.subStr(itStart, size);
+
+            // TODO fast way to do this or at least with pointers
+            int dumbi=0;
+            for(int ai=x1; ai<=x2; ai++){
+                dumbArrayChar[dumbi] = replyImageBuffer[ai];
+                dumbi++;
+            }
+            replyChunkedBuffer[index] = std::string(dumbArrayChar); // is size respected ?????????
+
+            index++;
+        }
+        return nbChunks;
+    }
+
     //#define QUEUE_LENGTH 10
     //#define RECV_BUFFER_SIZE 2048    
     int QUEUE_LENGTH;
@@ -179,6 +218,12 @@ public:
     int sock;
     char *m_buffer;
     bool m_debug;
+
+    int maxNbChunks;
+    std::string *replyChunkedBuffer;
+    char *replyImageBuffer;
+    int *replyChunkedSizes;
+    char *dumbArrayChar;
 };
 
 

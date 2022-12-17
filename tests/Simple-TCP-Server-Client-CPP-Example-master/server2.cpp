@@ -120,7 +120,9 @@ int main()
 
     while(1) // keep the server alive for further client reauest
     {
-        succ = tcpServer.wait_to_receive();
+        std::string outputPathJpgRecvImg = "temp_received.jpg";
+        std::string pathImageJpegToReplyTo_resultEcoVision = "../../todel.jpg";
+        succ = tcpServer.wait_to_receive(outputPathJpgRecvImg, pathImageJpegToReplyTo_resultEcoVision);
         if(succ==false)
         {
             return 1;
