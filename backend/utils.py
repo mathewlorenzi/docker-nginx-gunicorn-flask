@@ -6,7 +6,9 @@ import logging
 
 IMGEXT='jpg'
 
-from buffer_images import BufferClients
+# populate_fake_images()
+# exit(1)
+# uri_result = load_sample("todel.png")
 
 def convertDatetimeToString(input: datetime) -> str:
     return input.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
@@ -64,6 +66,78 @@ def test_convertStringTimestampToDatetimeAndMicrosecValue():
         print(convertedStampMicroSec)
     # exit(1)
 
+
+# in setBashRc.py now
+# def updateBashRcWithEcovisionLibPath(ecovisionPath: str):
+#     if not os.path.isdir(ecovisionPath):
+#         print("[ERROR]ecovisionPath does not exist: ", ecovisionPath)
+#         exit(1)
+#     ecovisionLib = ecovisionPath+'/build/lib'
+#     bashRcString = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'+ecovisionLib
+#     if not os.path.isdir(ecovisionLib):
+#         print("[ERROR]updateBashRcWithEcovisionLibPath: this dir does not exist: ", ecovisionLib)
+#         exit(1)
+#     if 'HOME' not in os.environ:
+#         print("[ERROR]updateBashRcWithEcovisionLibPath: environ HOME not present")
+#         exit(1)
+#     bashrcPath = os.path.join(os.environ['HOME'], ".bashrc")
+#     print("[INFO]check bashrc is present: ", bashrcPath)
+#     if not os.path.isfile(bashrcPath):
+#         print("[WARNING]bashrc not present in home dir ", bashrcPath, "lets create it")
+#         with open(bashrcPath, "w") as fbashrc:
+#             fbashrc.write(bashRcString)
+#             fbashrc.write("\n")
+#         if not os.path.isfile(bashrcPath):
+#             print("[ERROR]bashrc failed to be created in home dir ", bashrcPath)
+#             exit(1)
+#     else:
+#         ecovisionPathFound = 0
+
+#         targetWords = bashRcString.split(' ')
+#         with open(bashrcPath, "r") as fbashrc:
+#             for line in fbashrc.readlines():
+#                 # print(line)
+#                 words = line.split(' ')
+#                 # print(" ================= ")
+#                 words2 = []
+#                 for word in words:
+#                     words2.append(word.replace('\n',''))
+#                 # print(words2)
+#                 localFound = False
+#                 if len(words2) == len(targetWords):
+#                     localFound = True
+#                     for index in range(len(words2)):
+#                         if words2[index] != targetWords[index]:
+#                             localFound = False
+#                 # print(" +++++++++++++++++ ")
+#                 # print(targetWords)            
+#                 if localFound is True:
+#                     ecovisionPathFound += 1
+#                 # print(" ----------------- ", localFound, ecovisionPathFound)
+#         if ecovisionPathFound == 0:
+#             print("[INFO]adding ecovision path lib into bashrc")
+#             with open(bashrcPath, "a") as fbashrc:
+#                 fbashrc.write(bashRcString)
+#                 fbashrc.write("\n")
+#         else:
+#             print("[INFO]ecovision path lib already present in bashrc")
+
+#         if ecovisionPathFound > 1:
+#             print("[WARNING]ecovision path lib was fou nd more than once: ", ecovisionPathFound)
+
+#     # bash = subprocess.run('bash')
+#     # bash.execute('source '+os.environ['HOME']+'/.bashrc')
+#     # subprocess.call(['source', os.environ['HOME']+'/.bashrc'])
+       
+# TEST in main:
+#       # if args.setBashrc is True:
+    #     print("[INFO]updateBashRcWithEcovisionLibPath")
+    #     updateBashRcWithEcovisionLibPath(args.ecovisionPath)
+    #     print("[INFO]exit, export /user/.bashrc and restart manager")
+    #     exit(0)
+
+
+
 #def get_encoded_img(image_path):
     #img = Image.open(image_path, mode='r')
     #img_byte_arr = io.BytesIO()
@@ -108,129 +182,3 @@ def get_encoded_img(image_path):
         img_byte_arr = f.read()
         return base64.encodebytes(img_byte_arr).decode('ascii')
 
-
-def record_image_or_result(inputBufferClient: BufferClients, imageContentStr: str, camId: str, logger):
-    nameId = camId # data["nameId"]
-    if isinstance(imageContentStr, str) is False or isinstance(nameId, str) is False:
-        logger.error("/image: nameId is not a string:" + str(nameId))
-        return ("KO: nameId is not a string", nameId, 400)
-    else:
-        # look if existing active camera
-        indexClient = inputBufferClient.getClientIndex(nameId=nameId)
-        if indexClient is None:
-            logger.info("/image: nameId:" + nameId + " new client")
-            (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId)
-            if indexClient is None:
-                errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
-                logger.error(errMsg)
-                return (errMsg, nameId, 400)
-
-        # check really necessary ?
-        indexClient = inputBufferClient.getClientIndex(nameId=nameId)
-        if indexClient is None:
-            logger.error("/image: nameId:" + nameId + " failed finding client")
-            return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
-        
-        logger.debug("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
-
-        # while(inputBufferClient.buff[indexClient].lockOnUpload is True){
-        #     logger.info("/image: lock active, wait a bit, for camId" + nameId)
-        #     time.sleep(1)
-        # }
-        # lockOnUpload = False
-        # imageToBeUploaded = AppImage()
-
-        (msg, succ) = inputBufferClient.buff[indexClient].insertNewImage(logger=logger, imageContent=imageContentStr)
-        if succ is False:
-            logger.error(msg)
-            return ("KO: failed saving new image", nameId, 400)
-        else:
-            logger.info(msg)
-
-            # camId = nameId
-            # logger.debug("/result_image2 endpoint")
-            # v1
-            # if camId in ecovisionResults.trackResultsImage:
-            #     return (ecovisionResults.trackResultsImage[camId], nameId, 200)
-            # else:
-            #     return ("ok but image result from ecovision not ready yet for " + camId, nameId, 202)
-            # v2 return a blank image if not ready
-            # indexECO = bufferEcovisionResults.getClientIndex(nameId=nameId)
-            # if indexECO is None:
-            #     logger.error("/image: nameId:" + nameId + " failed finding client in ecovision results")
-            #     return (HERE blank image, nameId, 202)
-            # bufferEcovisionResults.buff[indexECO].get last image
-        
-            # HERE    
-
-            return ("OK", nameId, 200)
-    return ("OK", nameId, 200)
-
-def lastsample(camId: str, inputBufferClient: BufferClients, logger, take_care_of_already_uploaded: bool=True):
-    # called by httpclient or ecovision :
-    # prog_v2.h
-    #   httpRequestUtils getRequester;
-    #   httpRequestUtils postRequester; 
-    # prog_exe_v2.cpp
-    #   getRequester.getRequestImage(...)
-    #   postRequester.postRequestJsonMessage(...)
-    # curl_request.h
-    #   httpRequestUtils::getRequestImage(...)          ==>  url /lastimage/camId ... getCurler
-    #   httpRequestUtils::postRequestJsonMessage(...)   ==>  url /result/camId ... postCurler
-    #   /result/
-
-    # 405 error (that shoukd be handled by flask)
-    # 404 programming error
-    # 400 client/camId not present in list of current clients
-    # 204 ok but already uploaded last image
-    # 200 ok, last image returned
-
-    logger.debug("lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
-    if camId is None:
-        msg = "camId in None in url" + " /" + inputBufferClient.TYPE
-        logger.error(msg)
-        return (msg, 405)    
-    if camId == "":
-        msg = "nameId is empty in url" + " /" + inputBufferClient.TYPE
-        logger.error(msg)
-        return (msg, 405)
-    
-    index = inputBufferClient.getClientIndex(camId)
-    if index is None:
-        msg = "client/camId not present in list of current clients: " + camId + " /" + inputBufferClient.TYPE
-        logger.debug(msg)
-        return (msg, 400)
-
-    lastRecordedIndex = inputBufferClient.buff[index].bufferImages.lastRecordedIndex
-    logger.info("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
-
-    if lastRecordedIndex is None:
-        msg = "lastRecordedIndex None: camId: " + camId + " /" + inputBufferClient.TYPE
-        logger.error(msg)
-        return (msg, 404)
-    if lastRecordedIndex < 0:
-        msg = "lastRecordedIndex negative: camId: " + camId + " /" + inputBufferClient.TYPE
-        logger.error(msg)
-        return (msg, 404)
-
-
-    already_uploaded = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
-    filename = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
-
-    if take_care_of_already_uploaded is True:
-        if already_uploaded is True:
-            logger.warning("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded" + " /" + inputBufferClient.TYPE)
-            return ("already_uploaded", 204)
-            
-    dict_out = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()
-
-    if take_care_of_already_uploaded is True:
-        inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
-
-    # OK
-    # with open( "todel.png", mode="wb" ) as f:
-    #     f.write(base64.b64decode(dict_out["contentBytes"].encode()))
-        
-
-    # return (jsonify(dict_out), 200)
-    return (dict_out, 200)

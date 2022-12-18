@@ -251,14 +251,14 @@
                 var urlHost = window.location.host
                 var urlProtocol = window.location.protocol
                 var urlRoot = urlProtocol + "//" + urlHost
-                console.log(" ... urlRoot:" + urlRoot)
+                // console.log(" ... urlRoot:" + urlRoot)
 
                 const url = urlRoot + "/image";
                 //var url = 'http://localhost:5000/image';
                 //var url = 'http://web:8000/image';
                 //var url = 'https://51.77.194.68:81/image';
                 //var url = 'https://www.ecovision.ovh:81/image';
-                console.log(" ... url:" + url)
+                // console.log(" ... url:" + url)
                 xhr.open("POST", url, true);
 
                 // function execute after request is successful 
@@ -310,8 +310,10 @@
                  //   });
 
                  //  ... captureInterval  <input id="captureInterval" value="1" type="int" hidden="hidden">
-                 // console.log(" ... captureInterval ", captureInterval)
-                 setTimeout(takepicture, captureInterval.value);
+                //  console.log(" ... captureInterval ", captureInterval)
+                //  console.log(" ... captureInterval.value ", captureInterval.value)
+                //  setTimeout(takepicture, captureInterval.value);
+                 setTimeout(takepicture, 10000);
                  
             } else {
                 clearphoto();

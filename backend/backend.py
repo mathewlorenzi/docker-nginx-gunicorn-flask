@@ -3,6 +3,8 @@ import os
 import logging
 import psutil
 import threading
+import argparse
+import time
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -12,7 +14,12 @@ if file_path not in sys.path:
 
 from flask import Flask, jsonify, request, json#, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-from utils import IMGEXT, get_encoded_img, record_image_or_result, lastsample #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import IMGEXT, get_encoded_img #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils_api import record_image_or_result, lastsample
+from manager import ManagerEcovisionS
+
+HOST='0.0.0.0'
+PORT=5555
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -69,14 +76,6 @@ class WatchActiveClients(threading.Thread):
             self._stop_event.wait(self.intervalSec) # check every N sec                
         print('end client watcher')
 
-# populate_fake_images()
-# exit(1)
-# uri_result = load_sample("todel.png")
-
-watchActiveClients = WatchActiveClients()
-watchActiveClients.start()
-#watchActiveClients.join() # this make the main thread to wait for it to end (run functin ends or stop _stop_event line is done)
-
 @app.route("/backend")
 def backend():
     logger.debug("/backend endpoint: pid: " + str(os.getpid()))
@@ -92,7 +91,12 @@ def record_image():
     imagestr = data["image"]
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
+
     (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId, logger=logger)
+
+    # print(" ++++++ SLEEP ++++++ ", msg, camId, status)
+    # time.sleep(10)
+
     if status != 200:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
     else:
@@ -165,7 +169,12 @@ def record_result():
     print(" ... record_result: sent at ", timestamp)
     imagestr = data["image"]
     nameId = data["nameId"]
+
     (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+
+    print(" ++++++ SLEEP ++++++ backend record result done")
+    time.sleep(10)
+
     return (msg, status)
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
@@ -179,13 +188,13 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
     return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 # called by python thread manager for c++ cleint ecovision
-@app.route("/active_clients", methods=["GET"])
-def active_clients():
-    list = []
-    for clientEl in bufferClients.buff:
-        list.append(clientEl.clientId)
-    logger.debug("/active_clients " + str(list))
-    return (list, 200)
+# @app.route("/active_clients", methods=["GET"])
+# def active_clients():
+#     list = []
+#     for clientEl in bufferClients.buff:
+#         list.append(clientEl.clientId)
+#     logger.debug("/active_clients " + str(list))
+#     return (list, 200)
 
 @app.route("/active_client_cam", methods=["GET"])
 def active_client_cam():
@@ -194,6 +203,21 @@ def active_client_cam():
     return jsonify(data=listout), 200
     
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='ecovision threads manager')
+    parser.add_argument('--ecovisionPath', metavar='ecovisionPath', required=True,
+                        help='the ecovisionPath') # "/home/ecorvee/Projects/EcoVision/ecplatform2"
+    parser.add_argument('--debug', action='store_true', default=False)
+    print("...1")
+    args = parser.parse_args()
+    print("...2")
+    manager = ManagerEcovisionS(host=HOST, port=PORT, ecovisionPath=args.ecovisionPath, debug=args.debug)
+    manager.start()
+    print("...3")
+
+    watchActiveClients = WatchActiveClients()
+    watchActiveClients.start()
+
     # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
-    app.run(debug=True, host='0.0.0.0', port=5555, use_reloader=False)
+    app.run(debug=True, host=HOST, port=PORT, use_reloader=False)
+    print("...4")
     # shit i lost code about thread sessionrunner i think

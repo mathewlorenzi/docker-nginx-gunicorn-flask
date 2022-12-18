@@ -62,10 +62,11 @@ class AppImage:
         return dict_out
 
 class BufferImages:
-    def __init__(self, type: str, maxLength: int, clientId:str, directory: str=None):
+    def __init__(self, type: str, maxLength: int, clientId:str, tcpPort:int, directory: str=None):
         self.TYPE = type
         self.directory = directory
         self.clientId = clientId
+        self.tcpPort = tcpPort      # for each ecovision as a server tcp port 
         self.maxLength = maxLength
         self.buffer = []
         self.lastRecordedIndex = -1
@@ -133,9 +134,10 @@ class ClientCamera():
     """
     buffer of N images: bufferImages
     clientId = camId
+    tcpPort is the port of the ecovision as a server tcp
     directory where are saved the images if MODE_SAVE_TO_DISK is not set to no save
     """
-    def __init__(self, type: str, clientId: str, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
+    def __init__(self, type: str, clientId: str, tcpPort: int, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
 
         self.TYPE = type
         self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
@@ -148,6 +150,8 @@ class ClientCamera():
         self.clientId = clientId
         if clientId == "":
             self.clientId = STR_UNKNOWN
+
+        self.tcpPort = tcpPort
 
         if self.MODE_SAVE_TO_DISK == NOSAVE:
             self.mainUploadDir = None
@@ -167,6 +171,7 @@ class ClientCamera():
             type = self.TYPE,
             maxLength=5, 
             clientId = self.clientId,
+            tcpPort = self.tcpPort,
             directory = self.outputDir
         )
         if self.bufferImages is False:
@@ -179,7 +184,7 @@ class ClientCamera():
             self.initMsg = "[ERROR]ClientCamera/" + self.TYPE + ": buffer images creation failed: " + self.bufferImages.initMsg
             return
 
-        self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId
+        self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId + "(" + str(tcpPort) + ")"
         self.initSucc = True
     
     def insertNewImage(self, logger: logging.Logger, imageContent: str):
@@ -187,11 +192,9 @@ class ClientCamera():
         if appImage.success is False:
             return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        logger.debug("ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename)
+        logger.debug("ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
-
-
         
         if len(imageContent.split(',')) > 1:
             content = imageContent.split(',')[1]
@@ -268,9 +271,9 @@ class BufferClients():
                 break
         return indexClient
 
-    def insertNewClient(self, nameId: str) -> int:
+    def insertNewClient(self, nameId: str, tcpPort: int) -> int:
 
-        newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
+        newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, tcpPort=tcpPort, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
 
         if newClientCam is None:
             return ("[ERROR]BufferClients/" + self.TYPE + ":creating ClientCamera object is None", None)
@@ -319,5 +322,5 @@ class BufferClients():
     def getListClients(self):
         listClients = []
         for client in self.buff:
-            listClients.append(client.clientId)
+            listClients.append( (client.clientId, client.tcpPort) )
         return listClients
