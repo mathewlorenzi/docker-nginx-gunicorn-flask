@@ -16,6 +16,8 @@ version: '3'
 # cd ..
 # ./compile.sh
 # (if not present exe: make)
+# cd /home/ecorvee/Projects/EcoVision/ecplatform2/programs/programecpp/platformecpp/
+# ./test.sh
 
 # ****** [LOCAL] build only the web and ecoclient docker containers ****** unless all ois find and just go up
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
@@ -46,8 +48,10 @@ version: '3'
 # git add ....
 # git commit ....
 
-
-
+# backeup ecovision
+# cd /home/ecorvee/Projects/EcoVision
+# ./backup_simple.sh <PQSSWORD
+# send by email
 
 
 

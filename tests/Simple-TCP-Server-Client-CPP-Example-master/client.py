@@ -1,7 +1,7 @@
 import socket
 import base64
 
-host_ip, server_port = "127.0.0.1", 5453
+host_ip, server_port = "127.0.0.1", 5454
 data = " Hello how are you?\n"
 
 def client_sends_msg():
@@ -65,7 +65,7 @@ def client_sends_img():
             index = 0
             for chunk in dataSplit:
                 nb = tcp_client.send(chunk)
-                # print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
+                print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
                 index+=1
 
             # print("type", type(data))
