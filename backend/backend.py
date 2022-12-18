@@ -199,6 +199,7 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
 @app.route("/active_client_cam", methods=["GET"])
 def active_client_cam():
     listout = bufferClients.getListClients()
+    print(" ....... ", listout, type(listout))
     logger.info("/active_client_cam returns "+str(listout))
     return jsonify(data=listout), 200
     

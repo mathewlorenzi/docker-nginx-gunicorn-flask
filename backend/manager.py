@@ -148,8 +148,10 @@ class ManagerEcovisionS(threading.Thread):
                 json_data = json_data_res.get("data")
                 print("[INFO]checking current active client cam: ", json_data)
                 for el in json_data:
-                    camId = el
-                    
+                    print(" ..... ...... el", el)
+                    camId = el[0]  # cmaid, port
+                    ecovisionPort = el[1]
+
                     dirout = os.path.join(OUTPUT_DIR, camId)
                     if os.path.isdir(dirout) is False:
                         os.mkdir(dirout)
@@ -190,7 +192,7 @@ class ManagerEcovisionS(threading.Thread):
                         
                     if FOUND_INDEX is None:
                         print("[INFO]camId", camId, "CREATE NEW THREAD: index:", len(threads))
-                        thread = EcoVisionRunner(thread_id=len(threads), host=self.host, port=self.port, 
+                        thread = EcoVisionRunner(thread_id=len(threads), port=ecovisionPort, 
                             nameId=camId, ecovisionPath=self.ecovisionPath, debug=self.debug)
                         thread.start()
                         threads.append(thread)
@@ -203,7 +205,7 @@ class ManagerEcovisionS(threading.Thread):
                             # TODO restart it
                             print("[INFO]camId", camId, "NO MORE ALIVE : restart it ... TODO if timestamp last image not too old or not already treated")
                             threads.pop(index)
-                            thread = EcoVisionRunner(thread_id=index, host=self.host, port=self.port, 
+                            thread = EcoVisionRunner(thread_id=index, port=ecovisionPort, 
                                 nameId=camId, ecovisionPath=self.ecovisionPath, debug=self.debug)
                             thread.start()
                             threads.append(thread)

@@ -5,6 +5,43 @@ from datetime import datetime
 import logging
 
 from buffer_images import BufferClients
+from utils import is_port_in_use, check_port
+
+# All ports from 1–65535 support TCP
+
+# this technique create too large number
+# import math
+# def convertToNumber (s):
+#     return int.from_bytes(s.encode(), 'little')
+# def convertFromNumber (n):
+#     return n.to_bytes(math.ceil(n.bit_length() / 8), 'little').decode()
+# x = convertToNumber('foo bar baz')
+# convertFromNumber(x)
+
+class PortGenerator:
+    def __init__(self):
+        self.minPort = 9000 # to avoid the ones in the 5000 and 8000 or 1024 # or 1
+        self.maxPort = 65534 # or 65535
+        self.currPort = self.minPort
+    def getNewPort(self):
+        safeCounter=0
+        while(True):
+            safeCounter+=1
+            currPort = self.currPort
+            if is_port_in_use(currPort) is False:
+            # if check_port(currPort) is False:
+                self.currPort += 1
+                if self.currPort>=self.maxPort:
+                    self.currPort=self.minPort
+                print("[INFO] ... found new port: ", self.currPort)
+                return currPort
+            else:
+                self.currPort += 1
+            if safeCounter > 65535:
+                print("[ERROR]Impossible: all ports are used")
+                return -1
+
+portGenerator = PortGenerator()
 
 def record_image_or_result(inputBufferClient: BufferClients, imageContentStr: str, camId: str, logger):
     nameId = camId # data["nameId"]
@@ -17,9 +54,11 @@ def record_image_or_result(inputBufferClient: BufferClients, imageContentStr: st
     if indexClient is None:
         logger.info("/image: nameId:" + nameId + " new client")
 
-        how to create new port
+        newPort = portGenerator.getNewPort()
+        if newPort<0:
+            return ("KO: failed to find a free new port for a new ecovision job", nameId, 400)
 
-        (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=tcpPort)
+        (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=newPort)
         if indexClient is None:
             errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
             logger.error(errMsg)

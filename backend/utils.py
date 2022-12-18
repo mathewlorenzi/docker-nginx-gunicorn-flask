@@ -3,12 +3,33 @@ import psutil
 import base64
 from datetime import datetime
 import logging
+import socket, errno
 
 IMGEXT='jpg'
 
 # populate_fake_images()
 # exit(1)
 # uri_result = load_sample("todel.png")
+
+def is_port_in_use(port: int) -> bool:
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+def check_port(i):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        print("... port", i)
+        s.bind(("127.0.0.1", i))
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+            print("Port is already in use", i)
+        else:
+            print("Port available", i)
+            print(e)
+            return False   
+    s.close()
+    return True
 
 def convertDatetimeToString(input: datetime) -> str:
     return input.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]
