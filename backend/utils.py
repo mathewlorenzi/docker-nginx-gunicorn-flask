@@ -203,3 +203,22 @@ def get_encoded_img(image_path):
         img_byte_arr = f.read()
         return base64.encodebytes(img_byte_arr).decode('ascii')
 
+
+def split_images(input):
+    '''new_ids = []
+    function = lambda x, y: [x, y]
+    for i in range(0, len(input), 1024):
+        try:
+            new_ids.append(function(input[i], input[i + 1023]))
+        except IndexError:
+            new_ids.append(input[i])
+    return new_ids'''
+
+    output = []
+    start = 0
+    end = len(input)
+    step = 2048
+    for i in range(start, end, step):
+        x = i
+        output.append(input[x:x+step])
+    return output

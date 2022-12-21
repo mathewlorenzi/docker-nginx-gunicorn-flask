@@ -74,14 +74,14 @@ def image():
     # the camera.html (client) exects the result as a reply or a red image if ecovision did not reply a fresh result yet
 
         
-# reply to ecovision
-@app.route("/result", methods=['POST'])
-def result():
-    logger.info("/result POST")
-    response = requests.post(BACKEND_URL+"/record_result", data=request.data)
-    return (response.content, response.status_code)
-    #(msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
-    #return (msg, status)
+# # reply to ecovision
+# @app.route("/result", methods=['POST'])
+# def result():
+#     logger.info("/result POST")
+#     response = requests.post(BACKEND_URL+"/record_result", data=request.data)
+#     return (response.content, response.status_code)
+#     #(msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
+#     #return (msg, status)
 
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])

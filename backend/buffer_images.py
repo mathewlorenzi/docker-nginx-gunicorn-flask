@@ -3,6 +3,7 @@ import base64
 from base64 import b64encode
 import logging
 from datetime import datetime
+from socket import TCP_FASTOPEN
 from utils import IMGEXT, convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 STR_UNKNOWN = "UNKNOWN"
@@ -324,3 +325,9 @@ class BufferClients():
         for client in self.buff:
             listClients.append( (client.clientId, client.tcpPort) )
         return listClients
+
+    def getEcovisionPort(self, camId: int):
+        for client in self.buff:
+            if client.clientId == camId:
+                return (client.tcpPort, True)
+        return (-1, False)

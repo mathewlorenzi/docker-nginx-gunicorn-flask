@@ -71,7 +71,7 @@ class EcoVisionRunner(threading.Thread):
         logging.info('{}'.format(msg))
   
     def run(self):
-        self.log('starting')
+        self.log('[INFO]ecovision camid ' + str(self.nameId))
         # OK
         # cmdline = ["./simul_ecovision", "--host", self.host+":"+ str(args.port), "--camId", self.nameId]
         # echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/absolute_path/' >> ~/.bashrc
@@ -135,9 +135,11 @@ class ManagerEcovisionS(threading.Thread):
         threads = []
         while True:
             try:
+                # the url of the backend
                 url = "http://"+self.host+":"+ str(self.port) +"/active_client_cam"
                 if self.debug is True:
                     print("[DEBUG]asking for active clients on ", url)
+                # ask the backend the active clients
                 active_client_cam = requests.get(url)
                 if self.debug is True:
                     print("[DEBUG]active_client_cam ", active_client_cam)

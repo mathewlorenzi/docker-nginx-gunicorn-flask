@@ -5,6 +5,7 @@ import psutil
 import threading
 import argparse
 import time
+import socket
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +15,7 @@ if file_path not in sys.path:
 
 from flask import Flask, jsonify, request, json#, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-from utils import IMGEXT, get_encoded_img #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 from utils_api import record_image_or_result, lastsample
 from manager import ManagerEcovisionS
 
@@ -82,100 +83,172 @@ def backend():
     data = {"data": "Hello backend"}
     return jsonify(data)
 
+def get_image_to_return(status2: int, content: dict, logger):
+    colourImg = None
+    msg = None
+    _succ = False
+    if status2 == 200:
+        # TODO how to write timestamp in data or display it somewhere in html
+        if content["hasData"] == "False":
+            msg = "[ERROR]lastsample returned ok but dict hasData is False"
+            logger.error(msg)
+            colourImg = 'red'
+        elif content["uploaded"] == "True":
+            msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
+            logger.error(msg)
+            colourImg = 'red'
+        else:
+            _succ = True
+    else:
+        msg = "/image: " + content
+        if status2 == 404 or status2 == 405:
+            colourImg = "red"
+            logger.error(msg + " => reply with " + colourImg)
+        elif status2 == 400:
+            colourImg = "orange"
+            logger.warn(msg + " => reply with " + colourImg)
+        elif status2 == 204:
+            colourImg = "green"
+            logger.warn(msg + " => reply with " + colourImg)
+        else:
+            colourImg = "red"
+            logger.error(msg + " => reply with " + colourImg)
+    return (_succ, colourImg)
+
+
 @app.route("/record_image", methods=['POST'])
 def record_image():
     jsonstr = request.data.decode('utf8')
     data = json.loads(jsonstr)
     timestamp = data["timestamp"]
-    print(" ... record_image: sent at ", timestamp)
+    print(" ... /record_image: sent from camera.html at ", timestamp)
     imagestr = data["image"]
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
 
+    print(" ... /record_image: record_image_or_result ")
     (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId, logger=logger)
 
     # print(" ++++++ SLEEP ++++++ ", msg, camId, status)
     # time.sleep(10)
 
     if status != 200:
+        print("[ERROR]FAILED fecord image")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
-    else:
-        # image recorded successfully
-        # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
-        # if not available at all (no result client = ecovision never sent anything) then return a orange empty image
-        # if result/client present (ecovision already sent something) but last image already uploaded => send a green empty image
 
-        DEBUGING = False # True: simply return the last image else return the last result (posted by ecovision)
+    # image recorded successfully
+    # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
+    # if not available at all (no result client = ecovision never sent anything) then return a orange empty image
+    # if result/client present (ecovision already sent something) but last image already uploaded => send a green empty image
 
-        # instead of returning result, return the last image just to heck everything ok in image order buffer
-        if DEBUGING is True:
-            GIVE_IT_TO_ME = False
-            (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-            if status2 == 200:
-                return (content["contentBytes"], 200)
-            else:
-                return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
-        else:
-            # 405 error (that shoukd be handled by flask)
-            # 404 programming error
-            # 400 client/camId not present in list of current clients
-            # 202 ok but already uploaded last image
-            # 200 ok, last image returned
-            GIVE_IT_TO_ME = False
-            (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-        
-            colourImg = None
-            msg = None
-            _succ = False
-            if status2 == 200:
-                # TODO how to write timestamp in data or display it somewhere in html
-                if content["hasData"] == "False":
-                    msg = "[ERROR]lastsample returned ok but dict hasData is False"
-                    logger.error(msg)
-                    colourImg = 'red'
-                elif content["uploaded"] == "True":
-                    msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
-                    logger.error(msg)
-                    colourImg = 'red'
-                else:
-                    _succ = True
-            else:
-                msg = "/image: " + content
-                if status2 == 404 or status2 == 405:
-                    colourImg = "red"
-                    logger.error(msg + " => reply with " + colourImg)
-                elif status2 == 400:
-                    colourImg = "orange"
-                    logger.warn(msg + " => reply with " + colourImg)
-                elif status2 == 204:
-                    colourImg = "green"
-                    logger.warn(msg + " => reply with " + colourImg)
-                else:
-                    colourImg = "red"
-                    logger.error(msg + " => reply with " + colourImg)
+    #DEBUGING = False # True: simply return the last image else return the last result (posted by ecovision)
 
+    # instead of returning result, return the last image just to heck everything ok in image order buffer
+    # if DEBUGING is True:
+    #     GIVE_IT_TO_ME = False
+    #     (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    #     if status2 == 200:
+    #         return (content["contentBytes"], 200)
+    #     else:
+    #         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+    # else:
+    # 405 error (that shoukd be handled by flask)
+    # 404 programming error
+    # 400 client/camId not present in list of current clients
+    # 202 ok but already uploaded last image
+    # 200 ok, last image returned
+
+    (ecovisionPort, succPort) = bufferClients.getEcovisionPort(camId=camId)
+    if succPort is False:
+        print("[WARNING]no ecovision port for camid ", camId)
+        return (get_encoded_img(image_path=os.path.join(file_path, "red"+'.'+IMGEXT)), 200) 
+
+
+    # ==========================
+    # send a message to tcp server in eocivion code to get trakicing result
+    # ==========================
+    # Initialize a TCP client socket using SOCK_STREAM
+    host_ip = HOST
+    server_port = PORT
+    tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        # Establish connection to TCP server and exchange data
+        tcp_client.connect((host_ip, server_port))
+
+        GIVE_IT_TO_ME = False
+        (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+        print(" ... /record_image: get lastsample returned status ", status2)
+        if status2 != 200:
+            print("[ERROR]get lastsample image recorded failed although we just recorded one")
+            return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+        (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
         # no matter whether the result is available or not, the result to the post request if here 200
-        if _succ is True:
-            print(" ... .... reply with content saved at ", content["dateTime"])
-            return (content["contentBytes"], 200)
-        else:
+        if _succ is False:
+            print("[ERROR]lastsample image failed")
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
 
-@app.route("/record_result", methods=['POST'])
-def record_result():
-    jsonstr = request.data.decode('utf8')
-    data = json.loads(jsonstr)
-    timestamp = data["timestamp"]
-    print(" ... record_result: sent at ", timestamp)
-    imagestr = data["image"]
-    nameId = data["nameId"]
+        # TODO hasData, uploaded ? ......... ?
+        # data = content['contentBytes']
+        data = bytes(content['contentBytes'],'UTF-8')
+        print(" ... ... ", type(data))
+        dataSplit = split_images(data)
+        index = 0
+        for chunk in dataSplit:
+            nb = tcp_client.send(chunk)
+            # print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
+            index+=1
+        received = b""
+        while True:
+            curr = tcp_client.recv(2048)
+            print(len(curr))
+            received += curr
+            if len(curr) < 2048:
+                break            
 
-    (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+    finally:
+        tcp_client.close()
 
-    print(" ++++++ SLEEP ++++++ backend record result done")
-    time.sleep(10)
+    (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=received, camId=nameId)
+    if statusBack != 200:
+        print("[ERROR]FAILED fecord result")
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
 
-    return (msg, status)
+    (contentBack, statusBack) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    print(" ... /record_image: get lastsample of result returned status ", statusBack)
+    if statusBack != 200:
+        print("[ERROR]get lastsample result recorded failed although we just recorded one")
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+    
+    (_succBack, colourImg) = get_image_to_return(status2=statusBack, content=contentBack, logger=logger)
+    if _succBack is True:
+        print(" ... .... reply with result content saved at ", content["dateTime"])
+        return (contentBack["contentBytes"], 200)
+    else:
+        return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
+
+
+
+    # GIVE_IT_TO_ME = False
+    # print(" ... /record_image: now that image recorded get lastsample of ecovision results ")
+    # (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+
+    # print(" ... /record_image: get lastsample returned status ", status2)
+
+# @app.route("/record_result", methods=['POST'])
+# def record_result():
+#     jsonstr = request.data.decode('utf8')
+#     data = json.loads(jsonstr)
+#     timestamp = data["timestamp"]
+#     print(" ... record_result: sent at ", timestamp)
+#     imagestr = data["image"]
+#     nameId = data["nameId"]
+
+#     (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+
+#     print(" ++++++ SLEEP ++++++ backend record result done")
+#     time.sleep(10)
+
+#     return (msg, status)
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):

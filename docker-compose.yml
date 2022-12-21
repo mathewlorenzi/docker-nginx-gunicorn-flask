@@ -42,13 +42,15 @@ version: '3'
 # exit
 # === go back to ecoclient and get the compiled new package === 
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
-# rm -rf ecoclient/package_ecovision
-# cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
+# # rm -rf ecoclient/package_ecovision
+# rm -rf backend/package_ecovision
+# # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
+# cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./backend
 # git status
 # git add ....
 # git commit ....
 
-# backeup ecovision
+# backup ecovision
 # cd /home/ecorvee/Projects/EcoVision
 # ./backup_simple.sh <PQSSWORD
 # send by email

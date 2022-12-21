@@ -49,7 +49,7 @@ def split_images(input):
         output.append(input[x:x+step])
     return output
 
-def client_sends_img():
+def client_sends_img_v0():
 
     # Initialize a TCP client socket using SOCK_STREAM
     tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,6 +122,33 @@ def client_sends_img():
     with open("temp_received.jpg", "wb") as fout:
         fout.write(received)
 
+def client_sends_img():
+    # Initialize a TCP client socket using SOCK_STREAM
+    tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        # Establish connection to TCP server and exchange data
+        tcp_client.connect((host_ip, server_port))
+        with open("../../todel.jpg", mode='rb') as f:
+            data = f.read()
+            dataSplit = split_images(data)
+            index = 0
+            for chunk in dataSplit:
+                nb = tcp_client.send(chunk)
+                # print(index, "type", type(chunk), "len", len(chunk), "sent", nb)
+                index+=1
+            received = b""
+            while True:
+                curr = tcp_client.recv(2048)
+                print(len(curr))
+                received += curr
+                if len(curr) < 2048:
+                    break            
+
+    finally:
+        tcp_client.close()
+
+    with open("temp_received.jpg", "wb") as fout:
+        fout.write(received)
 
 #client_sends_msg()
 client_sends_img()
