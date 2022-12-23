@@ -222,7 +222,8 @@ class ClientCamera():
             # type(content)) # str
             appImage.contentBytes = imageContentBytes
             # type(appImage.contentBytes)) # bytes
-            appImage.contentBytes4Json = base64.decodebytes(imageContentBytes)  #imageContentBytes.decode()
+            # appImage.contentBytes4Json = base64.decodebytes(imageContentBytes)  #imageContentBytes.decode()
+            appImage.contentBytes4Json = imageContentBytes.decode()
             # type(appImage.contentBytes4Json)) # bytes
             appImage.hasData = True
 

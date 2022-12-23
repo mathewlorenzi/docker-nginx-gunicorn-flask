@@ -7,6 +7,7 @@ import argparse
 import time
 import socket
 import base64
+from PIL import Image
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -14,11 +15,14 @@ if file_path not in sys.path:
     sys.path.insert(1, file_path)
 # # printRootStructure(dirname=sys.path[0], indent=0)
 
-from flask import Flask, jsonify, request, json#, render_template, request, jsonify, json#, flash send_from_directory
+from flask import Flask, jsonify, request#, json#, render_template, request, jsonify, json#, flash send_from_directory
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
-from utils import IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
+from utils import isascii, isBase64, IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 from utils_api import record_image_or_result, lastsample
 from manager import ManagerEcovisionS
+
+import json
+
 
 HOST='0.0.0.0'
 PORT=5555
@@ -128,8 +132,9 @@ def record_image():
     data = json.loads(jsonstr)
     timestamp = data["timestamp"]
     print(" ... /record_image: sent from camera.html at ", timestamp)
-    imagestr = data["image"]
+    imagestr = data["image"]  # if of type str, and not base64 encoded .... strange as in camer html we send 64 image/jpg
     # print(" ... ... RECEIVED FROM CAMERA HTML image type:", type(imagestr))
+    print("[DEBUG] ++++++++++++++++ camera returned ", type(imagestr), " isbase64encoded", isBase64(imagestr), "ascii ? ", isascii(imagestr))
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
 
@@ -138,21 +143,7 @@ def record_image():
         imageContentStr=imagestr, 
         imageContentBytes=None, logger=logger)
 
-
-
-
-
-
-
-    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
-
-
-
-
-
-
-
-
+    # return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
     # print(" ++++++ SLEEP ++++++ ", msg, camId, status)
     # time.sleep(10)
@@ -266,13 +257,58 @@ def record_image():
             if len(curr) < 2048:
                 receivedResult = True
                 break
-        #received = received.decode('ascii')
-        #received = codecs.decode(received)
-        # with open("temp_received.jpg", "wb") as fout:
-        #     fout.write(received)
-        # f.write(base64.b64decode(dict_out["contentBytes"].encode()))
-        # return base64.encodebytes(img_byte_arr).decode('ascii')
-        # appImage.contentBytes = base64.b64decode(content.encode())
+
+        # [DEBUG] ++++++++++++++++ ecovisoin returned  <class 'bytes'>  isbase64encoded False encoding utf-8
+        # received is of type bytes, utf-8 encoded, and not base64 encoded
+        print("[DEBUG] ++++++++++++++++ ecovisoin returned ", type(received), " isbase64encoded", isBase64(received), "encoding", json.detect_encoding(received))
+        
+        
+        
+        
+        # receivedStr = unicode() received.decode('utf-8')
+        # print("[DEBUG] ++++++++++++++++ ecovision convert  ", type(receivedStr), " isbase64encoded", isBase64(receivedStr), "ascii ? ", isascii(receivedStr))    
+        # received = received.decode('ascii')
+        # received = codecs.decode(received)
+
+        # OK so bytes, utf-8, not base64encoded can be just dumped to jpeg file
+        with open("temp_received.jpg", "wb") as fout:
+            fout.write(received)
+        im = Image.open("temp_received.jpg")
+        im.save("temp_received.png", "PNG")
+        with open("temp_received.png", "rb") as fin:
+            received = fin.read()
+        print("[DEBUG] ++++++++++++++++ PNG       ", type(received), " isbase64encoded", 
+            isBase64(received), "encoding", json.detect_encoding(received))
+        
+
+        received = base64.b64encode(received)
+        print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
+             isBase64(received), "encoding", json.detect_encoding(received))
+        
+
+        # received = base64.b64encode(received)
+        # #received = base64.b64decode(received) 
+
+        # # received = received.rstrip("\n").decode("utf-16")
+        # # received = received.split("\r\n")
+        
+        # # with open("temp_received.jpg", "rb") as fin:
+        # #     received = fin.read()
+        # print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
+        #     isBase64(received), "encoding", json.detect_encoding(received))
+        
+
+        # received = received.decode() # str, base64: True, ascii: true
+        # print("[DEBUG] ++++++++++++++++ CHEARTING3 ", type(received), " isbase64encoded", isBase64(received), 
+        #     "ascii ? ", isascii(received))        
+
+        # received = base64.b64decode(received)
+        # received = received.decode('ascii')
+        # print("[DEBUG] ++++++++++++++++ CHEARTING4 ", type(received), " isbase64encoded", isBase64(received))
+
+        # # f.write(base64.b64decode(dict_out["contentBytes"].encode()))
+        # # return base64.encodebytes(img_byte_arr).decode('ascii')
+        # # appImage.contentBytes = base64.b64decode(content.encode())
 
 
     finally:

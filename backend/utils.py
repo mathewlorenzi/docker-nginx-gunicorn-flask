@@ -11,6 +11,23 @@ IMGEXT='jpg'
 # exit(1)
 # uri_result = load_sample("todel.png")
 
+def isascii(s):
+    """Check if the characters in string s are in ASCII, U+0-U+7F."""
+    return len(s) == len(s.encode())
+
+def isBase64(sb):
+    try:
+            if isinstance(sb, str):
+                    # If there's any unicode here, an exception will be thrown and the function will return false
+                    sb_bytes = bytes(sb, 'ascii')
+            elif isinstance(sb, bytes):
+                    sb_bytes = sb
+            else:
+                    raise ValueError("Argument must be string or bytes")
+            return base64.b64encode(base64.b64decode(sb_bytes)) == sb_bytes
+    except Exception:
+            return False
+
 def is_port_in_use(port: int) -> bool:
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -168,8 +185,14 @@ def test_convertStringTimestampToDatetimeAndMicrosecValue():
 
 def get_encoded_img(image_path):
     with open(image_path, mode="rb" ) as f:
-        img_byte_arr = f.read()
-        return base64.encodebytes(img_byte_arr).decode('ascii')
+        img_byte_arr = f.read()                 # bytes
+        a = base64.encodebytes(img_byte_arr)    # bytes (base64 encoded)
+        b = a.decode('ascii')                   # str
+        print("[DEBUG]get_encoded_img ", image_path, "step0 fread rb           : ", type(img_byte_arr))
+        print("[DEBUG]get_encoded_img ", image_path, "step1 encode base64 bytes: ", type(a))
+        print("[DEBUG]get_encoded_img ", image_path, "step2 decode ascii       : ", type(b))
+        # return base64.encodebytes(img_byte_arr).decode('ascii')
+        return b
 
 def get_cpu_ram_disk():
     per_cpu = psutil.cpu_percent(percpu=True)
@@ -198,10 +221,10 @@ def get_cpu_ram_disk():
     #my_encoded_img = base64.encodebytes(img_byte_arr.getvalue()).decode('ascii')
     #return my_encoded_img
 
-def get_encoded_img(image_path):
-    with open(image_path, mode="rb" ) as f:
-        img_byte_arr = f.read()
-        return base64.encodebytes(img_byte_arr).decode('ascii')
+# def get_encoded_img(image_path):
+#     with open(image_path, mode="rb" ) as f:
+#         img_byte_arr = f.read()
+#         return base64.encodebytes(img_byte_arr).decode('ascii')
 
 
 def split_images(input):
