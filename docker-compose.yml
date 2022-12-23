@@ -1,10 +1,13 @@
+create package to redo from within docker
+or from package light
+
 #try local without manager to test directly ecovision
 
 version: '3'
 
 # ****** have an ecovision package ******
 
-# === make sure to have these lines uncommented in Dependencies of 
+# === make sure to have these lines uncommented in Dependencies of DISPLAYCV_CPP
 # - nano /home/ecorvee/Projects/EcoVision/ecplatform2/libs_cpp/libecpp_sources/libecpp_sources_prog/Dependencies.txt
 # - nano /home/ecorvee/Projects/EcoVision/ecplatform2/programs/programecpp/platformecpp/Dependencies.txt
 # USE LIBEC_DISPLAYCV_CPP
@@ -38,11 +41,12 @@ version: '3'
 # cd /home/ecorvee/Projects/EcoVision
 # docker-compose build
 # docker run -t -d -v $PWD/package_ecovision:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+# docker ps
 # docker exec -it <ID given from docker ps> bash
 # ./compile.sh
 # ./create_package.sh       => the creqted pqckqge with end up in the shared directory
 # exit
-# === go back to ecoclient and get the compiled new package === 
+# === go back to backend and get the compiled new package === 
 # cd /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask
 # # rm -rf ecoclient/package_ecovision
 # rm -rf backend/package_ecovision
@@ -82,6 +86,7 @@ services:
     container_name: backend
     ports:
       - 5555:5555
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
 
   web:
     # restart: always
@@ -107,14 +112,13 @@ services:
     links:
       - web
 
-  ecoclient:
-    build:
-      context: ./ecoclient
-    container_name: ecoclient
-    depends_on:
-      - web
-    #command: top -b
-    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
-    # add --debug
-    
+  # ecoclient:
+  #   build:
+  #     context: ./ecoclient
+  #   container_name: ecoclient
+  #   depends_on:
+  #     - web
+  #   #command: top -b
+  #   command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 manager.py --url http://web --port 8000 --ecovisionPath ./package_ecovision"
+  #   # add --debug    
     

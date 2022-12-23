@@ -193,7 +193,7 @@ class ClientCamera():
         if appImage.success is False:
             return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        logger.debug("ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
+        print("[DEBUG]ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
         

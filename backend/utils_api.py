@@ -51,24 +51,24 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
 
     if imageContentStr is not None:
         if isinstance(imageContentStr, str) is False:
-            logger.error("/image: imageContentStr is not a string:", type(imageContentStr))
+            print("[ERROR]/image: imageContentStr is not a string:", type(imageContentStr))
             return ("KO: imageContentStr is not a string", 400)
     else:
         if imageContentBytes is not None:
             if isinstance(imageContentBytes, bytes) is False:
-                logger.error("/image: imageContentBytes is not bytes:", type(imageContentBytes))
+                print("[ERROR]/image: imageContentBytes is not bytes:", type(imageContentBytes))
                 return ("KO: imageContentBytes is not bytes", 400)
 
     
 
     if isinstance(nameId, str) is False:
-        logger.error("/image: nameId is not a string:" + str(nameId))
+        print("[ERROR]/image: nameId is not a string:" + str(nameId))
         return ("KO: nameId is not a string", nameId, 400)
 
     # look if existing active camera
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
     if indexClient is None:
-        logger.info("/image: nameId:" + nameId + " new client")
+        print("[INFO]/image: nameId:" + nameId + " new client")
 
         newPort = portGenerator.getNewPort()
         if newPort<0:
@@ -77,19 +77,20 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
         (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=newPort)
         if indexClient is None:
             errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
-            logger.error(errMsg)
+            # logger.error(errMsg)
+            print("[ERROR]", errMsg)
             return (errMsg, nameId, 400)
 
     # check really necessary ?
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
     if indexClient is None:
-        logger.error("/image: nameId:" + nameId + " failed finding client")
+        print("[ERROR]/image: nameId:" + nameId + " failed finding client")
         return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
     
-    logger.debug("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
+    print("[DEBUG]/image: nameId:" + nameId + " indexClient: " + str(indexClient))
 
     # while(inputBufferClient.buff[indexClient].lockOnUpload is True){
-    #     logger.info("/image: lock active, wait a bit, for camId" + nameId)
+    #     print("[INFO]/image: lock active, wait a bit, for camId" + nameId)
     #     time.sleep(1)
     # }
     # lockOnUpload = False
@@ -99,13 +100,13 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
                                                                     imageContentStr=imageContentStr,
                                                                     imageContentBytes=imageContentBytes)
     if succ is False:
-        logger.error(msg)
+        print("[ERROR]", msg)
         return ("KO: failed saving new image", nameId, 400)
     else:
-        logger.info(msg)
+        print("[INFO]", msg)
 
         # camId = nameId
-        # logger.debug("/result_image2 endpoint")
+        # print("[DEBUG]/result_image2 endpoint")
         # v1
         # if camId in ecovisionResults.trackResultsImage:
         #     return (ecovisionResults.trackResultsImage[camId], nameId, 200)
@@ -114,7 +115,7 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
         # v2 return a blank image if not ready
         # indexECO = bufferEcovisionResults.getClientIndex(nameId=nameId)
         # if indexECO is None:
-        #     logger.error("/image: nameId:" + nameId + " failed finding client in ecovision results")
+        #     print("[ERROR]/image: nameId:" + nameId + " failed finding client in ecovision results")
         #     return (HERE blank image, nameId, 202)
         # bufferEcovisionResults.buff[indexECO].get last image
     
@@ -142,32 +143,37 @@ def lastsample(camId: str, inputBufferClient: BufferClients, logger, take_care_o
     # 204 ok but already uploaded last image
     # 200 ok, last image returned
 
-    logger.debug("lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
+    print("[DEBUG]lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
     if camId is None:
         msg = "camId in None in url" + " /" + inputBufferClient.TYPE
-        logger.error(msg)
+        # logger.error(msg)
+        print("[ERROR]", msg)
         return (msg, 405)    
     if camId == "":
         msg = "nameId is empty in url" + " /" + inputBufferClient.TYPE
-        logger.error(msg)
+        # logger.error(msg)
+        print("[ERROR]", msg)
         return (msg, 405)
     
     index = inputBufferClient.getClientIndex(camId)
     if index is None:
         msg = "client/camId not present in list of current clients: " + camId + " /" + inputBufferClient.TYPE
-        logger.debug(msg)
+        # logger.debug(msg)
+        print("[DEBUG]", msg)
         return (msg, 400)
 
     lastRecordedIndex = inputBufferClient.buff[index].bufferImages.lastRecordedIndex
-    logger.info("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
+    print("[INFO]lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
 
     if lastRecordedIndex is None:
         msg = "lastRecordedIndex None: camId: " + camId + " /" + inputBufferClient.TYPE
-        logger.error(msg)
+        # logger.error(msg)
+        print("[ERROR]", msg)
         return (msg, 404)
     if lastRecordedIndex < 0:
         msg = "lastRecordedIndex negative: camId: " + camId + " /" + inputBufferClient.TYPE
-        logger.error(msg)
+        # logger.error(msg)
+        print("[ERROR]", msg)
         return (msg, 404)
 
 
@@ -176,7 +182,7 @@ def lastsample(camId: str, inputBufferClient: BufferClients, logger, take_care_o
 
     if take_care_of_already_uploaded is True:
         if already_uploaded is True:
-            logger.warning("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded" + " /" + inputBufferClient.TYPE)
+            print("[WARNING]lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + ", already uploaded" + " /" + inputBufferClient.TYPE)
             return ("already_uploaded", 204)
             
     dict_out = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].getAsJsonData()

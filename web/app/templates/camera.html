@@ -259,7 +259,12 @@
                 //var url = 'https://51.77.194.68:81/image';
                 //var url = 'https://www.ecovision.ovh:81/image';
                 // console.log(" ... url:" + url)
-                xhr.open("POST", url, true);
+
+                // async true
+                //xhr.open("POST", url, true);
+
+                // async false
+                xhr.open("POST", url, false);
 
                 // function execute after request is successful 
                 xhr.onreadystatechange = function () {
@@ -312,8 +317,8 @@
                  //  ... captureInterval  <input id="captureInterval" value="1" type="int" hidden="hidden">
                 console.log(" ... captureInterval ", captureInterval)
                 //  console.log(" ... captureInterval.value ", captureInterval.value)
-                //setTimeout(takepicture, captureInterval.value);
-                setTimeout(takepicture, 1000);
+                setTimeout(takepicture, captureInterval.value);
+                //setTimeout(takepicture, 1000);
                  
             } else {
                 clearphoto();

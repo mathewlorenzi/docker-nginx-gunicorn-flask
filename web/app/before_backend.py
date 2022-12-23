@@ -6,20 +6,20 @@
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "..", "database_clients_camera") )
-logger.debug("check output folder: "+str(OUTPUT_PATH))
+print("[DEBUG]check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
 bufferClients = BufferClients(type="camimage", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if bufferClients.initSucc is False:
-    logger.debug("BufferClients initialisation failed: " + bufferClients.initMsg)
+    print("[DEBUG]BufferClients initialisation failed: " + bufferClients.initMsg)
     exit(1)
 
 # V1 ecovisionResults => old2.py
 # v2 ecovisionResults
 ecovisionResults = BufferClients(type="resultmag", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if ecovisionResults.initSucc is False:
-    logger.debug("ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
+    print("[DEBUG]ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
     exit(1)
 
 # populate_fake_images(OUTPUT_PATH=OUTPUT_PATH, sampleImagePath="sample.png")
@@ -47,7 +47,7 @@ if ecovisionResults.initSucc is False:
 '''@app.route("/result_image2/<string:camId>", methods=['GET'])
 def result_image2(camId: str):
     print("/result_image2")
-    logger.debug("/result_image2 endpoint")
+    print("[DEBUG]/result_image2 endpoint")
     if camId in ecovisionResults.trackResultsImage:
         return (ecovisionResults.trackResultsImage[camId], 200)
     else:
@@ -103,15 +103,15 @@ watchActiveClients.start()
     imagestr = data["image"]
     nameId = data["nameId"]
     usedUrl = data["usedUrl"]
-    logger.debug("/image: nameId: " + nameId + " usedUrl: " + usedUrl)
+    print("[DEBUG]/image: nameId: " + nameId + " usedUrl: " + usedUrl)
     if isinstance(imagestr, str) is False or isinstance(nameId, str) is False:
-        logger.error("/image: nameId is not a string:" + str(nameId))
+        print("[ERROR]/image: nameId is not a string:" + str(nameId))
         return ("KO: nameId is not a string", nameId, 400)
     else:
         # look if existing active camera
         indexClient = inputBufferClient.getClientIndex(nameId=nameId)
         if indexClient is None:
-            logger.info("/image: nameId:" + nameId + " new client")
+            print("[INFO]/image: nameId:" + nameId + " new client")
             (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId)
             if indexClient is None:
                 errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
@@ -121,14 +121,14 @@ watchActiveClients.start()
         # check really necessary ?
         indexClient = inputBufferClient.getClientIndex(nameId=nameId)
         if indexClient is None:
-            logger.error("/image: nameId:" + nameId + " failed finding client")
+            print("[ERROR]/image: nameId:" + nameId + " failed finding client")
             return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
         
-        logger.debug("/image: nameId:" + nameId + " indexClient: " + str(indexClient))
+        print("[DEBUG]/image: nameId:" + nameId + " indexClient: " + str(indexClient))
 
 
         # while(inputBufferClient.buff[indexClient].lockOnUpload is True){
-        #     logger.info("/image: lock active, wait a bit, for camId" + nameId)
+        #     print("[INFO]/image: lock active, wait a bit, for camId" + nameId)
         #     time.sleep(1)
         # }
         # lockOnUpload = False
@@ -142,7 +142,7 @@ watchActiveClients.start()
             logger.info(msg)
 
             # camId = nameId
-            # logger.debug("/result_image2 endpoint")
+            # print("[DEBUG]/result_image2 endpoint")
             # v1
             # if camId in ecovisionResults.trackResultsImage:
             #     return (ecovisionResults.trackResultsImage[camId], nameId, 200)
@@ -151,7 +151,7 @@ watchActiveClients.start()
             # v2 return a blank image if not ready
             # indexECO = bufferEcovisionResults.getClientIndex(nameId=nameId)
             # if indexECO is None:
-            #     logger.error("/image: nameId:" + nameId + " failed finding client in ecovision results")
+            #     print("[ERROR]/image: nameId:" + nameId + " failed finding client in ecovision results")
             #     return (HERE blank image, nameId, 202)
             # bufferEcovisionResults.buff[indexECO].get last image
         
@@ -180,7 +180,7 @@ watchActiveClients.start()
     # 204 ok but already uploaded last image
     # 200 ok, last image returned
 
-    logger.debug("lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
+    print("[DEBUG]lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
     if camId is None:
         msg = "camId in None in url" + " /" + inputBufferClient.TYPE
         logger.error(msg)
@@ -197,7 +197,7 @@ watchActiveClients.start()
         return (msg, 400)
 
     lastRecordedIndex = inputBufferClient.buff[index].bufferImages.lastRecordedIndex
-    logger.info("lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
+    print("[INFO]lastsample camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex) + " /" + inputBufferClient.TYPE)
 
     if lastRecordedIndex is None:
         msg = "lastRecordedIndex None: camId: " + camId + " /" + inputBufferClient.TYPE

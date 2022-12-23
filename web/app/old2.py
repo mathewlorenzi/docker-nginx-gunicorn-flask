@@ -157,7 +157,7 @@ def result(camId: str):
 
 # @app.route("/debug_last_recorded_index/<string:camId>", methods=["GET"])
 # def debug_last_recorded_index(camId: str):
-#     logger.debug("/debug_last_recorded_index camId " + str(camId))
+#     print("[DEBUG]/debug_last_recorded_index camId " + str(camId))
 #     if camId is None:
 #         return ("camId not present in url", 400)    
 #     if camId == "":
@@ -168,7 +168,7 @@ def result(camId: str):
 #         return ("no client with camId: " + camId, 400)
 
 #     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
-#     logger.debug("/debug_last_recorded_index camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+#     print("[DEBUG]/debug_last_recorded_index camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
 #     return (str(lastRecordedIndex), 200)
 
 
@@ -177,7 +177,7 @@ def result(camId: str):
 # #@app.route("/lastimage_filename/<string:nameId>", methods=["GET"])
 # @app.route("/last_image_filename/<string:camId>", methods=["GET"])
 # def lastimage_filename(camId: str):
-#     logger.debug("/lastimage_filename camId " + str(camId))
+#     print("[DEBUG]/lastimage_filename camId " + str(camId))
 #     #print("[DEBUG]/lastimage_filename nameId ", nameId)
 #     if camId is None:
 #         return ("camId not present in url", 400)    
@@ -189,10 +189,10 @@ def result(camId: str):
 #         return ("no client with camId: " + camId, 400)
     
 #     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
-#     logger.debug("/last_image_filename camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+#     print("[DEBUG]/last_image_filename camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
 
 #     filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
-#     logger.debug("/last_image_filename camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
+#     print("[DEBUG]/last_image_filename camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
 #     #pathImage = os.path.join("images", filenameWithStamp) 
     
 #     return (filenameWithStamp, 200)
@@ -206,10 +206,10 @@ def result(camId: str):
 #         logger.error(msg)
 #         return (msg, 400)
 #     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
-#     logger.debug("/is_last_image_uploaded camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+#     print("[DEBUG]/is_last_image_uploaded camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
 
 #     uploaded = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded
-#     logger.debug("/is_last_image_uploaded camId " + str(camId) + " uploaded " + str(uploaded))
+#     print("[DEBUG]/is_last_image_uploaded camId " + str(camId) + " uploaded " + str(uploaded))
 #     return (str(uploaded), 200)
 
 # # called by c++ client
@@ -230,7 +230,7 @@ def result(camId: str):
 #         return ("no client with camId although we found it last image filename: " + camId, 400)
 
 #     lastRecordedIndex = bufferClients.buff[index].bufferImages.lastRecordedIndex
-#     logger.debug("/last_image_content camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
+#     print("[DEBUG]/last_image_content camId " + str(camId) + " lastRecordedIndex " + str(lastRecordedIndex))
 
 #     if lastRecordedIndex is None:
 #         msg = "lastRecordedIndex None: camId: " + camId
@@ -242,7 +242,7 @@ def result(camId: str):
 #         return (msg, 400)
 
 #     filenameWithStamp = bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
-#     logger.debug("/last_image_content camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
+#     print("[DEBUG]/last_image_content camId " + str(camId) + " filenameWithStamp " + str(filenameWithStamp))
     
 #     pathImage = os.path.join(bufferClients.buff[index].outputDir, filenameWithStamp)
 
@@ -268,7 +268,7 @@ def result(camId: str):
 #     with open( pathImage, mode="rb" ) as f:
 #         imageContent = f.read()
 #         bufferClients.buff[index].bufferImages.buffer[lastRecordedIndex].uploaded = True
-#         logger.info("uploading image content to client")
+#         print("[INFO]uploading image content to client")
 #         return (imageContent, 200)
 #         # TODO why no more displayed in webrowser
 
@@ -319,7 +319,7 @@ def result(camId: str):
 @app.route("/result_image/<string:camId>", methods=['GET'])
 def result_image(camId: str):
     print("/result_image localconfig.flip", localconfig.flip)
-    logger.debug("/result_image endpoint: " + str(localconfig.flip))
+    print("[DEBUG]/result_image endpoint: " + str(localconfig.flip))
     # data = {"data": "Hello Camera3"}
     # return jsonify(data)
 
@@ -348,8 +348,8 @@ def result_image(camId: str):
 # if using mydb in another docker: it worked
 '''@app.route("/test_mydb")
 def test_mydb():
-    logger.debug("/test_mydb 127.0.0.1:5001 ")
+    print("[DEBUG]/test_mydb 127.0.0.1:5001 ")
     response = requests.get("http://mydb:5001")
-    logger.debug("response:" + str(response.status_code) + ", content: " + str(response.content))
+    print("[DEBUG]response:" + str(response.status_code) + ", content: " + str(response.content))
     return (response.content, 200)
 '''

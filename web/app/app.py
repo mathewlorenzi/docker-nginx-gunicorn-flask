@@ -17,8 +17,8 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 # TODO log rotate
 #logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s : %(message)s')
-#logging.basicConfig(level=logging.INFO, format=f'%(asctime)s %(levelname)s : %(message)s')
+#logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s : %(message)s')
+logging.basicConfig(level=logging.INFO, format=f'%(asctime)s %(levelname)s : %(message)s')
 logger = logging.getLogger(__name__)
 logger.warning('Start') 
 # printRootStructure(dirname='./',indent=0)
@@ -30,14 +30,14 @@ BACKEND_URL = 'http://127.0.0.1:5555'
 
 @app.route("/hello")
 def hello():
-    logger.debug("/hello endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/hello endpoint: pid: " + str(os.getpid()))
     data = {"data": "Hello Camera3"}
     # uri_result = load_sample("sample.png")
     return jsonify(data)
 
 @app.route("/camera", methods=['GET'])
 def upload():
-    logger.debug("/camera endpoint" + str(request.method))
+    print("[DEBUG]/camera endpoint" + str(request.method))
     return render_template("camera.html", usedUrl = str(request.url_root), nameId = STR_UNKNOWN)#, uri_result=uri_result)
 
 @app.route('/update_values', methods= ['GET'])
@@ -48,18 +48,18 @@ def update_values():
 
 @app.route('/', methods=['GET', 'POST'])
 def mainroute():
-    logger.debug("/ main endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/ main endpoint: pid: " + str(os.getpid()))
     if request.method == 'GET':
         return render_template('form.html')
     elif request.method == 'POST':
-        logger.debug("redirect to camera with name: " + request.form['username'] + " with captureInterval " + request.form['captureInterval'] + " from " + request.url_root)
+        print("[DEBUG]redirect to camera with name: " + request.form['username'] + " with captureInterval " + request.form['captureInterval'] + " from " + request.url_root)
         return render_template('camera.html', usedUrl = str(request.url_root), nameId = request.form['username'], captureInterval = request.form['captureInterval'])#, uri_result=uri_result)
 
 # this is called within the camera.html: var url = 'https://www.ecovision.ovh:81/image';sam
 # the camera, javascript post its image to this endpoint
 @app.route("/image", methods=['POST'])
 def image():
-    logger.info("/image POST")
+    # print("[INFO]/image POST")
 
     # content = {'image': self.im_b64, 'nameId': self.camId, 'usedUrl': 'frontend'}
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -77,7 +77,7 @@ def image():
 # # reply to ecovision
 # @app.route("/result", methods=['POST'])
 # def result():
-#     logger.info("/result POST")
+#     print("[INFO]/result POST")
 #     response = requests.post(BACKEND_URL+"/record_result", data=request.data)
 #     return (response.content, response.status_code)
 #     #(msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
@@ -88,7 +88,7 @@ def image():
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
     response = requests.get(BACKEND_URL+"/lastimage/"+camId, data=request.data)
     return (response.content, response.status_code)
-    # logger.info("/lastimage GET")
+    # print("[INFO]/lastimage GET")
     # data[camId] = camId
     # data[careUpload] = reauest[]
     # get('http://backend/lastimage/: str, take_care_of_already_uploaded: bool=True):
@@ -101,7 +101,7 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
     # data[camId] = camId
     # data[careUpload] = reauest[]
     # get('http://backend/lastimage/: str, take_care_of_already_uploaded: bool=True):
-    # #logger.info("/lastresult GET")
+    # #print("[INFO]/lastresult GET")
     # #return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 # called by python thread manager for c++ cleint ecovision

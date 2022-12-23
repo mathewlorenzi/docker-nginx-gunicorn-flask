@@ -7,7 +7,7 @@ import argparse
 import time
 import socket
 import base64
-from PIL import Image
+#from PIL import Image
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -26,7 +26,7 @@ import json
 
 HOST='0.0.0.0'
 PORT=5555
-WITH_MANAGER=False
+WITH_MANAGER=True
 MODE_SAVE_TO_DISK = NOSAVE
 if WITH_MANAGER is False:
     print(" .............. WARNING, debug withiut manager activated: save to dosk images") 
@@ -48,18 +48,18 @@ logger.warning('Start')
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "database_clients_camera") )
-logger.debug("check output folder: "+str(OUTPUT_PATH))
+print("[DEBUG]check output folder: "+str(OUTPUT_PATH))
 if os.path.exists(OUTPUT_PATH) is False:
     os.mkdir(OUTPUT_PATH)
 
 bufferClients = BufferClients(type="camimage", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if bufferClients.initSucc is False:
-    logger.debug("BufferClients initialisation failed: " + bufferClients.initMsg)
+    print("[DEBUG]BufferClients initialisation failed: " + bufferClients.initMsg)
     exit(1)
 
 ecovisionResults = BufferClients(type="resultmag", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if ecovisionResults.initSucc is False:
-    logger.debug("ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
+    print("[DEBUG]ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
     exit(1)
 
 class WatchActiveClients(threading.Thread):
@@ -89,7 +89,7 @@ class WatchActiveClients(threading.Thread):
 
 @app.route("/backend")
 def backend():
-    logger.debug("/backend endpoint: pid: " + str(os.getpid()))
+    print("[DEBUG]/backend endpoint: pid: " + str(os.getpid()))
     data = {"data": "Hello backend"}
     return jsonify(data)
 
@@ -101,11 +101,13 @@ def get_image_to_return(status2: int, content: dict, logger):
         # TODO how to write timestamp in data or display it somewhere in html
         if content["hasData"] == "False":
             msg = "[ERROR]lastsample returned ok but dict hasData is False"
-            logger.error(msg)
+            # logger.error(msg)
+            print("[ERROR]", msg)
             colourImg = 'red'
         elif content["uploaded"] == "True":
             msg = "[ERROR]lastsample returned 200 with alreaddy uploaded: should be a 202 code: "
-            logger.error(msg)
+            # logger.error(msg)
+            print("[ERROR]", msg)
             colourImg = 'red'
         else:
             _succ = True
@@ -113,32 +115,40 @@ def get_image_to_return(status2: int, content: dict, logger):
         msg = "/image: " + content
         if status2 == 404 or status2 == 405:
             colourImg = "red"
-            logger.error(msg + " => reply with " + colourImg)
+            # logger.error(msg + " => reply with " + colourImg)
+            print("[ERROR]", msg, " => reply with " + colourImg)
         elif status2 == 400:
             colourImg = "orange"
-            logger.warn(msg + " => reply with " + colourImg)
+            # logger.warn(msg + " => reply with " + colourImg)
+            print("[ERROR]", msg, " => reply with " + colourImg)
         elif status2 == 204:
             colourImg = "green"
-            logger.warn(msg + " => reply with " + colourImg)
+            # logger.warn(msg + " => reply with " + colourImg)
+            print("[ERROR]", msg, " => reply with " + colourImg)
         else:
             colourImg = "red"
-            logger.error(msg + " => reply with " + colourImg)
+            #logger.error(msg + " => reply with " + colourImg)
+            print("[ERROR]", msg, " => reply with " + colourImg)
     return (_succ, colourImg)
 
 
 @app.route("/record_image", methods=['POST'])
 def record_image():
+
+    print()
+    print(" === record image ===")
+
     jsonstr = request.data.decode('utf8')
     data = json.loads(jsonstr)
     timestamp = data["timestamp"]
-    print(" ... /record_image: sent from camera.html at ", timestamp)
+    # print(" ... /record_image: sent from camera.html at ", timestamp)
     imagestr = data["image"]  # if of type str, and not base64 encoded .... strange as in camer html we send 64 image/jpg
     # print(" ... ... RECEIVED FROM CAMERA HTML image type:", type(imagestr))
-    print("[DEBUG] ++++++++++++++++ camera returned ", type(imagestr), " isbase64encoded", isBase64(imagestr), "ascii ? ", isascii(imagestr))
+    # print("[DEBUG] ++++++++++++++++ camera returned ", type(imagestr), " isbase64encoded", isBase64(imagestr), "ascii ? ", isascii(imagestr))
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
 
-    print(" ... /record_image: record_image_or_result: image ")
+    # print(" ... /record_image: record_image_or_result: image ")
     (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, camId=nameId, 
         imageContentStr=imagestr, 
         imageContentBytes=None, logger=logger)
@@ -198,16 +208,16 @@ def record_image():
     receivedResult = False
     try:
         # Establish connection to TCP server and exchange data
-        print(" .... connect ...")
+        #print(" .... connect ...")
         tcp_client.connect((host_ip, server_port))
 
-        print(" .... connected")
+        #print(" .... connected")
         connected = True
 
 
         GIVE_IT_TO_ME = False
         (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-        print(" ... /record_image: get lastsample returned status ", status2)
+        # print(" ... /record_image: get lastsample returned status ", status2)
         if status2 != 200:
             print("[ERROR]get lastsample image recorded failed although we just recorded one")
             return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
@@ -218,7 +228,6 @@ def record_image():
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
 
 
-        print(" ... 1")
         # TODO hasData, uploaded ? ......... ?
     
         data = base64.b64decode(content['contentBytes'].encode())
@@ -241,7 +250,7 @@ def record_image():
         #     data = f.read()
         #     print(" ... type(data)", type(data)) # bytes
         
-        print(" ... ... ", type(data))
+        # print(" ... ... ", type(data))
         dataSplit = split_images(data)
         index = 0
         for chunk in dataSplit:
@@ -260,55 +269,24 @@ def record_image():
 
         # [DEBUG] ++++++++++++++++ ecovisoin returned  <class 'bytes'>  isbase64encoded False encoding utf-8
         # received is of type bytes, utf-8 encoded, and not base64 encoded
-        print("[DEBUG] ++++++++++++++++ ecovisoin returned ", type(received), " isbase64encoded", isBase64(received), "encoding", json.detect_encoding(received))
-        
-        
-        
-        
-        # receivedStr = unicode() received.decode('utf-8')
-        # print("[DEBUG] ++++++++++++++++ ecovision convert  ", type(receivedStr), " isbase64encoded", isBase64(receivedStr), "ascii ? ", isascii(receivedStr))    
-        # received = received.decode('ascii')
-        # received = codecs.decode(received)
-
-        # OK so bytes, utf-8, not base64encoded can be just dumped to jpeg file
-        with open("temp_received.jpg", "wb") as fout:
-            fout.write(received)
-        im = Image.open("temp_received.jpg")
-        im.save("temp_received.png", "PNG")
-        with open("temp_received.png", "rb") as fin:
-            received = fin.read()
-        print("[DEBUG] ++++++++++++++++ PNG       ", type(received), " isbase64encoded", 
-            isBase64(received), "encoding", json.detect_encoding(received))
-        
+        # print("[DEBUG] ++++++++++++++++ ecovisoin returned ", type(received), " isbase64encoded", isBase64(received), "encoding", json.detect_encoding(received))
 
         received = base64.b64encode(received)
-        print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
-             isBase64(received), "encoding", json.detect_encoding(received))
-        
 
-        # received = base64.b64encode(received)
-        # #received = base64.b64decode(received) 
-
-        # # received = received.rstrip("\n").decode("utf-16")
-        # # received = received.split("\r\n")
-        
-        # # with open("temp_received.jpg", "rb") as fin:
-        # #     received = fin.read()
-        # print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
+        # # OK so bytes, utf-8, not base64encoded can be just dumped to jpeg file
+        # with open("temp_received.jpg", "wb") as fout:
+        #     fout.write(received)
+        # im = Image.open("temp_received.jpg")
+        # im.save("temp_received.png", "PNG")
+        # with open("temp_received.png", "rb") as fin:
+        #     received = fin.read()
+        # print("[DEBUG] ++++++++++++++++ PNG       ", type(received), " isbase64encoded", 
         #     isBase64(received), "encoding", json.detect_encoding(received))
         
 
-        # received = received.decode() # str, base64: True, ascii: true
-        # print("[DEBUG] ++++++++++++++++ CHEARTING3 ", type(received), " isbase64encoded", isBase64(received), 
-        #     "ascii ? ", isascii(received))        
-
-        # received = base64.b64decode(received)
-        # received = received.decode('ascii')
-        # print("[DEBUG] ++++++++++++++++ CHEARTING4 ", type(received), " isbase64encoded", isBase64(received))
-
-        # # f.write(base64.b64decode(dict_out["contentBytes"].encode()))
-        # # return base64.encodebytes(img_byte_arr).decode('ascii')
-        # # appImage.contentBytes = base64.b64decode(content.encode())
+        # received = base64.b64encode(received)
+        # print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
+        #      isBase64(received), "encoding", json.detect_encoding(received))
 
 
     finally:
@@ -327,14 +305,14 @@ def record_image():
             return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
         (contentBack, statusBack) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-        print(" ... /record_image: get lastsample of result returned status ", statusBack)
+        # print(" ... /record_image: get lastsample of result returned status ", statusBack)
         if statusBack != 200:
             print("[ERROR]get lastsample result recorded failed although we just recorded one")
             return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
         
         (_succBack, colourImg) = get_image_to_return(status2=statusBack, content=contentBack, logger=logger)
         if _succBack is True:
-            print(" ... .... reply with result content saved at ", content["dateTime"])
+            print("[INFO]reply with result content saved at ", content["dateTime"])
             return (contentBack["contentBytes"], 200)
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
@@ -367,12 +345,12 @@ def record_image():
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
-    logger.info("/lastimage GET")
+    print("[INFO]/lastimage GET")
     return lastsample(camId=camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 @app.route("/lastresult/<string:camId>", methods=["GET"])
 def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
-    logger.info("/lastresult GET")
+    print("[INFO]/lastresult GET")
     return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 # called by python thread manager for c++ cleint ecovision
@@ -381,14 +359,13 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
 #     list = []
 #     for clientEl in bufferClients.buff:
 #         list.append(clientEl.clientId)
-#     logger.debug("/active_clients " + str(list))
+#     print("[DEBUG]/active_clients " + str(list))
 #     return (list, 200)
 
 @app.route("/active_client_cam", methods=["GET"])
 def active_client_cam():
     listout = bufferClients.getListClients()
-    print(" ....... ", listout, type(listout))
-    logger.info("/active_client_cam returns "+str(listout))
+    print("[INFO]/active_client_cam returns "+str(listout))
     return jsonify(data=listout), 200
     
 if __name__ == '__main__':
@@ -396,18 +373,13 @@ if __name__ == '__main__':
     parser.add_argument('--ecovisionPath', metavar='ecovisionPath', required=True,
                         help='the ecovisionPath') # "/home/ecorvee/Projects/EcoVision/ecplatform2"
     parser.add_argument('--debug', action='store_true', default=False)
-    print("...1")
     args = parser.parse_args()
-    print("...2")
     if WITH_MANAGER is True:
         manager = ManagerEcovisionS(host=HOST, port=PORT, ecovisionPath=args.ecovisionPath, debug=args.debug)
         manager.start()
-        print("...3")
 
     watchActiveClients = WatchActiveClients()
     watchActiveClients.start()
 
     # to allow flask tu run in a thread add use_reloader=False, otherwise filewatcher thread blosk stuff
-    app.run(debug=True, host=HOST, port=PORT, use_reloader=False)
-    print("...4")
-    # shit i lost code about thread sessionrunner i think
+    app.run(debug=False, host=HOST, port=PORT, use_reloader=False)

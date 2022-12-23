@@ -39,7 +39,7 @@ import argparse
 # print(os.environ['LD_LIBRARY_PATH'])
 
 #logging.basicConfig(filename='file_watcher.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+logging.basicConfig(level=logging.INFO, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
   
 OUTPUT_DIR='output_manager'
   
@@ -125,7 +125,8 @@ class SessionRunner(threading.Thread):
         # cmdline = ["pwd"] => /usr/src/app
 
 
-        self.log("[INFO]cmdline:" + str(cmdline))
+        # self.log("[INFO]cmdline:" + str(cmdline))
+        print("[INFO]cmdline:" + str(cmdline))
         
         # ssend = str(int(1200 / (self.thread_id+1)))
         # intput_video = "Tears_of_Steel_1080p.webm"
@@ -177,7 +178,7 @@ class SessionRunner(threading.Thread):
         # self.log('sleep '+str(self.intervalSec))
         # time.sleep(self.intervalSec)
         
-        self.log('end')
+        print('[INFO]sessionrunner end')
   
 # def KillThemAll(FileWatcher):
 #     try:

@@ -39,7 +39,7 @@
 '''@app.route("/result_image2/<string:camId>", methods=['GET'])
 def result_image2(camId: str):
     print("/result_image2")
-    logger.debug("/result_image2 endpoint")
+    print("[DEBUG]/result_image2 endpoint")
     if camId in ecovisionResults.trackResultsImage:
         return (ecovisionResults.trackResultsImage[camId], 200)
     else:
