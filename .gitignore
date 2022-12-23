@@ -106,9 +106,14 @@ IMG_1649.JPG
 output_server_simul
 tempdebug.png
 
-
-
 ecoclient/client.cpp
 ecoclient/output_http_post_request
 ecoclient/simul_ecovision
 ecoclient/temp_raw_to_png.png
+
+backend/package_ecovision/programs/programecpp/platformecpp/*.jpg
+backend/package_ecovision/programs/programecpp/platformecpp/*.jpeg
+backend/blank*.jpg
+backend/debug*.jpg
+backend/temp*.jpg
+database_clients_camera

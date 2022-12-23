@@ -6,6 +6,7 @@ import threading
 import argparse
 import time
 import socket
+import base64
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -21,6 +22,13 @@ from manager import ManagerEcovisionS
 
 HOST='0.0.0.0'
 PORT=5555
+WITH_MANAGER=False
+MODE_SAVE_TO_DISK = NOSAVE
+if WITH_MANAGER is False:
+    print(" .............. WARNING, debug withiut manager activated: save to dosk images") 
+    MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
+    time.sleep(1)
+
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -33,8 +41,6 @@ logger.warning('Start')
 # printRootStructure(dirname='./',indent=0)
 #app.debug = True
 
-MODE_SAVE_TO_DISK = NOSAVE
-#MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.abspath( os.path.join(APP_ROOT, "..", "database_clients_camera") )
@@ -123,18 +129,37 @@ def record_image():
     timestamp = data["timestamp"]
     print(" ... /record_image: sent from camera.html at ", timestamp)
     imagestr = data["image"]
+    # print(" ... ... RECEIVED FROM CAMERA HTML image type:", type(imagestr))
     nameId = data["nameId"]
     # usedUrl = data["usedUrl"]
 
-    print(" ... /record_image: record_image_or_result ")
-    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, imageContentStr=imagestr, camId=nameId, logger=logger)
+    print(" ... /record_image: record_image_or_result: image ")
+    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, camId=nameId, 
+        imageContentStr=imagestr, 
+        imageContentBytes=None, logger=logger)
+
+
+
+
+
+
+
+    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+
+
+
+
+
+
+
+
 
     # print(" ++++++ SLEEP ++++++ ", msg, camId, status)
     # time.sleep(10)
 
     if status != 200:
         print("[ERROR]FAILED fecord image")
-        return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
     # image recorded successfully
     # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
@@ -161,7 +186,7 @@ def record_image():
     (ecovisionPort, succPort) = bufferClients.getEcovisionPort(camId=camId)
     if succPort is False:
         print("[WARNING]no ecovision port for camid ", camId)
-        return (get_encoded_img(image_path=os.path.join(file_path, "red"+'.'+IMGEXT)), 200) 
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
 
     # ==========================
@@ -169,11 +194,25 @@ def record_image():
     # ==========================
     # Initialize a TCP client socket using SOCK_STREAM
     host_ip = HOST
-    server_port = PORT
+    server_port = ecovisionPort
+
+
+    if WITH_MANAGER is False:
+        server_port = 6789 
+        print(" ................ without manager ...............ecovisionPort server_port", server_port)
+    
+
     tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connected = False
+    receivedResult = False
     try:
         # Establish connection to TCP server and exchange data
+        print(" .... connect ...")
         tcp_client.connect((host_ip, server_port))
+
+        print(" .... connected")
+        connected = True
+
 
         GIVE_IT_TO_ME = False
         (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
@@ -187,9 +226,30 @@ def record_image():
             print("[ERROR]lastsample image failed")
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
 
+
+        print(" ... 1")
         # TODO hasData, uploaded ? ......... ?
-        # data = content['contentBytes']
-        data = bytes(content['contentBytes'],'UTF-8')
+    
+        data = base64.b64decode(content['contentBytes'].encode())
+        
+        # data = bytes(content['contentBytes'],'UTF-8')
+        # print(" .... type(data)", type(data), len(data))
+        # exit(1)
+
+        # print("<", len(data), data)
+        
+        # print(" ... 2")
+        # with open("debugContentBytes.jpg", mode='wb') as f:
+        #     print(" ... 3")
+        #     #data = data.encode("iso-8859-1")
+        #     f.write(data)
+        #     print(" ... ============================> type(data)", type(data)) # bytes
+
+
+        # with open("/home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/todel.jpg", mode='rb') as f:
+        #     data = f.read()
+        #     print(" ... type(data)", type(data)) # bytes
+        
         print(" ... ... ", type(data))
         dataSplit = split_images(data)
         index = 0
@@ -199,32 +259,51 @@ def record_image():
             index+=1
         received = b""
         while True:
+            # print(index, "receving...")
             curr = tcp_client.recv(2048)
-            print(len(curr))
+            # print(len(curr))
             received += curr
             if len(curr) < 2048:
-                break            
+                receivedResult = True
+                break
+        #received = received.decode('ascii')
+        #received = codecs.decode(received)
+        # with open("temp_received.jpg", "wb") as fout:
+        #     fout.write(received)
+        # f.write(base64.b64decode(dict_out["contentBytes"].encode()))
+        # return base64.encodebytes(img_byte_arr).decode('ascii')
+        # appImage.contentBytes = base64.b64decode(content.encode())
+
 
     finally:
         tcp_client.close()
+        # print("[ERROR]tcp connection failed, return red image")
+        # return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+        time.sleep(1)
 
-    (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=received, camId=nameId)
-    if statusBack != 200:
-        print("[ERROR]FAILED fecord result")
-        return (get_encoded_img(image_path=os.path.join(file_path, 'red".'+IMGEXT)), status)
+    print("connected and reciedv resuklt", connected, receivedResult)
+    if connected is True and receivedResult is True:
+        (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
+            imageContentStr=None,
+            imageContentBytes=received, logger=logger)
+        if statusBack != 200:
+            print("[ERROR]FAILED record result:", msgBack)
+            return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
-    (contentBack, statusBack) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
-    print(" ... /record_image: get lastsample of result returned status ", statusBack)
-    if statusBack != 200:
-        print("[ERROR]get lastsample result recorded failed although we just recorded one")
-        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
-    
-    (_succBack, colourImg) = get_image_to_return(status2=statusBack, content=contentBack, logger=logger)
-    if _succBack is True:
-        print(" ... .... reply with result content saved at ", content["dateTime"])
-        return (contentBack["contentBytes"], 200)
+        (contentBack, statusBack) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+        print(" ... /record_image: get lastsample of result returned status ", statusBack)
+        if statusBack != 200:
+            print("[ERROR]get lastsample result recorded failed although we just recorded one")
+            return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+        
+        (_succBack, colourImg) = get_image_to_return(status2=statusBack, content=contentBack, logger=logger)
+        if _succBack is True:
+            print(" ... .... reply with result content saved at ", content["dateTime"])
+            return (contentBack["contentBytes"], 200)
+        else:
+            return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
-        return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
 
 
@@ -243,7 +322,7 @@ def record_image():
 #     imagestr = data["image"]
 #     nameId = data["nameId"]
 
-#     (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId)
+#     (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId, logger=logger)
 
 #     print(" ++++++ SLEEP ++++++ backend record result done")
 #     time.sleep(10)
@@ -284,9 +363,10 @@ if __name__ == '__main__':
     print("...1")
     args = parser.parse_args()
     print("...2")
-    manager = ManagerEcovisionS(host=HOST, port=PORT, ecovisionPath=args.ecovisionPath, debug=args.debug)
-    manager.start()
-    print("...3")
+    if WITH_MANAGER is True:
+        manager = ManagerEcovisionS(host=HOST, port=PORT, ecovisionPath=args.ecovisionPath, debug=args.debug)
+        manager.start()
+        print("...3")
 
     watchActiveClients = WatchActiveClients()
     watchActiveClients.start()

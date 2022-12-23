@@ -1,7 +1,7 @@
 import socket
 import base64
 
-host_ip, server_port = "127.0.0.1", 5454
+host_ip, server_port = "127.0.0.1", 6789
 data = " Hello how are you?\n"
 
 def client_sends_msg():
@@ -130,6 +130,7 @@ def client_sends_img():
         tcp_client.connect((host_ip, server_port))
         with open("../../todel.jpg", mode='rb') as f:
             data = f.read()
+            print("type(data)", type(data)) # bytes
             dataSplit = split_images(data)
             index = 0
             for chunk in dataSplit:

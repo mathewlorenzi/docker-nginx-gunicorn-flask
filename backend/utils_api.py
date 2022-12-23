@@ -43,9 +43,25 @@ class PortGenerator:
 
 portGenerator = PortGenerator()
 
-def record_image_or_result(inputBufferClient: BufferClients, imageContentStr: str, camId: str, logger):
+def record_image_or_result(inputBufferClient: BufferClients, camId: str,
+                            imageContentStr: str, 
+                            imageContentBytes: bytes, 
+                            logger):
     nameId = camId # data["nameId"]
-    if isinstance(imageContentStr, str) is False or isinstance(nameId, str) is False:
+
+    if imageContentStr is not None:
+        if isinstance(imageContentStr, str) is False:
+            logger.error("/image: imageContentStr is not a string:", type(imageContentStr))
+            return ("KO: imageContentStr is not a string", 400)
+    else:
+        if imageContentBytes is not None:
+            if isinstance(imageContentBytes, bytes) is False:
+                logger.error("/image: imageContentBytes is not bytes:", type(imageContentBytes))
+                return ("KO: imageContentBytes is not bytes", 400)
+
+    
+
+    if isinstance(nameId, str) is False:
         logger.error("/image: nameId is not a string:" + str(nameId))
         return ("KO: nameId is not a string", nameId, 400)
 
@@ -79,7 +95,9 @@ def record_image_or_result(inputBufferClient: BufferClients, imageContentStr: st
     # lockOnUpload = False
     # imageToBeUploaded = AppImage()
 
-    (msg, succ) = inputBufferClient.buff[indexClient].insertNewImage(logger=logger, imageContent=imageContentStr)
+    (msg, succ) = inputBufferClient.buff[indexClient].insertNewImage(logger=logger, 
+                                                                    imageContentStr=imageContentStr,
+                                                                    imageContentBytes=imageContentBytes)
     if succ is False:
         logger.error(msg)
         return ("KO: failed saving new image", nameId, 400)

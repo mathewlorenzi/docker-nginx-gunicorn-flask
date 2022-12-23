@@ -188,7 +188,7 @@ class ClientCamera():
         self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId + "(" + str(tcpPort) + ")"
         self.initSucc = True
     
-    def insertNewImage(self, logger: logging.Logger, imageContent: str):
+    def insertNewImage(self, logger: logging.Logger, imageContentStr: str, imageContentBytes: bytes):
         appImage = AppImage()
         if appImage.success is False:
             return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image", False)
@@ -197,19 +197,35 @@ class ClientCamera():
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
         
-        if len(imageContent.split(',')) > 1:
-            content = imageContent.split(',')[1]
-        elif len(imageContent.split(',')) == 1:
-            content = imageContent
-        else:
-            return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: image content seems empty", False)
+        if imageContentStr is not None:
+            if isinstance(imageContentStr, str) is False:
+                return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image: content is not of type string", False)
 
-        # type(content)) # str
-        appImage.contentBytes = base64.b64decode(content.encode())
-        # type(appImage.contentBytes)) # bytes
-        appImage.contentBytes4Json = content
-        # type(appImage.contentBytes4Json)) # bytes
-        appImage.hasData = True
+            if len(imageContentStr.split(',')) > 1:
+                content = imageContentStr.split(',')[1]
+            elif len(imageContentStr.split(',')) == 1:
+                content = imageContentStr
+            else:
+                return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: image content seems empty", False)
+
+            # type(content)) # str
+            appImage.contentBytes = base64.b64decode(content.encode())
+            # type(appImage.contentBytes)) # bytes
+            appImage.contentBytes4Json = content
+            # type(appImage.contentBytes4Json)) # bytes
+            appImage.hasData = True
+
+        elif imageContentBytes is not None:
+            if isinstance(imageContentBytes, bytes) is False:
+                return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image: content is not of type bytes", False)
+
+            # type(content)) # str
+            appImage.contentBytes = imageContentBytes
+            # type(appImage.contentBytes)) # bytes
+            appImage.contentBytes4Json = base64.decodebytes(imageContentBytes)  #imageContentBytes.decode()
+            # type(appImage.contentBytes4Json)) # bytes
+            appImage.hasData = True
+
 
         self.bufferImages.insert(appImage)
                 
@@ -234,6 +250,7 @@ class ClientCamera():
                     self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
                 pathout = os.path.join(self.bufferImages.directory, "image."+IMGEXT)
             with open(pathout, 'wb') as f:
+                # print("<", len(appImage.contentBytes), appImage.contentBytes)
                 f.write(appImage.contentBytes)
             #bufferImages.Print()
 

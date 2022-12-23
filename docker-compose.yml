@@ -1,3 +1,5 @@
+#try local without manager to test directly ecovision
+
 version: '3'
 
 # ****** have an ecovision package ******
@@ -35,7 +37,7 @@ version: '3'
 # === build for VM: ecoviion do witout opencv display, see above
 # cd /home/ecorvee/Projects/EcoVision
 # docker-compose build
-# docker run -t -d -v $PWD/shared_folder:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+# docker run -t -d -v $PWD/package_ecovision:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
 # docker exec -it <ID given from docker ps> bash
 # ./compile.sh
 # ./create_package.sh       => the creqted pqckqge with end up in the shared directory
@@ -45,7 +47,7 @@ version: '3'
 # # rm -rf ecoclient/package_ecovision
 # rm -rf backend/package_ecovision
 # # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
-# cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./backend
+# cp -r /home/ecorvee/Projects/EcoVision/package_ecovision ./backend
 # git status
 # git add ....
 # git commit ....
@@ -55,7 +57,9 @@ version: '3'
 # ./backup_simple.sh <PQSSWORD
 # send by email
 
-
+# local
+# python backend.py --ecovisionPath ./package_ecovision --debug
+# python web/app/app.py
 
 
 # shit i cannot access web contanier => TODO add -p 5009:80
