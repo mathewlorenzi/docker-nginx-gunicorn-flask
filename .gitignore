@@ -116,4 +116,10 @@ backend/package_ecovision/programs/programecpp/platformecpp/*.jpeg
 backend/blank*.jpg
 backend/debug*.jpg
 backend/temp*.jpg
+backend/temp_received*.jpeg
+backend/temp_received*.png
 database_clients_camera
+old/*.jpeg
+todel*
+tests/old
+old/nginx-BACKUP
