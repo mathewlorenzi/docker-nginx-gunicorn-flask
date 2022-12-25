@@ -1,5 +1,3 @@
-create package to redo from within docker
-or from package light
 
 #try local without manager to test directly ecovision
 
@@ -39,8 +37,10 @@ version: '3'
 
 # === build for VM: ecoviion do witout opencv display, see above
 # cd /home/ecorvee/Projects/EcoVision
+# make sure package_ecovision exists
+# !!!!!!!!!!!! PWD is where ? EcoVision or ecplatform2 where the dockerfile is
 # docker-compose build
-# docker run -t -d -v $PWD/package_ecovision:/usr/src/app/shared_folder --name ecovision ecovision_ecovision
+# docker run -t -d -v $PWD/package_ecovision:/usr/src/app/package_ecovision --name ecovision ecovision_ecovision
 # docker ps
 # docker exec -it <ID given from docker ps> bash
 # ./compile.sh
