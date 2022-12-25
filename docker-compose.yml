@@ -90,6 +90,8 @@ services:
     build:
       context: ./backend
     container_name: backend
+    volumes:
+      - ./volume_backend:/usr/src/volume_backend
     ports:
       - 5555:5555
     # command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision"
