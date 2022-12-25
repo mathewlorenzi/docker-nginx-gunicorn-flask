@@ -1,18 +1,17 @@
-FROM python:alpine
 
+FROM gcc
 WORKDIR /usr/src/app
-
 COPY . .
+#ENTRYPOINT [ "sh -c" ]
 
-# musl dev + linux heqders and gcc only for python build wheel for psutil ! for the cpu ram info ... do i keep that ?
-RUN apk update
-RUN apk add musl-dev
-RUN apk add linux-headers
-RUN apk add gcc
+# this prevents the container to run
+#CMD apt install -y python3-pip
 
-RUN pip install --no-cache-dir -r requirements.txt
-#RUN pip install -r requirements.txt
-# RUN pip install gunicorn
+RUN apt update
+RUN apt install -y python3-pip
+RUN pip3 install requests
+# optional
+RUN apt install -y curl
 
-# CMD ["FLASK_APP=./backend.py", "flask", "run", "-h", "0.0.0.0", "-p", "5555"]
-CMD ["python", "backend.py"]
+#<pre>docker: Error response from daemon: OCI runtime create failed: container_linux.go:380: starting container process caused: exec: &quot;pip3&quot;: executable file not found in $PATH: unknown.</pre>
+#CMD ["pip3", "install", "requests"]

@@ -3,7 +3,7 @@
 
 version: '3'
 
-# ****** have an ecovision package ******
+# ****** have an ecovision package compiled locally with local gcc ******
 
 # === make sure to have these lines uncommented in Dependencies of DISPLAYCV_CPP
 # - nano /home/ecorvee/Projects/EcoVision/ecplatform2/libs_cpp/libecpp_sources/libecpp_sources_prog/Dependencies.txt
