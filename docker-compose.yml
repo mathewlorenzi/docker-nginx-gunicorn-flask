@@ -92,7 +92,9 @@ services:
     container_name: backend
     ports:
       - 5555:5555
-    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision"
+    # command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision"
+    # DEBUG
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision --debug"
 
   web:
     # restart: always
@@ -100,7 +102,8 @@ services:
       context: ./web
     ports:
       - 8000:8000
-    command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
+    # command: gunicorn app.app:app --workers 4 --name app -b 0.0.0.0:8000
+    command: gunicorn app.app:app --workers 1 --name app -b 0.0.0.0:8000
     volumes:
       - ./database_clients_camera:/usr/src/database_clients_camera
     depends_on:
