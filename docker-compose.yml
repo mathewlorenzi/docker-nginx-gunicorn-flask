@@ -56,6 +56,12 @@ version: '3'
 # git add ....
 # git commit ....
 
+
+# ========= dont forget before VM docker:
+# app.py change #BACKEND_URL = 'http://127.0.0.1:5555', to
+# => BACKEND_URL = 'http://backend:5555'
+
+
 # backup ecovision
 # cd /home/ecorvee/Projects/EcoVision
 # ./backup_simple.sh <PQSSWORD
