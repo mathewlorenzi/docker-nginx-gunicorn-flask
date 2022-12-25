@@ -10,6 +10,7 @@ COPY . .
 RUN apt update
 RUN apt install -y python3-pip
 RUN pip3 install requests
+RUN pip3 install psutil
 # optional
 RUN apt install -y curl
 
