@@ -23,6 +23,57 @@ vm: git clone
 docker-compose build
 docker-compose up
 
+
+
+
+
+
+# regenerating private key for nginx it expired
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/conf.d/server.key -out nginx/conf.d/server.crt
+    Generating a RSA private key
+    ...................................+++++
+    ........................................................................................+++++
+    writing new private key to 'nginx/conf.d/server.key'
+    -----
+    You are about to be asked to enter information that will be incorporated
+    into your certificate request.
+    What you are about to enter is what is called a Distinguished Name or a DN.
+    There are quite a few fields but you can leave some blank
+    For some fields there will be a default value,
+    If you enter '.', the field will be left blank.
+    -----
+    Country Name (2 letter code) [AU]:FR
+    State or Province Name (full name) [Some-State]:Rennes
+    Locality Name (eg, city) []:Rennes
+    Organization Name (eg, company) [Internet Widgits Pty Ltd]:ecovision
+    Organizational Unit Name (eg, section) []:ecovision
+    Common Name (e.g. server FQDN or YOUR name) []:ecovision
+    Email Address []:etienne.corvee@caramail.com
+
+    systemctl restart nginx.service
+still does not work,
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/conf.d/server.key -out nginx/conf.d/server.crt
+ but which ones were really necessary ? perhpas only the last ones 
+ 1232  docker-compose up
+ 1235  ls -lht nginx/conf.d/
+ 1236  systemctl restart nginx.service 
+ 1244  sudo ufw status
+ 1247  sudo systemctl status certbot.timer
+ 1248  sudo certbot renew --dry-run
+ 1251  sudo ln -s /snap/bin/certbot /usr/bin/certbot
+ 1252  sudo certbot --nginx
+ 1254  sudo cp /etc/letsencrypt/live/www.ecovision.ovh/fullchain.pem nginx/conf.d/
+ 1255  sudo cp /etc/letsencrypt/live/www.ecovision.ovh/privkey.pem nginx/conf.d/
+
+# =========================================================================
+
+
+
+
+
+
 ## 1) Steps to make it work
 
 original read me in next section.
