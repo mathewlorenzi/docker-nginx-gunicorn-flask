@@ -313,7 +313,10 @@ def record_image():
         (_succBack, colourImg) = get_image_to_return(status2=statusBack, content=contentBack, logger=logger)
         if _succBack is True:
             print("[INFO]reply with result content saved at ", content["dateTime"])
-            return (contentBack["contentBytes"], 200)
+            
+            # ok with firefox but not with android
+            # return (contentBack["contentBytes"], 200) # jpeg now
+            
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
