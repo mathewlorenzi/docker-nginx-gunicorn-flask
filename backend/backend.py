@@ -7,7 +7,7 @@ import argparse
 import time
 import socket
 import base64
-#from PIL import Image
+from PIL import Image
 
 # # in docker, local files cannot be found: add current path to python path:
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -317,6 +317,27 @@ def record_image():
             # ok with firefox but not with android
             # return (contentBack["contentBytes"], 200) # jpeg now
             
+            data = contentBack["contentBytes"]
+            # print("[DEBUG] ++++++++++++++++ ", type(data), " isbase64encoded", isBase64(data), "ascii ? ", isascii(data))
+            # [DEBUG] ++++++++++++++++  <class 'str'>  isbase64encoded True ascii ?  True
+            
+            # print("[DEBUG] ++++++++++++++++ ", type(data), " isbase64encoded", isBase64(data), "ascii ? ", isascii(data))
+            
+            data = data.encode("ascii")
+            #print("[DEBUG] ++++++++++++++++ ", type(data), " isbase64encoded", isBase64(data), "encoding", json.detect_encoding(data))
+            #[DEBUG] ++++++++++++++++  <class 'bytes'>  isbase64encoded True encoding utf-8
+
+            return (data, 200) # jpeg now
+
+            # did not have to do that
+            # with open("temp.jpg", mode="wb") as ftemp:
+            #     ftemp.write(data)
+            # img1 = Image.open("temp.jpg")
+            # img1.save("temp.png")
+            # with open("temp.png", mode="rb") as ftemp:
+            #     data = ftemp.read()
+            #     data = base64.b64encode(data)
+            #     return (data, 200) # jpeg now
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
