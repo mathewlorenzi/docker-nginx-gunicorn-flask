@@ -12,6 +12,7 @@ RUN apt install -y python3-pip
 RUN pip3 install requests
 RUN pip3 install psutil
 RUN pip3 install flask
+RUN pip3 install pillow
 # optional
 RUN apt install -y curl
 
