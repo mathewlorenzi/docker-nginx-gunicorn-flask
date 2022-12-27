@@ -25,8 +25,8 @@ logger.warning('Start')
 #app.debug = True
 
 # TODO automatic
-#BACKEND_URL = 'http://127.0.0.1:5555'
-BACKEND_URL = 'http://backend:5555'
+BACKEND_URL = 'http://127.0.0.1:5555'
+#BACKEND_URL = 'http://backend:5555'
 
 @app.route("/hello")
 def hello():

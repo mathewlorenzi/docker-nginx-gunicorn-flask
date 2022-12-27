@@ -270,7 +270,6 @@ def record_image():
         # [DEBUG] ++++++++++++++++ ecovisoin returned  <class 'bytes'>  isbase64encoded False encoding utf-8
         # received is of type bytes, utf-8 encoded, and not base64 encoded
         # print("[DEBUG] ++++++++++++++++ ecovisoin returned ", type(received), " isbase64encoded", isBase64(received), "encoding", json.detect_encoding(received))
-
         received = base64.b64encode(received)
 
         # # OK so bytes, utf-8, not base64encoded can be just dumped to jpeg file
@@ -327,17 +326,18 @@ def record_image():
             #print("[DEBUG] ++++++++++++++++ ", type(data), " isbase64encoded", isBase64(data), "encoding", json.detect_encoding(data))
             #[DEBUG] ++++++++++++++++  <class 'bytes'>  isbase64encoded True encoding utf-8
 
-            return (data, 200) # jpeg now
+            # return (data, 200) # jpeg now
 
             # did not have to do that
-            # with open("temp.jpg", mode="wb") as ftemp:
-            #     ftemp.write(data)
-            # img1 = Image.open("temp.jpg")
-            # img1.save("temp.png")
-            # with open("temp.png", mode="rb") as ftemp:
-            #     data = ftemp.read()
-            #     data = base64.b64encode(data)
-            #     return (data, 200) # jpeg now
+            data = base64.decodebytes(data)
+            with open("temp.jpg", mode="wb") as ftemp:
+                ftemp.write(data)
+            img1 = Image.open("temp.jpg")
+            img1.save("temp.png")
+            with open("temp.png", mode="rb") as ftemp:
+                data = ftemp.read()
+                data = base64.b64encode(data)
+                return (data, 200) # jpeg now
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
