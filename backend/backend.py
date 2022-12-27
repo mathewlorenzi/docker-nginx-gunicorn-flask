@@ -326,9 +326,10 @@ def record_image():
             #print("[DEBUG] ++++++++++++++++ ", type(data), " isbase64encoded", isBase64(data), "encoding", json.detect_encoding(data))
             #[DEBUG] ++++++++++++++++  <class 'bytes'>  isbase64encoded True encoding utf-8
 
+            # === OK but still not ok on android
             # return (data, 200) # jpeg now
 
-            # did not have to do that
+            # for android
             data = base64.decodebytes(data)
             with open("temp.jpg", mode="wb") as ftemp:
                 ftemp.write(data)
