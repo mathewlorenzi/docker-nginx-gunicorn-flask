@@ -185,12 +185,11 @@ def record_image():
     # 200 ok, last image returned
 
     (ecovisionPort, succPort) = bufferClients.getEcovisionPort(camId=camId)
-    print(" ......... camId", camId, "ecovisionPort:", ecovisionPort, "............")
     if succPort is False:
         print("[WARNING]no ecovision port for camid ", camId)
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
-    '''
+
     # ==========================
     # send a message to tcp server in eocivion code to get trakicing result
     # ==========================
@@ -232,7 +231,25 @@ def record_image():
         # TODO hasData, uploaded ? ......... ?
     
         data = base64.b64decode(content['contentBytes'].encode())
-                
+        
+        # data = bytes(content['contentBytes'],'UTF-8')
+        # print(" .... type(data)", type(data), len(data))
+        # exit(1)
+
+        # print("<", len(data), data)
+        
+        # print(" ... 2")
+        # with open("debugContentBytes.jpg", mode='wb') as f:
+        #     print(" ... 3")
+        #     #data = data.encode("iso-8859-1")
+        #     f.write(data)
+        #     print(" ... ============================> type(data)", type(data)) # bytes
+
+
+        # with open("/home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/todel.jpg", mode='rb') as f:
+        #     data = f.read()
+        #     print(" ... type(data)", type(data)) # bytes
+        
         # print(" ... ... ", type(data))
         dataSplit = split_images(data)
         index = 0
@@ -254,6 +271,23 @@ def record_image():
         # received is of type bytes, utf-8 encoded, and not base64 encoded
         # print("[DEBUG] ++++++++++++++++ ecovisoin returned ", type(received), " isbase64encoded", isBase64(received), "encoding", json.detect_encoding(received))
         received = base64.b64encode(received)
+
+        # # OK so bytes, utf-8, not base64encoded can be just dumped to jpeg file
+        # with open("temp_received.jpg", "wb") as fout:
+        #     fout.write(received)
+        # im = Image.open("temp_received.jpg")
+        # im.save("temp_received.png", "PNG")
+        # with open("temp_received.png", "rb") as fin:
+        #     received = fin.read()
+        # print("[DEBUG] ++++++++++++++++ PNG       ", type(received), " isbase64encoded", 
+        #     isBase64(received), "encoding", json.detect_encoding(received))
+        
+
+        # received = base64.b64encode(received)
+        # print("[DEBUG] ++++++++++++++++ cheating       ", type(received), " isbase64encoded", 
+        #      isBase64(received), "encoding", json.detect_encoding(received))
+
+
     finally:
         tcp_client.close()
         # print("[ERROR]tcp connection failed, return red image")
@@ -310,7 +344,29 @@ def record_image():
     else:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
-    '''
+
+
+    # GIVE_IT_TO_ME = False
+    # print(" ... /record_image: now that image recorded get lastsample of ecovision results ")
+    # (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+
+    # print(" ... /record_image: get lastsample returned status ", status2)
+
+# @app.route("/record_result", methods=['POST'])
+# def record_result():
+#     jsonstr = request.data.decode('utf8')
+#     data = json.loads(jsonstr)
+#     timestamp = data["timestamp"]
+#     print(" ... record_result: sent at ", timestamp)
+#     imagestr = data["image"]
+#     nameId = data["nameId"]
+
+#     (msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, imageContentStr=imagestr, camId=nameId, logger=logger)
+
+#     print(" ++++++ SLEEP ++++++ backend record result done")
+#     time.sleep(10)
+
+#     return (msg, status)
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
