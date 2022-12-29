@@ -153,7 +153,7 @@ def record_image():
         imageContentStr=imagestr, 
         imageContentBytes=None, logger=logger)
 
-    # return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+    
 
     # print(" ++++++ SLEEP ++++++ ", msg, camId, status)
     # time.sleep(10)
@@ -161,6 +161,10 @@ def record_image():
     if status != 200:
         print("[ERROR]FAILED fecord image")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+
+
+    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+    '''
 
     # image recorded successfully
     # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
@@ -190,7 +194,9 @@ def record_image():
         print("[WARNING]no ecovision port for camid ", camId)
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
-    '''
+    # try replace tcp by method i used for tesseract docker run directly from command  and feed it image buffer ?   
+
+    
     # ==========================
     # send a message to tcp server in eocivion code to get trakicing result
     # ==========================
