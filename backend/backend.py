@@ -338,7 +338,7 @@ def record_image():
             with open("temp.png", mode="rb") as ftemp:
                 data = ftemp.read()
                 data = base64.b64encode(data)
-                return (data, 200) # jpeg now
+                return (data, 200)
         else:
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
