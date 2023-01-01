@@ -25,8 +25,32 @@ logger.warning('Start')
 #app.debug = True
 
 # TODO automatic
-#BACKEND_URL = 'http://127.0.0.1:5555'
-BACKEND_URL = 'http://backend:5555'
+BACKEND_URL = 'http://127.0.0.1:5555'
+#BACKEND_URL = 'http://backend:5555'
+
+
+
+# todo put in backend if working
+from flask import make_response
+import base64
+@app.route('/result/uid')
+def resultpage():
+  return render_template('result.html')
+@app.route('/result')
+def result_api():
+  with open("red.jpg", "rb") as f:
+  # with open("house-thumbs-up.gif", "rb") as f:
+    image_binary = f.read()
+
+    response = make_response(base64.b64encode(image_binary))
+    # response.headers.set('Content-Type', 'image/gif')
+    response.headers.set('Content-Type', 'image/jpg')
+    # response.headers.set('Content-Disposition', 'attachment', filename='image.gif')
+    response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
+    return response
+
+
+
 
 @app.route("/hello")
 def hello():
