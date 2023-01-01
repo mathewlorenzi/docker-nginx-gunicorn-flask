@@ -56,7 +56,7 @@ class EcoVisionRunner(threading.Thread):
         self.output_pipe = None
         self.ecovisionPath = ecovisionPath
         self.debug = debug
-        logging.info("EcoVisionRunner")
+        #logging.info("EcoVisionRunner")
         self._stop_event = threading.Event()
     def stop(self):
         self._stop_event.set()
@@ -71,7 +71,7 @@ class EcoVisionRunner(threading.Thread):
         logging.info('{}'.format(msg))
   
     def run(self):
-        self.log('[INFO]ecovision camid ' + str(self.nameId))
+        # self.log('[INFO]ecovision camid ' + str(self.nameId))
         # OK
         # cmdline = ["./simul_ecovision", "--host", self.host+":"+ str(args.port), "--camId", self.nameId]
         # echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/absolute_path/' >> ~/.bashrc
@@ -83,7 +83,8 @@ class EcoVisionRunner(threading.Thread):
             "-motionwindow", "2", "-context2dec", "LOCAL",
             ]
 
-        self.log("[INFO]cmdline:" + str(cmdline))
+        # self.log("[INFO]cmdline:" + str(cmdline))
+        print("[INFO]ecovision: camid:", self.nameId, ", cmdline: ", cmdline )
         
         capture_log_stderr = os.path.join(OUTPUT_DIR, "stderr" + self.nameId + ".log")
         capture_log_stdout = os.path.join(OUTPUT_DIR, "stdout" + self.nameId + ".log")
@@ -148,7 +149,8 @@ class ManagerEcovisionS(threading.Thread):
                     print("[DEBUG]json_data_res ", json_data_res)
                 
                 json_data = json_data_res.get("data")
-                print("[INFO]checking current active client cam: ", json_data)
+                if self.debug is True:
+                    print("[INFO]manager asked for active client cam: ", json_data)
                 for el in json_data:
                     # print(" ..... ...... el", el)
                     camId = el[0]  # cmaid, port
@@ -193,13 +195,15 @@ class ManagerEcovisionS(threading.Thread):
                             FOUND_INDEX = index
                         
                     if FOUND_INDEX is None:
-                        print("[INFO]camId", camId, "CREATE NEW THREAD: index:", len(threads))
+                        if self.debug is True:
+                            print("[INFO]camId", camId, "CREATE NEW THREAD: index:", len(threads))
                         thread = EcoVisionRunner(thread_id=len(threads), port=ecovisionPort, 
                             nameId=camId, ecovisionPath=self.ecovisionPath, debug=self.debug)
                         thread.start()
                         threads.append(thread)
                     else:
-                        print("[INFO]camId", camId, "still alive at thread buffer index: ", FOUND_INDEX)
+                        if self.debug is True:
+                            print("[INFO]camId", camId, "still alive at thread buffer index: ", FOUND_INDEX)
                         index = FOUND_INDEX
                         thread_id = threads[index].thread_id
                         isAlive = threads[index].is_alive()

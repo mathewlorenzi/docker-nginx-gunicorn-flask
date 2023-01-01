@@ -188,10 +188,10 @@ def get_encoded_img(image_path):
         img_byte_arr = f.read()                 # bytes
         a = base64.encodebytes(img_byte_arr)    # bytes (base64 encoded)
         b = a.decode('ascii')                   # str
-        print("[DEBUG]get_encoded_img ", image_path, "step0 fread rb           : ", type(img_byte_arr))
-        print("[DEBUG]get_encoded_img ", image_path, "step1 encode base64 bytes: ", type(a))
-        print("[DEBUG]get_encoded_img ", image_path, "step2 decode ascii       : ", type(b))
-        # return base64.encodebytes(img_byte_arr).decode('ascii')
+        # print("[DEBUG]get_encoded_img ", image_path, "step0 fread rb           : ", type(img_byte_arr))
+        # print("[DEBUG]get_encoded_img ", image_path, "step1 encode base64 bytes: ", type(a))
+        # print("[DEBUG]get_encoded_img ", image_path, "step2 decode ascii       : ", type(b))
+        # # return base64.encodebytes(img_byte_arr).decode('ascii')
         return b
 
 def get_cpu_ram_disk():

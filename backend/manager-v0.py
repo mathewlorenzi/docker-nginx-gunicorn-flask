@@ -198,6 +198,8 @@ class SessionRunner(threading.Thread):
   
 if __name__ == "__main__":
 
+    debug = False
+
     # logging.debug("create deamon")
     # deamon = threading.Thread(name=' ......... Daemon Main Manager .......... ', target=deamonWork)
     # deamon.setDaemon(True)
@@ -274,7 +276,8 @@ if __name__ == "__main__":
                     thread.start()
                     threads.append(thread)
                 else:
-                    print("[INFO]camId", camId, "still alive at thread buffer index: ", FOUND_INDEX)
+                    if debug is True:
+                        print("[DEBUG]camId", camId, "still alive at thread buffer index: ", FOUND_INDEX)
                     index = FOUND_INDEX
                     thread_id = threads[index].thread_id
                     isAlive = threads[index].is_alive()

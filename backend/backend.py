@@ -20,9 +20,13 @@ from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_
 from utils import isascii, isBase64, IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 from utils_api import record_image_or_result, lastsample
 from manager import ManagerEcovisionS
-
 import json
 
+DEBUG = False
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+log.disabled = True
+logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 HOST='0.0.0.0'
 PORT=5555
@@ -151,7 +155,7 @@ def record_image():
     # print(" ... /record_image: record_image_or_result: image ")
     (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, camId=nameId, 
         imageContentStr=imagestr, 
-        imageContentBytes=None, logger=logger)
+        imageContentBytes=None, logger=logger, debug=DEBUG)
 
     
 
@@ -163,8 +167,8 @@ def record_image():
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
 
-    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
-    '''
+    #return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+    
 
     # image recorded successfully
     # now return as a reply the last result, if not already uploaded and if available (sent by ecovision)
@@ -189,7 +193,7 @@ def record_image():
     # 200 ok, last image returned
 
     (ecovisionPort, succPort) = bufferClients.getEcovisionPort(camId=camId)
-    print(" ......... camId", camId, "ecovisionPort:", ecovisionPort, "............")
+    # print(" ......... camId", camId, "ecovisionPort:", ecovisionPort, "............")
     if succPort is False:
         print("[WARNING]no ecovision port for camid ", camId)
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
@@ -266,11 +270,12 @@ def record_image():
         # return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
         time.sleep(1)
 
-    print("connected and reciedv resuklt", connected, receivedResult)
+    print("[INFO]connected and reciedv resuklt", connected, receivedResult)
     if connected is True and receivedResult is True:
+        print(" === === record result ===. ===")
         (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
             imageContentStr=None,
-            imageContentBytes=received, logger=logger)
+            imageContentBytes=received, logger=logger, debug=DEBUG)
         if statusBack != 200:
             print("[ERROR]FAILED record result:", msgBack)
             return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
@@ -316,7 +321,7 @@ def record_image():
     else:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
 
-    '''
+    
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
 def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
@@ -340,7 +345,7 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
 @app.route("/active_client_cam", methods=["GET"])
 def active_client_cam():
     listout = bufferClients.getListClients()
-    print("[INFO]/active_client_cam returns "+str(listout))
+    # print("[INFO]/active_client_cam returns "+str(listout))
     return jsonify(data=listout), 200
     
 if __name__ == '__main__':

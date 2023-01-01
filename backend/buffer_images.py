@@ -188,12 +188,14 @@ class ClientCamera():
         self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId + "(" + str(tcpPort) + ")"
         self.initSucc = True
     
-    def insertNewImage(self, logger: logging.Logger, imageContentStr: str, imageContentBytes: bytes):
+    def insertNewImage(self, logger: logging.Logger, imageContentStr: str, imageContentBytes: bytes, debug: bool):
         appImage = AppImage()
         if appImage.success is False:
             return ("[ERROR]ClientCamera/" + self.TYPE + "::insertNewImage: failed creating new image", False)
         filename = appImage.filenameWithStamp
-        print("[DEBUG]ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
+        if debug is True:
+            #print("[DEBUG]ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
+            print("[DEBUG]insertNewImage, type:" + self.TYPE + ", camId:" + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
         
@@ -233,7 +235,7 @@ class ClientCamera():
         # logger.info(msg)
         
         if self.MODE_SAVE_TO_DISK == NOSAVE:
-            msg = "ClientCamera/" + self.TYPE + "::insertNewImage " + self.TYPE + " ready at {}: {} ".format( 
+            msg = "insertNewImage: type: " + self.TYPE + ", @[{}] filename {} ".format( 
                 self.bufferImages.lastRecordedIndex, 
                 self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp)
             return (msg, True)

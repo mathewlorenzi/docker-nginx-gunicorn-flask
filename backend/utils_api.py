@@ -46,7 +46,7 @@ portGenerator = PortGenerator()
 def record_image_or_result(inputBufferClient: BufferClients, camId: str,
                             imageContentStr: str, 
                             imageContentBytes: bytes, 
-                            logger):
+                            logger, debug: bool=False):
     nameId = camId # data["nameId"]
 
     if imageContentStr is not None:
@@ -68,11 +68,12 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
     # look if existing active camera
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
     if indexClient is None:
-        print("[INFO]/image: nameId:" + nameId + " new client")
-
+        
         newPort = portGenerator.getNewPort()
         if newPort<0:
             return ("KO: failed to find a free new port for a new ecovision job", nameId, 400)
+
+        print("[INFO]record_image_or_result: new client: nameId:" + nameId + ", new port: ", newPort)
 
         (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=newPort)
         if indexClient is None:
@@ -87,7 +88,8 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
         print("[ERROR]/image: nameId:" + nameId + " failed finding client")
         return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
     
-    print("[DEBUG]/image: nameId:" + nameId + " indexClient: " + str(indexClient))
+    if debug is True:
+        print("[DEBUG]/image: nameId:" + nameId + " indexClient: " + str(indexClient))
 
     # while(inputBufferClient.buff[indexClient].lockOnUpload is True){
     #     print("[INFO]/image: lock active, wait a bit, for camId" + nameId)
@@ -98,12 +100,12 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
 
     (msg, succ) = inputBufferClient.buff[indexClient].insertNewImage(logger=logger, 
                                                                     imageContentStr=imageContentStr,
-                                                                    imageContentBytes=imageContentBytes)
+                                                                    imageContentBytes=imageContentBytes, debug=False)
     if succ is False:
         print("[ERROR]", msg)
         return ("KO: failed saving new image", nameId, 400)
     else:
-        print("[INFO]", msg)
+        print("[INFO]" + msg)
 
         # camId = nameId
         # print("[DEBUG]/result_image2 endpoint")
@@ -143,7 +145,7 @@ def lastsample(camId: str, inputBufferClient: BufferClients, logger, take_care_o
     # 204 ok but already uploaded last image
     # 200 ok, last image returned
 
-    print("[DEBUG]lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
+    # print("[DEBUG]lastsample camId " + str(camId) + "/" + inputBufferClient.TYPE)
     if camId is None:
         msg = "camId in None in url" + " /" + inputBufferClient.TYPE
         # logger.error(msg)
