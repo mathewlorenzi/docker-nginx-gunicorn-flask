@@ -167,7 +167,9 @@ def record_image():
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
 
-    #return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+
+    # ******************** does android at least get the red image
+    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
     
 
     # image recorded successfully
