@@ -16,6 +16,7 @@ if file_path not in sys.path:
 # # printRootStructure(dirname=sys.path[0], indent=0)
 
 from flask import Flask, jsonify, request#, json#, render_template, request, jsonify, json#, flash send_from_directory
+from flask import make_response
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
 from utils import isascii, isBase64, IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 from utils_api import record_image_or_result, lastsample
@@ -90,6 +91,32 @@ class WatchActiveClients(threading.Thread):
                 deletedOneClient = ecovisionResults.deleteOneTooOldConnectedClient(maxDeltaAge=self.maxDeltaAge, debug=self.debug)
             self._stop_event.wait(self.intervalSec) # check every N sec                
         print('end client watcher')
+
+
+
+
+@app.route('/result/<string:camId>', methods=['GET'])
+def result_api(camId: str):
+    print(" ... ... camId", camId)
+
+    
+
+    here lastresult(camId: str, take_care_of_already_uploaded: bool=True):
+    
+    with open("red.jpg", "rb") as f:
+        # with open("house-thumbs-up.gif", "rb") as f:
+        image_binary = f.read()
+
+        # response = make_response(base64.b64encode(image_binary))
+        # # response.headers.set('Content-Type', 'image/gif')
+        # response.headers.set('Content-Type', 'image/jpg')
+        # # response.headers.set('Content-Disposition', 'attachment', filename='image.gif')
+        # response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
+        # # return response
+
+        return base64.b64encode(image_binary), 200
+
+
 
 @app.route("/backend")
 def backend():

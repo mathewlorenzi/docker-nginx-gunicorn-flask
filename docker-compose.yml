@@ -1,10 +1,11 @@
-nez html to display result. in webapp now.
-to put in backend, and to test with alternative colour or text timestamp with android
-
 
 # https://blog.miguelgrinberg.com/post/video-streaming-with-flask
 
-# why recor image happedns so long after it was captured
+now get last image of results recorded in backend/result/camid
+but first
+  find a way to ... ? use shared volumes instead of tcp for ecovision
+
+
 # print pid instead of thread from werkzeug
 
 
