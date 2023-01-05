@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
 
 int main()
 {
-    bool debug = false;
+    bool debug = true;
     int queueLength = 10;
     int recvBufferSize = 2048;
-    char *server_port = (char*)("5453");
+    char *server_port = (char*)("6789");
     TcpServer tcpServer;
 
     //tcpServer.create(server_port);
@@ -120,9 +120,10 @@ int main()
 
     while(1) // keep the server alive for further client reauest
     {
-        std::string outputPathJpgRecvImg = "temp_received.jpg";
-        std::string pathImageJpegToReplyTo_resultEcoVision = "../../IMG_1649.jpg";
-        succ = tcpServer.wait_to_receive(outputPathJpgRecvImg, pathImageJpegToReplyTo_resultEcoVision);
+        succ = tcpServer.wait_to_receive_msg();
+        //std::string outputPathJpgRecvImg = "temp_received.jpg";
+        //std::string pathImageJpegToReplyTo_resultEcoVision = "../../IMG_1649.jpg";
+        //succ = tcpServer.wait_to_receive_img(outputPathJpgRecvImg, pathImageJpegToReplyTo_resultEcoVision);
         if(succ==false)
         {
             return 1;

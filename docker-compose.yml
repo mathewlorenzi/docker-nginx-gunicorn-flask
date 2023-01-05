@@ -1,9 +1,9 @@
 
 # https://blog.miguelgrinberg.com/post/video-streaming-with-flask
 
-now get last image of results recorded in backend/result/camid
-but first
-  find a way to ... ? use shared volumes instead of tcp for ecovision
+# now get last image of results recorded in backend/result/camid
+# but first
+#   find a way to ... ? use shared volumes instead of tcp for ecovision
 
 
 # print pid instead of thread from werkzeug

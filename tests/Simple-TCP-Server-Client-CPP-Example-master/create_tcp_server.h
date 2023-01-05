@@ -19,7 +19,7 @@
 #include <iostream> // std::cout
 #include <fstream> // to save image as binary
 
-#include "base64.h"
+//#include "base64.h"
 
 class TcpServer
 {
@@ -89,7 +89,47 @@ public:
         printf("[INFO]TcpServer::create with port %s successful\n", server_port);
         return true;
     }
-    bool wait_to_receive(std::string outputPathJpgRecvImg, std::string pathImageJpegToReplyTo_resultEcoVision)
+    bool wait_to_receive_msg()
+    {
+        printf("[INFO]TcpServer::wait_connection of a client\n");
+        while (1)
+        {
+            // accept a connection
+            int addrlen = sizeof(address);
+            if ((sock = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+            {
+                printf("[ERROR]accept failed\n");
+                return false;
+            }
+            printf("[INFO]TcpServer::wait_to_receive client message\n");
+            while (1) {
+                // receive message
+                std::string myString;
+                int nDataLength;
+                int index=0;
+                while ((nDataLength = recv(sock, m_buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+                    if(m_debug==true) { printf(" ... received chunk %d size %d sizebuffer %d\n", index, nDataLength, RECV_BUFFER_SIZE); }
+                    myString.append(m_buffer, nDataLength);
+                    if(nDataLength<RECV_BUFFER_SIZE){
+                        if(m_debug==true) { printf(" ... break\n"); }        
+                        break;
+                    }
+                    index++;
+                }
+                if(m_debug==true) { printf(" ... finished loop\n"); }
+                
+                // ECO: OK: respond text message
+                /*char msg[2048];
+                memset(&msg, 0, sizeof(msg));//clear the buffer
+                strcpy(msg, "image content");
+                send(sock, (char*)&msg, strlen(msg), 0);*/
+
+                return true;
+            }
+        }
+        return false;
+    }
+    bool wait_to_receive_img(std::string outputPathJpgRecvImg, std::string pathImageJpegToReplyTo_resultEcoVision)
     {
         printf("[INFO]TcpServer::wait_connection of a client\n");
         while (1)
@@ -158,11 +198,6 @@ public:
 
 
 
-//std::ofstream outfile2{"debug_img_to_send-as-a-areply.jpg", std::ofstream::binary};
-// outfile2.write(replyImageBuffer, static_cast<std::streamsize>(inputSize));
-//std::string debugOut;
-
-
 
                 int nbChunks = get_nb_chunks(inputSize);
                 if(nbChunks<0){ printf("[ERROR]create_tcp_server.h: wait_to_receive: splitimages failed\n"); return false; }
@@ -196,11 +231,11 @@ public:
                 {
                     if(m_debug==true) { printf(" ... sending chunk %d size %d\n", ii, replyChunkedSizes[ii]); }
                     send(sock, (char *)replyChunkedBuffer[ii].c_str(), replyChunkedSizes[ii], 0);
-//debugOut += replyChunkedBuffer[ii].c_str();
+                    //debugOut += replyChunkedBuffer[ii].c_str();
                 }*/
                 printf("[INFO]TcpServer::wait_to_receive client: msg received and replied\n");
-//outfile2.write(debugOut.c_str(), static_cast<std::streamsize>(inputSize));
-//printf("%d vs %d\n", sizeof(debugOut), inputSize);
+                //outfile2.write(debugOut.c_str(), static_cast<std::streamsize>(inputSize));
+                //printf("%d vs %d\n", sizeof(debugOut), inputSize);
                 return true;
             }
         }

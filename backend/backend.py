@@ -32,7 +32,7 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 HOST='0.0.0.0'
 PORT=5555
 WITH_MANAGER=True
-MODE_SAVE_TO_DISK = NOSAVE
+MODE_SAVE_TO_DISK = SAVE_WITH_TIMESTAMPS # for mmap version and no more tcp   NOSAVE
 if WITH_MANAGER is False:
     print(" .............. WARNING, debug withiut manager activated: save to dosk images") 
     MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
@@ -101,7 +101,7 @@ def result_api(camId: str):
 
     
 
-    here lastresult(camId: str, take_care_of_already_uploaded: bool=True):
+    # here lastresult(camId: str, take_care_of_already_uploaded: bool=True):
     
     with open("red.jpg", "rb") as f:
         # with open("house-thumbs-up.gif", "rb") as f:
@@ -124,7 +124,7 @@ def backend():
     data = {"data": "Hello backend"}
     return jsonify(data)
 
-def get_image_to_return(status2: int, content: dict, logger):
+'''def get_image_to_return(status2: int, content: dict, logger):
     colourImg = None
     msg = None
     _succ = False
@@ -160,7 +160,7 @@ def get_image_to_return(status2: int, content: dict, logger):
             colourImg = "red"
             #logger.error(msg + " => reply with " + colourImg)
             print("[ERROR]", msg, " => reply with " + colourImg)
-    return (_succ, colourImg)
+    return (_succ, colourImg)'''
 
 
 @app.route("/record_image", methods=['POST'])
@@ -195,8 +195,25 @@ def record_image():
 
 
 
+    (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=False)
+    if status2 == 200:
+        check filename file is saved cause thats the one that s going to be r5ead by ecovision
+
+to do create pods for each camid in common outout path        
+    fname = './pods.txt'
+    if not os.path.isfile(fname):
+        # create initial file
+        with open(fname, "w+b") as fd:
+            fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
+
+    else:
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+
+
+
     # ******************** does android at least get the red image
-    return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+    #return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
     
 
     # image recorded successfully

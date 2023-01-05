@@ -151,5 +151,5 @@ def client_sends_img():
     with open("temp_received.jpg", "wb") as fout:
         fout.write(received)
 
-#client_sends_msg()
-client_sends_img()
+client_sends_msg()
+#client_sends_img()
