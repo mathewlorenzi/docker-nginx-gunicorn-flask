@@ -78,7 +78,8 @@ class EcoVisionRunner(threading.Thread):
         cmdline = [self.ecovisionPath+"/build/bin/platformecpp",
             "-subsize", "0",
             "-control", self.ecovisionPath+"/programs/programecpp/platformecpp/control2d.txt",
-            "-create_tcp_server", "-camidname", self.nameId,
+            #"-create_tcp_server", 
+            "-camidname", self.nameId,
             "-port", str(self.port),
             "-motionwindow", "2", "-context2dec", "LOCAL",
             ]

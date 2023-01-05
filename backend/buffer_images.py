@@ -2,8 +2,10 @@ import os
 import base64
 from base64 import b64encode
 import logging
+import mmap
+import shutil
 from datetime import datetime
-from socket import TCP_FASTOPEN
+# from socket import TCP_FASTOPEN
 from utils import IMGEXT, convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
 
 STR_UNKNOWN = "UNKNOWN"
@@ -63,11 +65,12 @@ class AppImage:
         return dict_out
 
 class BufferImages:
-    def __init__(self, type: str, maxLength: int, clientId:str, tcpPort:int, directory: str=None):
+    # def __init__(self, type: str, maxLength: int, clientId:str, tcpPort:int, directory: str=None):
+    def __init__(self, type: str, maxLength: int, clientId:str, directory: str=None):
         self.TYPE = type
         self.directory = directory
         self.clientId = clientId
-        self.tcpPort = tcpPort      # for each ecovision as a server tcp port 
+        # self.tcpPort = tcpPort      # for each ecovision as a server tcp port 
         self.maxLength = maxLength
         self.buffer = []
         self.lastRecordedIndex = -1
@@ -138,7 +141,8 @@ class ClientCamera():
     tcpPort is the port of the ecovision as a server tcp
     directory where are saved the images if MODE_SAVE_TO_DISK is not set to no save
     """
-    def __init__(self, type: str, clientId: str, tcpPort: int, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
+    # def __init__(self, type: str, clientId: str, tcpPort: int, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
+    def __init__(self, type: str, clientId: str, MODE_SAVE_TO_DISK: str, mainUploadDir: str=None) -> None:
 
         self.TYPE = type
         self.MODE_SAVE_TO_DISK = MODE_SAVE_TO_DISK 
@@ -152,7 +156,7 @@ class ClientCamera():
         if clientId == "":
             self.clientId = STR_UNKNOWN
 
-        self.tcpPort = tcpPort
+        # self.tcpPort = tcpPort
 
         if self.MODE_SAVE_TO_DISK == NOSAVE:
             self.mainUploadDir = None
@@ -162,17 +166,29 @@ class ClientCamera():
             self.outputDir = os.path.join(self.mainUploadDir, self.clientId)
             if os.path.exists(self.outputDir) is False:
                 os.mkdir(self.outputDir)
+            else:# nEW: delte the whole content of this sub dir
+                shutil.rmtree(self.outputDir)
+                os.mkdir(self.outputDir)
             if os.path.exists(self.outputDir) is False:
                 self.initMsg = "could not create: " + self.outputDir
                 #print("[ERROR]", self.initMsg)
                 self.initSucc = False
                 return
+            
+            # for mmap with ecovsion: we write in this ram space the timestmap hr min sec ms
+            self.mmapPodFilename = "pods.txt"                 
+            if not os.path.isfile(self.mmapPodFilename):
+                # create initial file
+                with open(self.mmapPodFilename, "w+b") as fd:
+                    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+            with open(self.mmapPodFilename, "r+b") as fd:
+                self.mmPods = mmap.mmap(fd.fileno(), 9, access=mmap.ACCESS_WRITE, offset=0)
         
         self.bufferImages = BufferImages(
             type = self.TYPE,
             maxLength=5, 
             clientId = self.clientId,
-            tcpPort = self.tcpPort,
+            # tcpPort = self.tcpPort,
             directory = self.outputDir
         )
         if self.bufferImages is False:
@@ -185,7 +201,8 @@ class ClientCamera():
             self.initMsg = "[ERROR]ClientCamera/" + self.TYPE + ": buffer images creation failed: " + self.bufferImages.initMsg
             return
 
-        self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId + "(" + str(tcpPort) + ")"
+        # self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId + "(" + str(tcpPort) + ")"
+        self.initMsg = "ClientCamera/" + self.TYPE + " created: "+self.clientId
         self.initSucc = True
     
     def insertNewImage(self, logger: logging.Logger, imageContentStr: str, imageContentBytes: bytes, debug: bool):
@@ -195,7 +212,7 @@ class ClientCamera():
         filename = appImage.filenameWithStamp
         if debug is True:
             #print("[DEBUG]ClientCamera/" + self.TYPE + "::insertNewImage " + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
-            print("[DEBUG]insertNewImage, type:" + self.TYPE + ", camId:" + self.bufferImages.clientId + ", filename: " + filename + "(" + str(self.tcpPort) + ")")
+            print("[DEBUG]insertNewImage, type:" + self.TYPE + ", camId:" + self.bufferImages.clientId + ", filename: " + filename)
 
         # OK but KO with simul_clients => f.write(base64.b64decode(imageContent.split(',')[1].encode()))
         
@@ -255,6 +272,22 @@ class ClientCamera():
             with open(pathout, 'wb') as f:
                 # print("<", len(appImage.contentBytes), appImage.contentBytes)
                 f.write(appImage.contentBytes)
+
+                ST = self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp
+                # 01-34-6789T12:45:78.012.jpg
+                int_array = [int(ST[11]), int(ST[12]), int(ST[14]), int(ST[15]), int(ST[17]), int(ST[18]), int(ST[20]), int(ST[21]), int(ST[22])]
+                print(' ... ... mmaps writin', ST, int_array)
+                # nameWithStamp[ here ]
+                byte_array = []
+                for vali in int_array:
+                    bytes_val = vali.to_bytes(1, 'little')
+                    byte_array.append(bytes_val)
+                # reset to the start of the file
+                self.mmPods.seek(0)
+                for byte_val in byte_array:
+                    self.mmPods.write(byte_val)
+                
+
             #bufferImages.Print()
 
             if self.MODE_SAVE_TO_DISK == SAVE_WITH_TIMESTAMPS:
@@ -292,9 +325,11 @@ class BufferClients():
                 break
         return indexClient
 
-    def insertNewClient(self, nameId: str, tcpPort: int) -> int:
+    def insertNewClient(self, nameId: str) -> int:
+    #def insertNewClient(self, nameId: str, tcpPort: int) -> int:
 
-        newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, tcpPort=tcpPort, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
+        # newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, tcpPort=tcpPort, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
+        newClientCam = ClientCamera(type=self.TYPE, clientId=nameId, MODE_SAVE_TO_DISK=self.MODE_SAVE_TO_DISK, mainUploadDir=self.database_main_path_all_clients)
 
         if newClientCam is None:
             return ("[ERROR]BufferClients/" + self.TYPE + ":creating ClientCamera object is None", None)
@@ -343,11 +378,12 @@ class BufferClients():
     def getListClients(self):
         listClients = []
         for client in self.buff:
-            listClients.append( (client.clientId, client.tcpPort) )
+            # listClients.append( (client.clientId, client.tcpPort) )
+            listClients.append( (client.clientId) )
         return listClients
 
-    def getEcovisionPort(self, camId: int):
-        for client in self.buff:
-            if client.clientId == camId:
-                return (client.tcpPort, True)
-        return (-1, False)
+    # def getEcovisionPort(self, camId: int):
+    #     for client in self.buff:
+    #         if client.clientId == camId:
+    #             return (client.tcpPort, True)
+    #     return (-1, False)

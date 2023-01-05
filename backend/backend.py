@@ -19,7 +19,7 @@ from flask import Flask, jsonify, request#, json#, render_template, request, jso
 from flask import make_response
 from buffer_images import STR_UNKNOWN, load_sample, BufferClients, NOSAVE, SAVE_WITH_TIMESTAMPS, SAVE_WITH_UNIQUE_FILENAME
 from utils import isascii, isBase64, IMGEXT, get_encoded_img, split_images #convertDatetimeToString, convertStringTimestampToDatetimeAndMicrosecValue
-from utils_api import record_image_or_result, lastsample
+from utils_api import record_image_or_result, lastsample, lastfilename, getOutputDir
 from manager import ManagerEcovisionS
 import json
 
@@ -124,7 +124,7 @@ def backend():
     data = {"data": "Hello backend"}
     return jsonify(data)
 
-'''def get_image_to_return(status2: int, content: dict, logger):
+def get_image_to_return(status2: int, content: dict, logger):
     colourImg = None
     msg = None
     _succ = False
@@ -160,7 +160,7 @@ def backend():
             colourImg = "red"
             #logger.error(msg + " => reply with " + colourImg)
             print("[ERROR]", msg, " => reply with " + colourImg)
-    return (_succ, colourImg)'''
+    return (_succ, colourImg)
 
 
 @app.route("/record_image", methods=['POST'])
@@ -194,23 +194,31 @@ def record_image():
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
 
+    lastFilename = lastfilename(camId=camId, inputBufferClient=bufferClients)
+    if lastFilename is None:
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 500)
 
-    (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=False)
-    if status2 == 200:
-        check filename file is saved cause thats the one that s going to be r5ead by ecovision
+    _outDir = getOutputDir(camId=camId, inputBufferClient=bufferClients)
+    print(" ... ... this will be the input for ecovision", _outDir, lastFilename)
+    
 
-to do create pods for each camid in common outout path        
-    fname = './pods.txt'
-    if not os.path.isfile(fname):
-        # create initial file
-        with open(fname, "w+b") as fd:
-            fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-
-
-    else:
+    GIVE_IT_TO_ME = False
+    (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    # print(" ... /record_image: get lastsample returned status ", status2)
+    if status2 != 200:
+        print(" ... ... 1")
+        print("[ERROR]get lastsample image recorded failed although we just recorded one")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+    (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
+    # no matter whether the result is available or not, the result to the post request if here 200
+    if _succ is False:
+        print(" ... ... 2")
+        print("[ERROR]lastsample image failed")
+        return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
 
+    return (content["contentBytes"], 200)
 
+    '''
 
     # ******************** does android at least get the red image
     #return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
@@ -366,7 +374,7 @@ to do create pods for each camid in common outout path
             return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200) 
     else:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200) 
-
+    '''
     
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])

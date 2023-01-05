@@ -18,7 +18,7 @@ from utils import is_port_in_use, check_port
 # x = convertToNumber('foo bar baz')
 # convertFromNumber(x)
 
-class PortGenerator:
+'''class PortGenerator:
     def __init__(self):
         self.minPort = 9000 # to avoid the ones in the 5000 and 8000 or 1024 # or 1
         self.maxPort = 65534 # or 65535
@@ -41,7 +41,7 @@ class PortGenerator:
                 print("[ERROR]Impossible: all ports are used")
                 return -1
 
-portGenerator = PortGenerator()
+portGenerator = PortGenerator()'''
 
 def record_image_or_result(inputBufferClient: BufferClients, camId: str,
                             imageContentStr: str, 
@@ -69,13 +69,15 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
     if indexClient is None:
         
-        newPort = portGenerator.getNewPort()
-        if newPort<0:
-            return ("KO: failed to find a free new port for a new ecovision job", nameId, 400)
+        # newPort = portGenerator.getNewPort()
+        # if newPort<0:
+        #     return ("KO: failed to find a free new port for a new ecovision job", nameId, 400)
 
-        print("[INFO]record_image_or_result: new client: nameId:" + nameId + ", new port: ", newPort)
+        # print("[INFO]record_image_or_result: new client: nameId:" + nameId + ", new port: ", newPort)
+        print("[INFO]record_image_or_result: new client: nameId:" + nameId)
 
-        (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=newPort)
+        #(_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId, tcpPort=newPort)
+        (_msg, indexClient) = inputBufferClient.insertNewClient(nameId=nameId)
         if indexClient is None:
             errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
             # logger.error(errMsg)
@@ -125,6 +127,25 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
 
         return ("OK", nameId, 200)
     return ("OK", nameId, 200)
+
+def lastfilename(camId: str, inputBufferClient: BufferClients):
+    index = inputBufferClient.getClientIndex(camId)
+    if index is None:
+        return None
+    lastRecordedIndex = inputBufferClient.buff[index].bufferImages.lastRecordedIndex
+    if lastRecordedIndex is None:
+        return None
+    filename = inputBufferClient.buff[index].bufferImages.buffer[lastRecordedIndex].filenameWithStamp
+    return filename
+
+def getOutputDir(camId: str, inputBufferClient: BufferClients):
+    index = inputBufferClient.getClientIndex(camId)
+    if index is None:
+        return None
+    outputDir = inputBufferClient.buff[index].bufferImages.directory
+    if outputDir is None:
+        return None
+    return outputDir
 
 def lastsample(camId: str, inputBufferClient: BufferClients, logger, take_care_of_already_uploaded: bool=True):
     # called by httpclient or ecovision :
