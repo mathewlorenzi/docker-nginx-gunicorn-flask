@@ -63,7 +63,7 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
 
     if isinstance(nameId, str) is False:
         print("[ERROR]/image: nameId is not a string:" + str(nameId))
-        return ("KO: nameId is not a string", nameId, 400)
+        return ("KO: nameId is not a string", 400)
 
     # look if existing active camera
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
@@ -71,7 +71,7 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
         
         # newPort = portGenerator.getNewPort()
         # if newPort<0:
-        #     return ("KO: failed to find a free new port for a new ecovision job", nameId, 400)
+        #     return ("KO: failed to find a free new port for a new ecovision job", 400)
 
         # print("[INFO]record_image_or_result: new client: nameId:" + nameId + ", new port: ", newPort)
         print("[INFO]record_image_or_result: new client: nameId:" + nameId)
@@ -82,13 +82,13 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
             errMsg = "/image: nameId:" + nameId + " failed inserting new client " + _msg
             # logger.error(errMsg)
             print("[ERROR]", errMsg)
-            return (errMsg, nameId, 400)
+            return (errMsg, 400)
 
     # check really necessary ?
     indexClient = inputBufferClient.getClientIndex(nameId=nameId)
     if indexClient is None:
         print("[ERROR]/image: nameId:" + nameId + " failed finding client")
-        return ("KO: Failed finding client or inserting new client " + nameId, nameId, 400)
+        return ("KO: Failed finding client or inserting new client " + nameId, 400)
     
     if debug is True:
         print("[DEBUG]/image: nameId:" + nameId + " indexClient: " + str(indexClient))
@@ -105,7 +105,7 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
                                                                     imageContentBytes=imageContentBytes, debug=False)
     if succ is False:
         print("[ERROR]", msg)
-        return ("KO: failed saving new image", nameId, 400)
+        return ("KO: failed saving new image", 400)
     else:
         print("[INFO]" + msg)
 
@@ -113,20 +113,20 @@ def record_image_or_result(inputBufferClient: BufferClients, camId: str,
         # print("[DEBUG]/result_image2 endpoint")
         # v1
         # if camId in ecovisionResults.trackResultsImage:
-        #     return (ecovisionResults.trackResultsImage[camId], nameId, 200)
+        #     return (ecovisionResults.trackResultsImage[camId], 200)
         # else:
-        #     return ("ok but image result from ecovision not ready yet for " + camId, nameId, 202)
+        #     return ("ok but image result from ecovision not ready yet for " + camId, 202)
         # v2 return a blank image if not ready
         # indexECO = bufferEcovisionResults.getClientIndex(nameId=nameId)
         # if indexECO is None:
         #     print("[ERROR]/image: nameId:" + nameId + " failed finding client in ecovision results")
-        #     return (HERE blank image, nameId, 202)
+        #     return (HERE blank image, 202)
         # bufferEcovisionResults.buff[indexECO].get last image
     
         # HERE    
 
-        return ("OK", nameId, 200)
-    return ("OK", nameId, 200)
+        return ("OK", 200)
+    return ("OK", 200)
 
 def lastfilename(camId: str, inputBufferClient: BufferClients):
     index = inputBufferClient.getClientIndex(camId)

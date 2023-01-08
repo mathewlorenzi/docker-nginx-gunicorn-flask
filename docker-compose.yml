@@ -1,6 +1,8 @@
 
 # https://blog.miguelgrinberg.com/post/video-streaming-with-flask
 
+# ecovision in manager does stop anymore with mmaps. TODO have a timeout (if same timestamp for more than ... then exit ecovision thread)
+
 #  ... ... 9 => mmaps writin byteval <class 'bytes'> b'\t'
 
 # now get last image of results recorded in backend/result/camid

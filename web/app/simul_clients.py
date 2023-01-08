@@ -117,12 +117,21 @@ while True:
     json_data = json_data_res.get("data")
     for el in json_data:
         camId = str(el)
-        
-        print("...request get last image TODO")
-        #lastimage = str(requests.get(MAIN_URL+"/last_image/"+camId))#.content.decode("utf-8"))
-        
-        
-        
+
+        response = requests.get(MAIN_URL+"/input/"+camId)
+        print(response.status_code)
+        if response.status_code == 200:
+            with open("/home/ecorvee/temp_lastimage.jpg", mode="wb") as fout:
+                a = base64.b64decode(response.content)
+                fout.write(a)
+
+        response = requests.get(MAIN_URL+"/result/"+camId)
+        print(response.status_code)
+        if response.status_code == 200:
+            with open("/home/ecorvee/temp_lastresult.jpg", mode="wb") as fout:
+                a = base64.b64decode(response.content)
+                fout.write(a)
+
         '''url_get_image_filename = MAIN_URL+"/last_image_filename/"+camId
         url_get_image_content = MAIN_URL+"/last_image_content/"+camId
         url_get_image_isuploaded = MAIN_URL+"/is_last_image_uploaded/"+camId

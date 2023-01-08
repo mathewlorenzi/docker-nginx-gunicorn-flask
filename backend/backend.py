@@ -62,7 +62,8 @@ if bufferClients.initSucc is False:
     print("[DEBUG]BufferClients initialisation failed: " + bufferClients.initMsg)
     exit(1)
 
-ecovisionResults = BufferClients(type="resultmag", MODE_SAVE_TO_DISK=MODE_SAVE_TO_DISK, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
+# no save otherwise we overwritte the bufferClients input images
+ecovisionResults = BufferClients(type="resultmag", MODE_SAVE_TO_DISK=NOSAVE, database_main_path_all_clients=OUTPUT_PATH, debugapp=False)
 if ecovisionResults.initSucc is False:
     print("[DEBUG]ecovisionResults initialisation failed: " + ecovisionResults.initMsg)
     exit(1)
@@ -99,31 +100,6 @@ class WatchActiveClients(threading.Thread):
 
             self._stop_event.wait(self.intervalSec) # check every N sec                
         print('end client watcher')
-
-
-
-
-@app.route('/result/<string:camId>', methods=['GET'])
-def result_api(camId: str):
-    print(" ... ... camId", camId)
-
-    
-
-    # here lastresult(camId: str, take_care_of_already_uploaded: bool=True):
-    
-    with open("red.jpg", "rb") as f:
-        # with open("house-thumbs-up.gif", "rb") as f:
-        image_binary = f.read()
-
-        # response = make_response(base64.b64encode(image_binary))
-        # # response.headers.set('Content-Type', 'image/gif')
-        # response.headers.set('Content-Type', 'image/jpg')
-        # # response.headers.set('Content-Disposition', 'attachment', filename='image.gif')
-        # response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
-        # # return response
-
-        return base64.b64encode(image_binary), 200
-
 
 
 @app.route("/backend")
@@ -188,7 +164,7 @@ def record_image():
     # usedUrl = data["usedUrl"]
 
     # print(" ... /record_image: record_image_or_result: image ")
-    (msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, camId=nameId, 
+    (msg, status) = record_image_or_result(inputBufferClient=bufferClients, camId=nameId, 
         imageContentStr=imagestr, 
         imageContentBytes=None, logger=logger, debug=DEBUG)
 
@@ -202,25 +178,25 @@ def record_image():
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
 
 
-    lastFilename = lastfilename(camId=camId, inputBufferClient=bufferClients)
+    lastFilename = lastfilename(camId=nameId, inputBufferClient=bufferClients)
     if lastFilename is None:
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 500)
 
-    _outDir = getOutputDir(camId=camId, inputBufferClient=bufferClients)
-    print(" ... ... this will be the input for ecovision", _outDir, lastFilename)
+    _outDir = getOutputDir(camId=nameId, inputBufferClient=bufferClients)
+    # print(" ... ... this will be the input for ecovision", _outDir, lastFilename)
     
 
     GIVE_IT_TO_ME = False
-    (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    (content, status2) = lastsample(camId = nameId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
     # print(" ... /record_image: get lastsample returned status ", status2)
     if status2 != 200:
-        print(" ... ... 1")
+        # print(" ... ... 1")
         print("[ERROR]get lastsample image recorded failed although we just recorded one")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
     (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
     # no matter whether the result is available or not, the result to the post request if here 200
     if _succ is False:
-        print(" ... ... 2")
+        # print(" ... ... 2")
         print("[ERROR]lastsample image failed")
         return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
 
@@ -233,15 +209,15 @@ def record_image():
         nbTry += 1
         clientIdList = bufferClients.getListClients()
         for client in bufferClients.buff:
-            if client.clientId in clientIdList and client.clientId == camId:
-                print(" ... ...  check if result arrived")
-                print(" ... ... mmaps_getResults client Id", client.clientId)
+            if client.clientId in clientIdList and client.clientId == nameId:
+                # print(" ... ...  check if result arrived")
+                # print(" ... ... mmaps_getResults client Id", client.clientId)
                 for filename in os.listdir(client.outputDir):
-                    print(" ... ... check ", filename)
+                    # print(" ... ... check ", filename)
                     if filename.startswith("track2d-") and filename.endswith(".jpg"):
                         stamp = filename.replace("track2d-", "")
                         # stamp = stamp.replace(".jpg", "")
-                        print(" ... ... ", filename, stamp)
+                        # print(" ... ... ", filename, stamp)
                         # diff in seconds
                         pathImage = os.path.join(client.outputDir, filename)
                         if( datetime.now().timestamp() - os.path.getmtime(pathImage) > maxAgeInSec ):
@@ -250,7 +226,7 @@ def record_image():
                         else:
                             # check if already in buffer images
                             for bufMag in client.bufferImages.buffer:
-                                print(" ... ... ", stamp, " VS ", bufMag.filenameWithStamp)
+                                # print(" ... ... ", stamp, " VS ", bufMag.filenameWithStamp)
                                 if stamp == bufMag.filenameWithStamp:
                                     resultPathImage = pathImage
         
@@ -258,12 +234,25 @@ def record_image():
             time.sleep(1)
 
     if resultPathImage is not None:
-        (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
-            imageContentStr=None,
-            imageContentBytes=HERE and where are the results with teimstamp saved 
-            check not overwritten with images  in /paul
+        print(" ... ... saving result", resultPathImage)
+        with open(resultPathImage, "rb") as fin:
+            im_bytes = fin.read()  
+            im_b64 = base64.b64encode(im_bytes)
+            #im_b64 = base64.b64encode(im_bytes).decode("utf8")
+
+              
+            # img_data = fsample.read()
+            # encoded = b64encode(img_data)
+            # decoded_img = encoded.decode('utf-8')
             
-            received, logger=logger, debug=DEBUG)
+
+            # print(" ... ... ... ", type(im_bytes))
+            # print(" ... ... ... ", type(im_b64))
+            (msgBack, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
+                imageContentStr=None,
+                imageContentBytes=im_b64,
+                logger=logger, debug=DEBUG)
+            # print(" ... ... ... saved")
         if statusBack != 200:
             print("[ERROR]FAILED record result:", msgBack)
             return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
@@ -381,7 +370,7 @@ def record_image():
     print("[INFO]connected and reciedv resuklt", connected, receivedResult)
     if connected is True and receivedResult is True:
         print(" === === record result ===. ===")
-        (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
+        (msgBack, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
             imageContentStr=None,
             imageContentBytes=received, logger=logger, debug=DEBUG)
         if statusBack != 200:
@@ -432,14 +421,62 @@ def record_image():
     
 
 @app.route("/lastimage/<string:camId>", methods=["GET"])
-def lastimage(camId: str, take_care_of_already_uploaded: bool=True):
+def lastimage(camId: str, take_care_of_already_uploaded: bool=False):
     print("[INFO]/lastimage GET")
     return lastsample(camId=camId, inputBufferClient=bufferClients, take_care_of_already_uploaded=take_care_of_already_uploaded)
 
 @app.route("/lastresult/<string:camId>", methods=["GET"])
-def lastresult(camId: str, take_care_of_already_uploaded: bool=True):
+def lastresult(camId: str, take_care_of_already_uploaded: bool=False):
     print("[INFO]/lastresult GET")
     return lastsample(camId=camId, inputBufferClient=ecovisionResults, take_care_of_already_uploaded=take_care_of_already_uploaded)
+
+@app.route('/input/<string:camId>', methods=['GET'])
+def input_api(camId: str):
+    print(" ... ... B")
+    GIVE_IT_TO_ME = False
+    (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    if status2 != 200:
+        print(" ... ... B1")
+        print("[ERROR]get lastsample image recorded failed")
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+    (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
+    # no matter whether the result is available or not, the result to the post request if here 200
+    if _succ is False:
+        print(" ... ... B2")
+        print("[ERROR]lastsample image failed")
+        return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
+    return (content["contentBytes"], status2)
+
+@app.route('/result/<string:camId>', methods=['GET'])
+def result_api(camId: str):
+    '''print(" ... ... camId", camId)
+    # here lastresult(camId: str, take_care_of_already_uploaded: bool=True):
+    with open("red.jpg", "rb") as f:
+        # with open("house-thumbs-up.gif", "rb") as f:
+        image_binary = f.read()
+        # response = make_response(base64.b64encode(image_binary))
+        # # response.headers.set('Content-Type', 'image/gif')
+        # response.headers.set('Content-Type', 'image/jpg')
+        # # response.headers.set('Content-Disposition', 'attachment', filename='image.gif')
+        # response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
+        # # return response
+        return base64.b64encode(image_binary), 200
+    '''
+    print(" ... ... A")
+    GIVE_IT_TO_ME = False
+    (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
+    if status2 != 200:
+        print(" ... ... A1")
+        print("[ERROR]get lastsample result recorded failed")
+        return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
+    (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
+    # no matter whether the result is available or not, the result to the post request if here 200
+    if _succ is False:
+        print(" ... ... A2")
+        print("[ERROR]lastsample result failed")
+        return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
+    return (content["contentBytes"], status2)
+
 
 # called by python thread manager for c++ cleint ecovision
 # @app.route("/active_clients", methods=["GET"])

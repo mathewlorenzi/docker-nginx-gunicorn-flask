@@ -37,17 +37,23 @@ def resultpage():
 def result_api(camId: str):
     print("... ... camId", camId, BACKEND_URL+"/result/"+camId)
     response = requests.get(BACKEND_URL+"/result/"+camId)
-
     # response = make_response(base64.b64encode(response.content))
     response = make_response(response.content)
     response.headers.set('Content-Type', 'image/jpg')
     response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
     return response
-
-
     #print("... ... response", response.text)
     #print("... ... response", response.content)
     #return response
+
+@app.route('/input/<string:camId>', methods=['GET'])
+def input_api(camId: str):
+    print("... ... camId", camId, BACKEND_URL+"/input/"+camId)
+    response = requests.get(BACKEND_URL+"/input/"+camId)
+    response = make_response(response.content)
+    response.headers.set('Content-Type', 'image/jpg')
+    response.headers.set('Content-Disposition', 'attachment', filename='red.jpg')
+    return response
 
 @app.route("/hello")
 def hello():
@@ -91,7 +97,7 @@ def image():
     # return ("debug", 200)
     return (response.content, response.status_code)
     #post("http://backend/record_image", data=)
-    #(msg, camId, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
+    #(msg, status) = record_image_or_result(inputBufferClient=bufferClients, info="input")
     # the camera.html (client) exects the result as a reply or a red image if ecovision did not reply a fresh result yet
 
         
@@ -101,7 +107,7 @@ def image():
 #     print("[INFO]/result POST")
 #     response = requests.post(BACKEND_URL+"/record_result", data=request.data)
 #     return (response.content, response.status_code)
-#     #(msg, camId, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
+#     #(msg, status) = record_image_or_result(inputBufferClient=ecovisionResults, info="result")
 #     #return (msg, status)
 
 
