@@ -33,11 +33,12 @@ int test_org()
    return 0;
 }
 
-int test1()
+int test1(char *filename)
 {
     // assume file exists. the python script must be run first
     int fd = -1;
-    if ((fd = open("pods.txt", O_RDWR, 0)) == -1)
+    if ((fd = open(filename, O_RDWR, 0)) == -1)
+    // if ((fd = open("pods.txt", O_RDWR, 0)) == -1)
     {
         printf("unable to open pods.txt\n");
         return 0;
@@ -65,6 +66,8 @@ int test1()
 int main(void)
 {
     // return test_org();
-    return test1();
+    // char *filename = "pods.txt";
+    char *filename = "/home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/database_clients_camera/paul/pods.txt";
+    return test1(filename);
 }
 

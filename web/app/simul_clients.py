@@ -14,7 +14,8 @@ if USE_VIDEO_IMAGES is True:
 
 SAMPLE_IMAGE="sample.png"
 MAIN_URL = "http://127.0.0.1:5000"
-camIds = ["peter", "paul", "jack", "UNKNOWN"]
+# camIds = ["peter", "paul", "jack", "UNKNOWN"]
+camIds = ["paul"]
 
 if USE_VIDEO_IMAGES is True:
     videosMainPath = "/home/ecorvee/data/LCS-videos/database1/" 
@@ -63,8 +64,16 @@ class SimulatorClientPostImage(threading.Thread):
                 print("error in getting images")
                 exit(1)
 
+            now = datetime.now()
+            now = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]    
+
             url = MAIN_URL+"/image"
-            content = {'image': self.im_b64, 'nameId': self.camId, 'usedUrl': url}
+            content = {
+                'image': self.im_b64, 
+                'nameId': self.camId, 
+                'usedUrl': url,
+                "timestamp": now,
+            }
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             response = requests.post(url, data=json.dumps(content), headers=headers)
             time.sleep(self.intervalSec)
@@ -109,8 +118,11 @@ while True:
     for el in json_data:
         camId = str(el)
         
-        print("...request get last image")
-        lastimage = str(requests.get(MAIN_URL+"/last_image/"+camId))#.content.decode("utf-8"))
+        print("...request get last image TODO")
+        #lastimage = str(requests.get(MAIN_URL+"/last_image/"+camId))#.content.decode("utf-8"))
+        
+        
+        
         '''url_get_image_filename = MAIN_URL+"/last_image_filename/"+camId
         url_get_image_content = MAIN_URL+"/last_image_content/"+camId
         url_get_image_isuploaded = MAIN_URL+"/is_last_image_uploaded/"+camId

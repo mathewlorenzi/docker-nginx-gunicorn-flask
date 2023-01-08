@@ -31,7 +31,7 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 HOST='0.0.0.0'
 PORT=5555
-WITH_MANAGER=True
+WITH_MANAGER=False
 MODE_SAVE_TO_DISK = SAVE_WITH_TIMESTAMPS # for mmap version and no more tcp   NOSAVE
 if WITH_MANAGER is False:
     print(" .............. WARNING, debug withiut manager activated: save to dosk images") 

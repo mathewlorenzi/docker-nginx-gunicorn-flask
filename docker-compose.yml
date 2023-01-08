@@ -29,7 +29,7 @@ version: '3'
 # ./configure_workspace
 # == locally ===
 # cd ..
-# ./compile.sh
+# ./compile.sh --display
 # (if not present exe: make)
 # cd /home/ecorvee/Projects/EcoVision/ecplatform2/programs/programecpp/platformecpp/
 # ./test.sh
@@ -76,7 +76,7 @@ version: '3'
 
 # backup ecovision
 # cd /home/ecorvee/Projects/EcoVision
-# ./backup_simple.sh <PQSSWORD
+# ./backup_simple.sh <PQSSWORD  
 # send by email
 
 # local

@@ -153,7 +153,7 @@ class ManagerEcovisionS(threading.Thread):
                 if self.debug is True:
                     print("[INFO]manager asked for active client cam: ", json_data)
                 for el in json_data:
-                    # print(" ..... ...... el", el)
+                    print(" ..... ...... el", el)
                     camId = el[0]  # cmaid, port
                     ecovisionPort = el[1]
 

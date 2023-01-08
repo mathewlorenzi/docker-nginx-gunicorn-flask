@@ -176,12 +176,16 @@ class ClientCamera():
                 return
             
             # for mmap with ecovsion: we write in this ram space the timestmap hr min sec ms
-            self.mmapPodFilename = "pods.txt"                 
-            if not os.path.isfile(self.mmapPodFilename):
+            # /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/database_clients_camera/qaz/pods.txt
+            # /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/qaz/pods.txt
+            mmapPodFilename = os.path.join(self.outputDir, "pods.txt")
+            print(" ... ... mmapPodFilename", mmapPodFilename)
+            if not os.path.isfile(mmapPodFilename):
                 # create initial file
-                with open(self.mmapPodFilename, "w+b") as fd:
+                print(" ... ... NEW mmapPodFilename", mmapPodFilename)
+                with open(mmapPodFilename, "w+b") as fd:
                     fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-            with open(self.mmapPodFilename, "r+b") as fd:
+            with open(mmapPodFilename, "r+b") as fd:
                 self.mmPods = mmap.mmap(fd.fileno(), 9, access=mmap.ACCESS_WRITE, offset=0)
         
         self.bufferImages = BufferImages(
@@ -273,20 +277,37 @@ class ClientCamera():
                 # print("<", len(appImage.contentBytes), appImage.contentBytes)
                 f.write(appImage.contentBytes)
 
-                ST = self.bufferImages.buffer[self.bufferImages.oldestRecordedImage].filenameWithStamp
+                ST = self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp
                 # 01-34-6789T12:45:78.012.jpg
                 int_array = [int(ST[11]), int(ST[12]), int(ST[14]), int(ST[15]), int(ST[17]), int(ST[18]), int(ST[20]), int(ST[21]), int(ST[22])]
-                print(' ... ... mmaps writin', ST, int_array)
+                print(' ... ... mmaps input ints', len(int_array), ST, int_array)
                 # nameWithStamp[ here ]
                 byte_array = []
                 for vali in int_array:
-                    bytes_val = vali.to_bytes(1, 'little')
+                    # bytes_val = vali.to_bytes(1, 'little')
+                    if vali==0: bytes_val=b'\x00'
+                    elif vali==1: bytes_val=b'\x01'
+                    elif vali==2: bytes_val=b'\x02'
+                    elif vali==3: bytes_val=b'\x03'
+                    elif vali==4: bytes_val=b'\x04'
+                    elif vali==5: bytes_val=b'\x05'
+                    elif vali==6: bytes_val=b'\x06'
+                    elif vali==7: bytes_val=b'\x07'
+                    elif vali==8: bytes_val=b'\x08'
+                    elif vali==9: bytes_val=b'\x09'
+                    else:
+                        return("[ERROR]value interger out of range", False)
+
+                    print(' ... ... ', type(vali), vali, type(bytes_val), len(bytes_val), ": ", bytes_val)
                     byte_array.append(bytes_val)
                 # reset to the start of the file
                 self.mmPods.seek(0)
+                print(' ... ... mmaps bytes', len(byte_array), byte_array)
+                #for i in range(len()):
                 for byte_val in byte_array:
+                    print(' ... ... mmaps writin byteval', type(byte_val), byte_val)
                     self.mmPods.write(byte_val)
-                
+                print(' ... ... mmaps written')
 
             #bufferImages.Print()
 

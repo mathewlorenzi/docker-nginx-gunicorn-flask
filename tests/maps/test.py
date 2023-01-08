@@ -117,7 +117,7 @@ def checking3():
     print(type(byte_array))
 
 def test1():
-    int_array = [1, 6, 5, 7, 0, 3, 1, 2, 3]
+    int_array = [8, 6, 5, 7, 0, 3, 1, 2, 3]
     byte_array = []
     for vali in int_array:
         bytes_val = vali.to_bytes(1, 'little')
@@ -148,6 +148,10 @@ def test1():
         mm.close()
         fd.close()
 
+            # now = datetime.now()
+            # now = now.strftime("%m-%d-%YT%H:%M:%S.%f")[:-3]    
+
+
 # test_org()
-# checking3()
-test1()
+checking3()
+# test1()
