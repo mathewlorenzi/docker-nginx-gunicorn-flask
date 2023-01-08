@@ -184,9 +184,9 @@ class ClientCamera():
                 # create initial file
                 print(" ... ... NEW mmapPodFilename", mmapPodFilename)
                 with open(mmapPodFilename, "w+b") as fd:
-                    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+                    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
             with open(mmapPodFilename, "r+b") as fd:
-                self.mmPods = mmap.mmap(fd.fileno(), 9, access=mmap.ACCESS_WRITE, offset=0)
+                self.mmPods = mmap.mmap(fd.fileno(), 17, access=mmap.ACCESS_WRITE, offset=0)
         
         self.bufferImages = BufferImages(
             type = self.TYPE,
@@ -279,8 +279,10 @@ class ClientCamera():
 
                 ST = self.bufferImages.buffer[self.bufferImages.lastRecordedIndex].filenameWithStamp
                 # 01-34-6789T12:45:78.012.jpg
-                int_array = [int(ST[11]), int(ST[12]), int(ST[14]), int(ST[15]), int(ST[17]), int(ST[18]), int(ST[20]), int(ST[21]), int(ST[22])]
-                print(' ... ... mmaps input ints', len(int_array), ST, int_array)
+                # int_array = [int(ST[11]), int(ST[12]), int(ST[14]), int(ST[15]), int(ST[17]), int(ST[18]), int(ST[20]), int(ST[21]), int(ST[22])]
+                int_array = [int(ST[0]), int(ST[1]), int(ST[3]), int(ST[4]), int(ST[6]), int(ST[7]), int(ST[8]), int(ST[9]), 
+                    int(ST[11]), int(ST[12]), int(ST[14]), int(ST[15]), int(ST[17]), int(ST[18]), int(ST[20]), int(ST[21]), int(ST[22])]
+                # print(' ... ... mmaps input ints', len(int_array), ST, int_array)
                 # nameWithStamp[ here ]
                 byte_array = []
                 for vali in int_array:
@@ -298,16 +300,16 @@ class ClientCamera():
                     else:
                         return("[ERROR]value interger out of range", False)
 
-                    print(' ... ... ', type(vali), vali, type(bytes_val), len(bytes_val), ": ", bytes_val)
+                    # print(' ... ... ', type(vali), vali, type(bytes_val), len(bytes_val), ": ", bytes_val)
                     byte_array.append(bytes_val)
                 # reset to the start of the file
                 self.mmPods.seek(0)
-                print(' ... ... mmaps bytes', len(byte_array), byte_array)
+                # print(' ... ... mmaps bytes', len(byte_array), byte_array)
                 #for i in range(len()):
                 for byte_val in byte_array:
-                    print(' ... ... mmaps writin byteval', type(byte_val), byte_val)
+                    # print(' ... ... mmaps writin byteval', type(byte_val), byte_val)
                     self.mmPods.write(byte_val)
-                print(' ... ... mmaps written')
+                # print(' ... ... mmaps written')
 
             #bufferImages.Print()
 
@@ -365,6 +367,31 @@ class BufferClients():
             return ("[ERROR]BufferClients/" + self.TYPE + ":insertClient failed getClientIndex failed for nameId: " + nameId, None)
 
         return ("[INFO]BufferClients/" + self.TYPE + ":insertClient SUCCESS at " + str(indexClient), indexClient)
+
+    
+    '''def mmaps_getResults(self, maxAgeInSec: float, debug: bool=False):
+
+        for existingInputImageClients
+
+        for client in self.buff:
+            # client.mainUploadDir
+            # client.outputDir #.clientId)
+            print(" ... ... mmaps_getResults client Id", client.clientId)
+            for pathImage in os.listdir(client.outputDir):
+                print(" ... ... check ", pathImage)
+                if pathImage.startswith("track2d-") and pathImage.endswith(".jpg"):
+                    stamp = pathImage.replace("track2d-", "")
+                    stamp = stamp.replace(".jpg", "")
+                    print(" ... ... ", pathImage, stamp)
+                    # diff in seconds
+                    if( datetime.now().timestamp() - os.path.getmtime(pathImage) > maxAgeInSec ):
+                        print(" ... ... delete ", pathImage)
+                        os.remove(pathImage)
+                    else:
+                        # check if already in buffer images
+                        for bufMag in client.bufferImages:
+                            print(" ... ... ", stamp, " VS ", bufMag.filenameWithStamp)
+    '''
 
     def deleteOneTooOldConnectedClient(self, maxDeltaAge: int, debug: bool=False) -> bool:
         now = datetime.now()

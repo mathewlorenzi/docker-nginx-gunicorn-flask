@@ -44,9 +44,13 @@ if os.path.isdir(OUTPUT_DIR) is False:
 
 class EcoVisionRunner(threading.Thread):
   
-    def __init__(self, port: int, thread_id: int, nameId:str, ecovisionPath: str, debug: bool):
+    def __init__(self, 
+            #port: int,
+            sharedVolume: str, 
+            thread_id: int, nameId:str, ecovisionPath: str, debug: bool):
         threading.Thread.__init__(self)
-        self.port = port
+        #self.port = port
+        self.sharedVolume = sharedVolume
         #self.lock = lock
         self.thread_id = thread_id
         self.nameId = nameId
@@ -71,18 +75,25 @@ class EcoVisionRunner(threading.Thread):
         logging.info('{}'.format(msg))
   
     def run(self):
+
         # self.log('[INFO]ecovision camid ' + str(self.nameId))
         # OK
         # cmdline = ["./simul_ecovision", "--host", self.host+":"+ str(args.port), "--camId", self.nameId]
         # echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/absolute_path/' >> ~/.bashrc
+
         cmdline = [self.ecovisionPath+"/build/bin/platformecpp",
             "-subsize", "0",
             "-control", self.ecovisionPath+"/programs/programecpp/platformecpp/control2d.txt",
-            #"-create_tcp_server", 
+            "-stamp_filename_from_mmap", 
             "-camidname", self.nameId,
-            "-port", str(self.port),
-            "-motionwindow", "2", "-context2dec", "LOCAL",
+            "-directory", self.sharedVolume,  # /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/database_clients_camera
+            "-motionwindow", "2", 
+            "-context2dec", "LOCAL",
             ]
+
+
+        
+
 
         # self.log("[INFO]cmdline:" + str(cmdline))
         print("[INFO]ecovision: camid:", self.nameId, ", cmdline: ", cmdline )
@@ -93,6 +104,7 @@ class EcoVisionRunner(threading.Thread):
         # *************** TODO logrotate ********************
 
         if self.debug is True:
+            print(" ... ... debug => ecovision stdout and stderr to ", capture_log_stderr, capture_log_stdout)
             with open(capture_log_stderr, "w") as fileStdErr:
                 with open(capture_log_stdout, "w") as fileStdOut:
                     self.capture_process = subprocess.Popen(
@@ -120,11 +132,12 @@ class EcoVisionRunner(threading.Thread):
     
 
 class ManagerEcovisionS(threading.Thread):
-    def __init__(self, host: str, port: int, ecovisionPath: str, debug: bool=False):
+    def __init__(self, host: str, port: int, ecovisionPath: str, sharedVolume: str, debug: bool=False):
         threading.Thread.__init__(self)
         self.host = host
         self.port = port
         self.ecovisionPath = ecovisionPath
+        self.sharedVolume = sharedVolume
         self.debug = debug
         logging.info("ManagerEcovisionS")
         self._stop_event = threading.Event()
@@ -154,8 +167,8 @@ class ManagerEcovisionS(threading.Thread):
                     print("[INFO]manager asked for active client cam: ", json_data)
                 for el in json_data:
                     print(" ..... ...... el", el)
-                    camId = el[0]  # cmaid, port
-                    ecovisionPort = el[1]
+                    camId = el#[0]  # cmaid, port
+                    #ecovisionPort = el[1]
 
                     dirout = os.path.join(OUTPUT_DIR, camId)
                     if os.path.isdir(dirout) is False:
@@ -198,7 +211,7 @@ class ManagerEcovisionS(threading.Thread):
                     if FOUND_INDEX is None:
                         if self.debug is True:
                             print("[INFO]camId", camId, "CREATE NEW THREAD: index:", len(threads))
-                        thread = EcoVisionRunner(thread_id=len(threads), port=ecovisionPort, 
+                        thread = EcoVisionRunner(thread_id=len(threads), sharedVolume=self.sharedVolume, #port=ecovisionPort, 
                             nameId=camId, ecovisionPath=self.ecovisionPath, debug=self.debug)
                         thread.start()
                         threads.append(thread)
@@ -212,7 +225,7 @@ class ManagerEcovisionS(threading.Thread):
                             # TODO restart it
                             print("[INFO]camId", camId, "NO MORE ALIVE : restart it ... TODO if timestamp last image not too old or not already treated")
                             threads.pop(index)
-                            thread = EcoVisionRunner(thread_id=index, port=ecovisionPort, 
+                            thread = EcoVisionRunner(thread_id=index, sharedVolume=self.sharedVolume,#port=ecovisionPort, 
                                 nameId=camId, ecovisionPath=self.ecovisionPath, debug=self.debug)
                             thread.start()
                             threads.append(thread)

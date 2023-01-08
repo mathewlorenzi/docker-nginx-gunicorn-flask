@@ -7,6 +7,7 @@ import argparse
 import time
 import socket
 import base64
+from datetime import datetime
 from PIL import Image
 
 # # in docker, local files cannot be found: add current path to python path:
@@ -31,11 +32,10 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 HOST='0.0.0.0'
 PORT=5555
-WITH_MANAGER=False
+WITH_MANAGER=True
 MODE_SAVE_TO_DISK = SAVE_WITH_TIMESTAMPS # for mmap version and no more tcp   NOSAVE
 if WITH_MANAGER is False:
     print(" .............. WARNING, debug withiut manager activated: save to dosk images") 
-    MODE_SAVE_TO_DISK = SAVE_WITH_UNIQUE_FILENAME
     time.sleep(1)
 
 
@@ -83,12 +83,20 @@ class WatchActiveClients(threading.Thread):
     def run(self):
         print('starting client watcher')
         while(True):
+
+            # print(' ... ... delete ? one image ?')
             deletedOneClient = True
             while deletedOneClient is True:
                 deletedOneClient = bufferClients.deleteOneTooOldConnectedClient(maxDeltaAge=self.maxDeltaAge, debug=self.debug)
+
+            # print(' ... ... delete ? one result ?')
             deletedOneClient = True
             while deletedOneClient is True:
                 deletedOneClient = ecovisionResults.deleteOneTooOldConnectedClient(maxDeltaAge=self.maxDeltaAge, debug=self.debug)
+
+            # print(' ... ... mmaps_getResults')
+            # ecovisionResults.mmaps_getResults(maxAgeInSec=30, debug=self.debug)
+
             self._stop_event.wait(self.intervalSec) # check every N sec                
         print('end client watcher')
 
@@ -215,6 +223,52 @@ def record_image():
         print(" ... ... 2")
         print("[ERROR]lastsample image failed")
         return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
+
+    maxAgeInSec = 30
+
+    nbTry = 0
+    maxNbTry = 10
+    resultPathImage = None
+    while(resultPathImage is None and nbTry<maxNbTry):
+        nbTry += 1
+        clientIdList = bufferClients.getListClients()
+        for client in bufferClients.buff:
+            if client.clientId in clientIdList and client.clientId == camId:
+                print(" ... ...  check if result arrived")
+                print(" ... ... mmaps_getResults client Id", client.clientId)
+                for filename in os.listdir(client.outputDir):
+                    print(" ... ... check ", filename)
+                    if filename.startswith("track2d-") and filename.endswith(".jpg"):
+                        stamp = filename.replace("track2d-", "")
+                        # stamp = stamp.replace(".jpg", "")
+                        print(" ... ... ", filename, stamp)
+                        # diff in seconds
+                        pathImage = os.path.join(client.outputDir, filename)
+                        if( datetime.now().timestamp() - os.path.getmtime(pathImage) > maxAgeInSec ):
+                            print(" ... ... delete ", pathImage)
+                            os.remove(pathImage)
+                        else:
+                            # check if already in buffer images
+                            for bufMag in client.bufferImages.buffer:
+                                print(" ... ... ", stamp, " VS ", bufMag.filenameWithStamp)
+                                if stamp == bufMag.filenameWithStamp:
+                                    resultPathImage = pathImage
+        
+        if resultPathImage is None:
+            time.sleep(1)
+
+    if resultPathImage is not None:
+        (msgBack, camId, statusBack) = record_image_or_result(inputBufferClient=ecovisionResults, camId=nameId, 
+            imageContentStr=None,
+            imageContentBytes=HERE and where are the results with teimstamp saved 
+            check not overwritten with images  in /paul
+            
+            received, logger=logger, debug=DEBUG)
+        if statusBack != 200:
+            print("[ERROR]FAILED record result:", msgBack)
+            return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), status)
+
+
 
     return (content["contentBytes"], 200)
 
@@ -406,10 +460,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ecovision threads manager')
     parser.add_argument('--ecovisionPath', metavar='ecovisionPath', required=True,
                         help='the ecovisionPath') # "/home/ecorvee/Projects/EcoVision/ecplatform2"
+    parser.add_argument('--sharedVolume', metavar='sharedVolume', required=True,
+                        help='sharedVolume bet ecovision and backend') # "/home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/database_clients_camera"
     parser.add_argument('--debug', action='store_true', default=False)
     args = parser.parse_args()
     if WITH_MANAGER is True:
-        manager = ManagerEcovisionS(host=HOST, port=PORT, ecovisionPath=args.ecovisionPath, debug=args.debug)
+        manager = ManagerEcovisionS(host=HOST, port=PORT, 
+            ecovisionPath=args.ecovisionPath, 
+            sharedVolume=args.sharedVolume,
+            debug=args.debug)
         manager.start()
 
     watchActiveClients = WatchActiveClients()

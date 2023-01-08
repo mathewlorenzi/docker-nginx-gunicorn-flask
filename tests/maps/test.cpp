@@ -44,16 +44,16 @@ int test1(char *filename)
         return 0;
     }
     // open the file in shared memory
-    char* shared = (char*) mmap(NULL, 9, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    char* shared = (char*) mmap(NULL, 17, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     // periodically read the file contents
     while (true)
     {
-        for(int i=0; i<9; i++){
+        for(int i=0; i<17; i++){
             printf("0x%02X ", shared[i]);
         }
         printf("\n");
-        for(int i=0; i<9; i++){
+        for(int i=0; i<17; i++){
             printf("%d ", int(shared[i]));
         }
         printf("\n");        

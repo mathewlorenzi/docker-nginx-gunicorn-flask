@@ -4,23 +4,31 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../../build/lib
 export LD_LIBRARY_PATH
 
 # HOST=$1
-PORT=$1
-CAMID=$2
+
+# PORT=$1
+# CAMID=$2
 
 # if [ "$HOST" == "" ]; then
 #     echo "host as first arg not provided"
 #     exit 1
 # fi
-if [ "$PORT" == "" ]; then
-    echo "port as first arg not provided"
-    exit 1
-fi
+
+# if [ "$PORT" == "" ]; then
+#     echo "port as first arg not provided"
+#     exit 1
+# fi
+# if [ "$CAMID" == "" ]; then
+#     echo "camid as second arg not provided"
+#     exit 1
+# fi
+
+CAMID=$1
 if [ "$CAMID" == "" ]; then
-    echo "camid as second arg not provided"
+    echo "camid as first arg not provided"
     exit 1
 fi
 
-./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -create_tcp_server -camidname $CAMID -port $PORT -motionwindow 2 -context2dec LOCAL -fantagaugedim 70 -httpPostGet_waitIntervalBeforeRetrying 1
+./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -stamp_filename_from_mmap -camidname $CAMID -motionwindow 2 -context2dec LOCAL -directory /home/ecorvee/Projects/WEBAPP/docker-nginx-gunicorn-flask/database_clients_camera
 #./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -http_client_to_flask_server -camidname $CAMID -host $HOST -port $PORT -motionwindow 2 -context2dec LOCAL -fantagaugedim 70 -httpPostGet_waitIntervalBeforeRetrying 1
 #./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -http_client_to_flask_server -camidname paulo9 -host https://www.ecovision.ovh -port 81 -motionwindow 2 -context2dec LOCAL -fantagaugedim 70 httpPostGet_waitIntervalBeforeRetrying 10
 #./../../../build/bin/platformecpp -subsize 0 -control control2d.txt -lcsmainfolder -directory /home/ecorvee/data/LCS-videos/database1/ -lcsvideoindex 33 -startat 1 -incrementvideoindex 10 -motionwindow 2  -context2dec LOCAL -fantagaugedim 70 

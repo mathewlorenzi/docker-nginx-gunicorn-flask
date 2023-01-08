@@ -1,6 +1,8 @@
 
 # https://blog.miguelgrinberg.com/post/video-streaming-with-flask
 
+#  ... ... 9 => mmaps writin byteval <class 'bytes'> b'\t'
+
 # now get last image of results recorded in backend/result/camid
 # but first
 #   find a way to ... ? use shared volumes instead of tcp for ecovision
@@ -63,7 +65,8 @@ version: '3'
 # # rm -rf ecoclient/package_ecovision
 # rm -rf backend/package_ecovision
 # # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
-# cp -r /home/ecorvee/Projects/EcoVision/package_ecovision ./backend
+# # cp -r /home/ecorvee/Projects/EcoVision/package_ecovision ./backend
+# cp -r /home/ecorvee/Projects/EcoVision/ecplatform2/package_ecovision ./backend
 # git status
 # git add ....
 # git commit ....
