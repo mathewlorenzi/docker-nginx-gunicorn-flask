@@ -103,7 +103,7 @@ def populate_fake_images():
 # exit(0)
 
 # keep posting fake image every 10 intervalSec
-intervalSec = 15
+intervalSec = 1
 threads = []
 for camId in camIds:
     thread = SimulatorClientPostImage(camId=camId, intervalSec=intervalSec)
@@ -154,4 +154,4 @@ while True:
             fout.write(getimage_content.content)
         '''
 
-    time.sleep(5)
+    time.sleep(1)

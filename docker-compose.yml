@@ -56,7 +56,8 @@ version: '3'
 # make sure package_ecovision exists
 # !!!!!!!!!!!! PWD is where ? EcoVision or ecplatform2 where the dockerfile is
 # docker-compose build
-# docker run -t -d -v $PWD/package_ecovision:/usr/src/app/package_ecovision --name ecovision ecovision_ecovision
+# # docker run -t -d -v $PWD/package_ecovision:/usr/src/app/package_ecovision --name ecovision ecovision_ecovision
+# docker run -t -d -v $PWD/shared_volume:/usr/src/app/shared_volume --name ecovision ecovision_ecovision
 # docker ps
 # docker exec -it <ID given from docker ps> bash
 # ./compile.sh
@@ -68,7 +69,7 @@ version: '3'
 # rm -rf backend/package_ecovision
 # # cp -r /home/ecorvee/Projects/EcoVision/shared_folder/package_ecovision ./ecoclient
 # # cp -r /home/ecorvee/Projects/EcoVision/package_ecovision ./backend
-# cp -r /home/ecorvee/Projects/EcoVision/ecplatform2/package_ecovision ./backend
+# cp -r /home/ecorvee/Projects/EcoVision/shared_volume/package_ecovision ./backend
 # git status
 # git add ....
 # git commit ....
