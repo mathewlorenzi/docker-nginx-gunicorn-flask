@@ -45,9 +45,9 @@ version: '3'
 # docker-compose build ecoclient
 ## docker-compose build nginx   # for VM
 ### remove the -d for dbugging easier
-# docker-compose up -d backend
-# docker-compose up -d web
-# docker-compose build ecoclient
+# docker-compose up backend
+# docker-compose up web
+## docker-compose build ecoclient
 ## docker-compose up -d nginx  # for VM
 # === same docker as ecovision but different name obvioulsy and no need of shared folders ? TODO for logging yes 
 
@@ -109,10 +109,11 @@ services:
       context: ./backend
     container_name: backend
     volumes:
-      - ./volume_backend:/usr/src/volume_backend
+      # - ./volume_backend:/usr/src/volume_backend
+      - ./database_clients_camera:/usr/src/database_clients_camera
     ports:
       - 5555:5555
-    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision"
+    command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision --sharedVolume /usr/src/database_clients_camera"
     # DEBUG
     # command: bash -c "python3 setBashRc.py --ecovisionPath ./package_ecovision && source /root/.bashrc && python3 backend.py --ecovisionPath ./package_ecovision --debug"
 

@@ -234,7 +234,7 @@ def record_image():
             time.sleep(1)
 
     if resultPathImage is not None:
-        print(" ... ... saving result", resultPathImage)
+        # print(" ... ... saving result", resultPathImage)
         with open(resultPathImage, "rb") as fin:
             im_bytes = fin.read()  
             im_b64 = base64.b64encode(im_bytes)
@@ -432,17 +432,14 @@ def lastresult(camId: str, take_care_of_already_uploaded: bool=False):
 
 @app.route('/input/<string:camId>', methods=['GET'])
 def input_api(camId: str):
-    print(" ... ... B")
     GIVE_IT_TO_ME = False
     (content, status2) = lastsample(camId = camId, inputBufferClient=bufferClients, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
     if status2 != 200:
-        print(" ... ... B1")
         print("[ERROR]get lastsample image recorded failed")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
     (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
     # no matter whether the result is available or not, the result to the post request if here 200
     if _succ is False:
-        print(" ... ... B2")
         print("[ERROR]lastsample image failed")
         return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
     return (content["contentBytes"], status2)
@@ -462,17 +459,14 @@ def result_api(camId: str):
         # # return response
         return base64.b64encode(image_binary), 200
     '''
-    print(" ... ... A")
     GIVE_IT_TO_ME = False
     (content, status2) = lastsample(camId = camId, inputBufferClient=ecovisionResults, logger=logger, take_care_of_already_uploaded=GIVE_IT_TO_ME)
     if status2 != 200:
-        print(" ... ... A1")
         print("[ERROR]get lastsample result recorded failed")
         return (get_encoded_img(image_path=os.path.join(file_path, 'red.'+IMGEXT)), 200)
     (_succ, colourImg) = get_image_to_return(status2=status2, content=content, logger=logger)
     # no matter whether the result is available or not, the result to the post request if here 200
     if _succ is False:
-        print(" ... ... A2")
         print("[ERROR]lastsample result failed")
         return (get_encoded_img(image_path=os.path.join(file_path, colourImg+'.'+IMGEXT)), 200)
     return (content["contentBytes"], status2)
